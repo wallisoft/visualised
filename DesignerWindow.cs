@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes; 
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Path = System.IO.Path;  
 
 namespace ConfigUI
 {
@@ -19,35 +21,15 @@ namespace ConfigUI
         private TextBox? _yamlEditor;
         private TextBlock? _selectedControlLabel;
         private TextBlock? _propType;
-        
-        private TextBox? _propName;
-        private TextBox? _propX;
-        private TextBox? _propY;
-        private TextBox? _propWidth;
-        private TextBox? _propHeight;
-        private TextBox? _propCaption;
-        private TextBox? _propText;
-        private TextBox? _propBackgroundColor;
-        private TextBox? _propForegroundColor;
-        private TextBox? _propFontFamily;
-        private TextBox? _propFontSize;
-        private CheckBox? _propFontBold;
-        private CheckBox? _propVisible;
-        private CheckBox? _propEnabled;
-        private ComboBox? _propAlignment;
+
+        private Dictionary<string, TextBox?> _propertyEditors = new Dictionary<string, TextBox?>();
+        private Dictionary<string, CheckBox?> _propertyCheckboxes = new Dictionary<string, CheckBox?>();
+        private Dictionary<string, ComboBox?> _propertyComboBoxes = new Dictionary<string, ComboBox?>();
         
         private Panel? _toolboxPanel;
         private Panel? _propertiesPanel;
         private Panel? _editorPanel;
-        
-        private Panel? _panelIdentity;
-        private Panel? _panelPosition;
-        private Panel? _panelAppearance;
-        private Panel? _panelFont;
-        private Button? _groupIdentity;
-        private Button? _groupPosition;
-        private Button? _groupAppearance;
-        private Button? _groupFont;
+        private ScrollViewer? _canvasScroller;
         
         private List<DesignerControl> _designerControls = new List<DesignerControl>();
         private DesignerControl? _selectedControl = null;
@@ -56,9 +38,17 @@ namespace ConfigUI
         private DesignerControl? _draggedControl = null;
         private Point _dragStartPoint;
         private Point _dragStartControlPosition;
+
+        private List<Rectangle> _resizeHandles = new List<Rectangle>();
+        private Rectangle? _activeResizeHandle = null;
+        private Point _resizeStartPoint;
+        private Size _resizeStartSize;
+        private Point _resizeStartPosition;
+        private string _resizeDirection = "";
         
         private string? _draggingControlType = null;
         private Border? _ghostControl = null;
+        private Point _ghostOffset; // NEW: Track offset for smoother drag
         
         private bool _updatingProperties = false;
         
@@ -78,26 +68,396 @@ namespace ConfigUI
             _designerDatabase = new DesignerDatabase(_scriptDatabase, _designerControls);
             _importExport = new DesignerImportExport(_designerControls, _scriptDatabase, this);
             
-	    ImportDesignerYamlToDatabase();
+            InitializePanelDefinitions();
+            ImportDesignerYamlToDatabase();
 
             this.Loaded += (s, e) => LoadDesignerUI();
+            
+            // Handle window resize for responsive panels - use SizeChanged instead
+            this.SizeChanged += (s, e) =>
+            {
+                RepositionPanels();
+            };
         }
 
-	// Add this method to DesignerWindow.cs
+        private void RepositionPanels()
+        {
+            if (_toolboxPanel != null)
+            {
+                Canvas.SetLeft(_toolboxPanel, 10);
+                Canvas.SetTop(_toolboxPanel, 30);
+                _toolboxPanel.Height = this.Height - 40; // Adjust height with window
+            }
+            
+            if (_propertiesPanel != null)
+            {
+                Canvas.SetLeft(_propertiesPanel, this.Bounds.Width - 310);
+                Canvas.SetTop(_propertiesPanel, 30);
+                _propertiesPanel.Height = this.Height - 40; // Adjust height with window
+            }
+            
+            if (_editorPanel != null)
+            {
+                // Reposition YAML editor panel to be centered between toolbox and properties
+                var editorWidth = this.Bounds.Width - 620; // Total width minus both panels
+                var editorX = 300; // After toolbox
+                Canvas.SetLeft(_editorPanel, editorX);
+                Canvas.SetTop(_editorPanel, this.Height - 210); // Bottom of window
+                _editorPanel.Width = editorWidth;
+            }
+            
+            // Also update the main canvas if needed
+            if (this.Content is Canvas mainCanvas)
+            {
+                mainCanvas.Width = this.Bounds.Width;
+                mainCanvas.Height = this.Bounds.Height;
+            }
+        }
 
-private void ImportDesignerYamlToDatabase()
-{
-    if (_designerDatabase == null) return;
+        private void InitializePanelDefinitions()
+        {
+            if (_scriptDatabase == null) return;
 
-    Console.WriteLine("🔄 Importing visual-designer.yaml to database...");
-    _designerDatabase.ImportFromYaml();
-    Console.WriteLine("✅ Designer YAML imported to SQLite!");
-}
+            Console.WriteLine("🎨 Initializing panel definitions...");
+            
+            _scriptDatabase.ExecuteSql(@"
+                CREATE TABLE IF NOT EXISTS panel_definitions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    panel_type TEXT NOT NULL,
+                    panel_name TEXT NOT NULL,
+                    x REAL,
+                    y REAL,
+                    width REAL,
+                    height REAL,
+                    background_color TEXT,
+                    border_color TEXT,
+                    visible INTEGER DEFAULT 1
+                )
+            ");
+            
+            _scriptDatabase.ExecuteSql(@"
+                CREATE TABLE IF NOT EXISTS panel_controls (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    panel_id INTEGER,
+                    control_type TEXT NOT NULL,
+                    control_name TEXT NOT NULL,
+                    label TEXT,
+                    icon TEXT,
+                    group_name TEXT,
+                    x REAL,
+                    y REAL,
+                    width REAL,
+                    height REAL,
+                    display_order INTEGER,
+                    action_type TEXT,
+                    action_value TEXT,
+                    FOREIGN KEY(panel_id) REFERENCES panel_definitions(id)
+                )
+            ");
+            
+            _scriptDatabase.ExecuteSql(@"
+                CREATE TABLE IF NOT EXISTS property_definitions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    property_name TEXT NOT NULL,
+                    property_label TEXT NOT NULL,
+                    property_group TEXT NOT NULL,
+                    editor_type TEXT NOT NULL,
+                    display_order INTEGER,
+                    default_value TEXT,
+                    is_readonly INTEGER DEFAULT 0,
+                    control_types TEXT,
+                    group_color TEXT,
+                    group_expanded INTEGER DEFAULT 1
+                )
+            ");
+           
+    _scriptDatabase.ExecuteSql(@"
+        CREATE TABLE IF NOT EXISTS control_properties (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            control_id INTEGER NOT NULL,
+            property_name TEXT NOT NULL,
+            property_value TEXT,
+            FOREIGN KEY(control_id) REFERENCES controls(id) ON DELETE CASCADE,
+            UNIQUE(control_id, property_name)
+        )
+    ");
+    
+    Console.WriteLine("✅ control_properties table created!");
+ 
+            var panelCount = _scriptDatabase.ExecuteScalarSql("SELECT COUNT(*) FROM panel_definitions");
+            if (Convert.ToInt32(panelCount) == 0)
+            {
+                SeedPanelDefinitions();
+            }
+            
+            Console.WriteLine("✅ Panel definitions initialized!");
+        }
 
-private void LoadDesignerUI()
+        private void SeedPanelDefinitions()
+        {
+            if (_scriptDatabase == null) return;
+            
+            Console.WriteLine("🌱 Seeding panel definitions...");
+            
+            _scriptDatabase.ExecuteSql(@"
+                INSERT INTO panel_definitions (panel_type, panel_name, x, y, width, height, background_color, border_color)
+                VALUES ('toolbox', 'ToolboxPanel', 10, 30, 280, 870, '#FFFFFF', '#c0c0c0')
+            ");
+            
+            var toolboxId = _scriptDatabase.ExecuteScalarSql("SELECT last_insert_rowid()");
+            
+            var commonControls = new[]
+            {
+                ("button", "Label", "🏷️", "label", 1),
+                ("button", "Button", "🔘", "button", 2),
+                ("button", "TextBox", "📝", "textbox", 3),
+                ("button", "CheckBox", "☑️", "checkbox", 4),
+                ("button", "RadioButton", "⚪", "radiobutton", 5)
+            };
+            
+            foreach (var (type, label, icon, value, order) in commonControls)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO panel_controls (panel_id, control_type, control_name, label, icon, group_name, display_order, action_type, action_value, width, height)
+                    VALUES ({toolboxId}, '{type}', 'Add{label}', '{label}', '{icon}', 'Common Controls', {order}, 'create_control', '{value}', 250, 32)
+                ");
+            }
+            
+            var containerControls = new[]
+            {
+                ("button", "Panel", "📦", "panel", 10),
+                ("button", "TabControl", "📑", "tabcontrol", 11)
+            };
+            
+            foreach (var (type, label, icon, value, order) in containerControls)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO panel_controls (panel_id, control_type, control_name, label, icon, group_name, display_order, action_type, action_value, width, height)
+                    VALUES ({toolboxId}, '{type}', 'Add{label}', '{label}', '{icon}', 'Containers', {order}, 'create_control', '{value}', 250, 32)
+                ");
+            }
+            
+            var dataControls = new[]
+            {
+                ("button", "ComboBox", "🔽", "combobox", 20),
+                ("button", "ListBox", "📋", "listbox", 21),
+                ("button", "Grid", "⊞", "grid", 22),
+                ("button", "Data", "💾", "data", 23)
+            };
+            
+            foreach (var (type, label, icon, value, order) in dataControls)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO panel_controls (panel_id, control_type, control_name, label, icon, group_name, display_order, action_type, action_value, width, height)
+                    VALUES ({toolboxId}, '{type}', 'Add{label}', '{label}', '{icon}', 'Lists & Data', {order}, 'create_control', '{value}', 250, 32)
+                ");
+            }
+            
+            var menuControls = new[]
+            {
+                ("button", "MenuBar", "☰", "menubar", 30),
+                ("button", "ToolBar", "🔧", "toolbar", 31)
+            };
+            
+            foreach (var (type, label, icon, value, order) in menuControls)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO panel_controls (panel_id, control_type, control_name, label, icon, group_name, display_order, action_type, action_value, width, height)
+                    VALUES ({toolboxId}, '{type}', 'Add{label}', '{label}', '{icon}', 'Menus & Toolbars', {order}, 'create_control', '{value}', 250, 32)
+                ");
+            }
+            
+            var otherControls = new[]
+            {
+                ("button", "ProgressBar", "▬", "progressbar", 40),
+                ("button", "HScrollBar", "⟷", "hscrollbar", 41),
+                ("button", "VScrollBar", "↕", "vscrollbar", 42),
+                ("button", "Timer", "⏱", "timer", 43)
+            };
+            
+            foreach (var (type, label, icon, value, order) in otherControls)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO panel_controls (panel_id, control_type, control_name, label, icon, group_name, display_order, action_type, action_value, width, height)
+                    VALUES ({toolboxId}, '{type}', 'Add{label}', '{label}', '{icon}', 'Other', {order}, 'create_control', '{value}', 250, 32)
+                ");
+            }
+            
+            _scriptDatabase.ExecuteSql(@"
+                INSERT INTO panel_definitions (panel_type, panel_name, x, y, width, height, background_color, border_color)
+                VALUES ('properties', 'PropertiesPanel', 1100, 30, 300, 870, '#FFFFFF', '#c0c0c0')
+            ");
+            
+            var identityProps = new[]
+            {
+                ("type", "Type", "textbox", 1, "", 1, "#1976D2"),
+                ("name", "Name", "textbox", 2, "", 0, "#1976D2"),
+                ("tag", "Tag", "textbox", 3, "", 0, "#1976D2"),
+                ("index", "Index", "textbox", 4, "0", 0, "#1976D2")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in identityProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Identity', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var positionProps = new[]
+            {
+                ("x", "X", "textbox", 10, "0", 0, "#388E3C"),
+                ("y", "Y", "textbox", 11, "0", 0, "#388E3C"),
+                ("z_index", "Z-Index", "textbox", 12, "0", 0, "#388E3C")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in positionProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Position', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var sizeProps = new[]
+            {
+                ("width", "Width", "textbox", 20, "100", 0, "#F57C00"),
+                ("height", "Height", "textbox", 21, "30", 0, "#F57C00")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in sizeProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Size', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var contentProps = new[]
+            {
+                ("caption", "Caption", "textbox", 30, "", 0, "#7B1FA2"),
+                ("text", "Text", "textbox", 31, "", 0, "#7B1FA2")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in contentProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Content', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var appearanceProps = new[]
+            {
+                ("background_color", "BackColor", "textbox", 40, "", 0, "#C62828"),
+                ("foreground_color", "ForeColor", "textbox", 41, "", 0, "#C62828"),
+                ("border_style", "BorderStyle", "combobox", 42, "None", 0, "#C62828"),
+                ("opacity", "Opacity", "textbox", 43, "1.0", 0, "#C62828")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in appearanceProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Appearance', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var fontProps = new[]
+            {
+                ("font_family", "Name", "textbox", 50, "Segoe UI", 0, "#00796B"),
+                ("font_size", "Size", "textbox", 51, "12", 0, "#00796B"),
+                ("font_bold", "Bold", "checkbox", 52, "false", 0, "#00796B"),
+                ("font_italic", "Italic", "checkbox", 53, "false", 0, "#00796B"),
+                ("font_underline", "Underline", "checkbox", 54, "false", 0, "#00796B")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in fontProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Font', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var behaviorProps = new[]
+            {
+                ("visible", "Visible", "checkbox", 60, "true", 0, "#5D4037"),
+                ("enabled", "Enabled", "checkbox", 61, "true", 0, "#5D4037"),
+                ("tab_stop", "TabStop", "checkbox", 62, "true", 0, "#5D4037"),
+                ("tab_index", "TabIndex", "textbox", 63, "0", 0, "#5D4037")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in behaviorProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Behavior', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 1)
+                ");
+            }
+            
+            var layoutProps = new[]
+            {
+                ("margin", "Margin", "textbox", 70, "0", 0, "#00897B"),
+                ("padding", "Padding", "textbox", 71, "0", 0, "#00897B"),
+                ("horizontal_alignment", "HAlign", "combobox", 72, "Left", 0, "#00897B"),
+                ("vertical_alignment", "VAlign", "combobox", 73, "Top", 0, "#00897B")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in layoutProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Layout', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 0)
+                ");
+            }
+            
+            var dataProps = new[]
+            {
+                ("data_source", "DataSource", "textbox", 80, "", 0, "#6A1B9A"),
+                ("data_member", "DataMember", "textbox", 81, "", 0, "#6A1B9A"),
+                ("data_field", "DataField", "textbox", 82, "", 0, "#6A1B9A")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in dataProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Data Binding', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 0)
+                ");
+            }
+            
+            var advancedProps = new[]
+            {
+                ("tooltip", "ToolTip", "textbox", 90, "", 0, "#424242"),
+                ("cursor", "Cursor", "combobox", 91, "Default", 0, "#424242"),
+                ("anchor", "Anchor", "textbox", 92, "None", 0, "#424242"),
+                ("dock", "Dock", "combobox", 93, "None", 0, "#424242")
+            };
+            
+            foreach (var (name, label, editor, order, defValue, isReadonly, color) in advancedProps)
+            {
+                _scriptDatabase.ExecuteSql($@"
+                    INSERT INTO property_definitions (property_name, property_label, property_group, editor_type, display_order, default_value, is_readonly, group_color, group_expanded)
+                    VALUES ('{name}', '{label}', 'Advanced', '{editor}', {order}, '{defValue}', {isReadonly}, '{color}', 0)
+                ");
+            }
+            
+            Console.WriteLine("✅ Panel definitions seeded!");
+        }
+
+        private void ImportDesignerYamlToDatabase()
+        {
+            // No longer needed - designer is 100% database-driven now
+            Console.WriteLine("✅ Designer is 100% database-driven!");
+        }
+
+        private void LoadDesignerUI()
         {
             try
             {
+                Console.WriteLine("🎨 Building designer UI from database...");
+                
                 var mainCanvas = new Canvas
                 {
                     Width = this.Width,
@@ -107,244 +467,974 @@ private void LoadDesignerUI()
                 
                 this.Content = mainCanvas;
                 
-                var yamlPath = DesignerHelpers.FindYamlFile("visual-designer.yaml");
-                if (yamlPath == null)
-                {
-                    Console.WriteLine("❌ visual-designer.yaml not found!");
-                    return;
-                }
-
-                var mainWindow = new MainWindow(yamlPath);
-                mainWindow.Show();
+                // Build main menu from scratch
+                var mainMenu = CreateMainMenu();
+                mainCanvas.Children.Add(mainMenu);
                 
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                // Build design canvas
+                _designCanvas = new Canvas
                 {
-                    var sourceCanvas = mainWindow.FindControl<Canvas>("MainCanvas");
-                    
-                    if (sourceCanvas != null)
-                    {
-                        var childrenToMove = sourceCanvas.Children.ToList();
-                        sourceCanvas.Children.Clear();
-                        
-                        foreach (var child in childrenToMove)
-                        {
-                            mainCanvas.Children.Add(child);
-                        }
-                        
-                        mainWindow.Close();
-                        
-                        var oldPropsPanel = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "PropertiesPanel");
-                        if (oldPropsPanel != null)
-                        {
-                            mainCanvas.Children.Remove(oldPropsPanel);
-                        }
-
-                        var newPropsPanel = CreatePropertiesPanel();
-                        mainCanvas.Children.Add(newPropsPanel);
-
-                        _toolboxPanel = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "ToolboxPanel");
-                        _editorPanel = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "EditorPanel");
-                        _yamlEditor = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "YamlEditor");
-
-                        HookupToolboxButtons(mainCanvas);
-                        HookupMenuItems(mainCanvas);
-                        SetupPropertyEditors();
-                        
-                        _designCanvas = DesignerHelpers.FindCanvasByName(mainCanvas, "DesignCanvas");
-                        
-                        if (_designCanvas != null)
-                        {
-                            Console.WriteLine($"✅ Found DesignCanvas: {_designCanvas.Width}x{_designCanvas.Height}");
-                            SetupCanvasEvents(_designCanvas);
-                        }
-                        else
-                        {
-                            Console.WriteLine("❌ DesignCanvas not found!");
-                        }
-                        
-                        Console.WriteLine("✅ Visual Designer UI loaded successfully!");
-                    }
-                }, Avalonia.Threading.DispatcherPriority.Loaded);
+                    Width = 800,
+                    Height = 600,
+                    Background = new SolidColorBrush(Colors.White),
+                    ClipToBounds = true
+                };
+                Canvas.SetLeft(_designCanvas, 300);
+                Canvas.SetTop(_designCanvas, 60);
+                
+                var canvasBorder = new Border
+                {
+                    Width = 800,
+                    Height = 600,
+                    BorderBrush = new SolidColorBrush(Color.Parse("#BDBDBD")),
+                    BorderThickness = new Thickness(2),
+                    Child = _designCanvas
+                };
+                Canvas.SetLeft(canvasBorder, 300);
+                Canvas.SetTop(canvasBorder, 60);
+                mainCanvas.Children.Add(canvasBorder);
+                
+                // Build YAML editor panel
+                _editorPanel = CreateYamlEditorPanel();
+                mainCanvas.Children.Add(_editorPanel);
+                
+                // Build database-driven panels
+                Console.WriteLine("📦 Building panels from database...");
+                var newToolbox = BuildPanelFromDatabase("toolbox");
+                if (newToolbox != null)
+                {
+                    mainCanvas.Children.Add(newToolbox);
+                    _toolboxPanel = newToolbox;
+                }
+                
+                var newPropsPanel = BuildPanelFromDatabase("properties");
+                if (newPropsPanel != null)
+                {
+                    mainCanvas.Children.Add(newPropsPanel);
+                    _propertiesPanel = newPropsPanel;
+                }
+                
+                SetupCanvasEvents(_designCanvas);
+                
+                Console.WriteLine("✅ Designer UI loaded from database!");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Failed to load designer UI: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
-        private void InitializeUIReferences(Canvas mainCanvas)
+        private Menu CreateMainMenu()
         {
-            _toolboxPanel = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "ToolboxPanel");
-            _propertiesPanel = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "PropertiesPanel");
-            _editorPanel = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "EditorPanel");
+            var menu = new Menu
+            {
+                Height = 30,
+                Background = new SolidColorBrush(Color.Parse("#f5f5f5"))
+            };
+            Canvas.SetLeft(menu, 0);
+            Canvas.SetTop(menu, 0);
+            Canvas.SetRight(menu, 0);
             
-            _yamlEditor = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "YamlEditor");
-            _selectedControlLabel = DesignerHelpers.FindControlByName<TextBlock>(mainCanvas, "SelectedControlLabel");
-            _propType = DesignerHelpers.FindControlByName<TextBlock>(mainCanvas, "PropType");
+            // File menu
+            var fileMenu = new MenuItem { Header = "File" };
+            fileMenu.Items.Add(new MenuItem { Header = "New Form" });
+            fileMenu.Items.Add(new MenuItem { Header = "Open Form..." });
+            fileMenu.Items.Add(new MenuItem { Header = "Save Form..." });
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(new MenuItem { Header = "Save to Database" });
+            fileMenu.Items.Add(new MenuItem { Header = "Load from Database" });
+            fileMenu.Items.Add(new MenuItem { Header = "Export YAML from Database" });
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(new MenuItem { Header = "Reset Database" });
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(new MenuItem { Header = "Exit" });
+            menu.Items.Add(fileMenu);
             
-            _propName = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropName");
-            _propX = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropX");
-            _propY = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropY");
-            _propWidth = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropWidth");
-            _propHeight = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropHeight");
-            _propCaption = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropCaption");
-            _propText = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropText");
-            _propBackgroundColor = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropBackgroundColor");
-            _propForegroundColor = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropForegroundColor");
-            _propFontFamily = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropFontFamily");
-            _propFontSize = DesignerHelpers.FindControlByName<TextBox>(mainCanvas, "PropFontSize");
-            _propFontBold = DesignerHelpers.FindControlByName<CheckBox>(mainCanvas, "PropFontBold");
-            _propVisible = DesignerHelpers.FindControlByName<CheckBox>(mainCanvas, "PropVisible");
-            _propEnabled = DesignerHelpers.FindControlByName<CheckBox>(mainCanvas, "PropEnabled");
-            _propAlignment = DesignerHelpers.FindControlByName<ComboBox>(mainCanvas, "PropAlignment");
+            // View menu
+            var viewMenu = new MenuItem { Header = "View" };
+            viewMenu.Items.Add(new MenuItem { Header = "Toolbox" });
+            viewMenu.Items.Add(new MenuItem { Header = "Properties" });
+            viewMenu.Items.Add(new MenuItem { Header = "YAML Editor" });
+            menu.Items.Add(viewMenu);
             
-            _panelIdentity = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "PanelIdentity");
-            _panelPosition = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "PanelPosition");
-            _panelAppearance = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "PanelAppearance");
-            _panelFont = DesignerHelpers.FindControlByName<Panel>(mainCanvas, "PanelFont");
+            // Help menu
+            var helpMenu = new MenuItem { Header = "Help" };
+            helpMenu.Items.Add(new MenuItem { Header = "About" });
+            menu.Items.Add(helpMenu);
             
-            _groupIdentity = DesignerHelpers.FindControlByName<Button>(mainCanvas, "GroupIdentity");
-            _groupPosition = DesignerHelpers.FindControlByName<Button>(mainCanvas, "GroupPosition");
-            _groupAppearance = DesignerHelpers.FindControlByName<Button>(mainCanvas, "GroupAppearance");
-            _groupFont = DesignerHelpers.FindControlByName<Button>(mainCanvas, "GroupFont");
+            // Wire up events
+            HookupMenuEvents(menu);
+            SetupCanvasSizeMenu(menu);
+            
+            return menu;
         }
 
-        private void HookupPropertyGroups(Canvas mainCanvas)
+        private void HookupMenuEvents(Menu menu)
         {
-            HookupButton(mainCanvas, "GroupIdentity", () => TogglePropertyGroup("Identity"));
-            HookupButton(mainCanvas, "GroupPosition", () => TogglePropertyGroup("Position"));
-            HookupButton(mainCanvas, "GroupAppearance", () => TogglePropertyGroup("Appearance"));
-            HookupButton(mainCanvas, "GroupFont", () => TogglePropertyGroup("Font"));
-        }
-
-        private void TogglePropertyGroup(string groupName)
-        {
-            Panel? panel = groupName switch
+            foreach (var topItem in menu.Items.Cast<MenuItem>())
             {
-                "Identity" => _panelIdentity,
-                "Position" => _panelPosition,
-                "Appearance" => _panelAppearance,
-                "Font" => _panelFont,
-                _ => null
-            };
-            
-            Button? button = groupName switch
-            {
-                "Identity" => _groupIdentity,
-                "Position" => _groupPosition,
-                "Appearance" => _groupAppearance,
-                "Font" => _groupFont,
-                _ => null
-            };
-            
-            if (panel != null && button != null)
-            {
-                panel.IsVisible = !panel.IsVisible;
-                var caption = button.Content?.ToString() ?? "";
-                if (panel.IsVisible)
+                if (topItem.Header?.ToString() == "File")
                 {
-                    button.Content = caption.Replace("▶", "▼");
+                    foreach (var fileItem in topItem.Items.Cast<object>())
+                    {
+                        if (fileItem is MenuItem mi)
+                        {
+                            var header = mi.Header?.ToString();
+                            if (header == "Open Form...")
+                                mi.Click += async (s, e) => await _importExport?.ShowImportDialog()!;
+                            else if (header == "Save Form...")
+                                mi.Click += async (s, e) => await _importExport?.ShowExportDialog()!;
+                            else if (header == "Save to Database")
+                                mi.Click += (s, e) => _designerDatabase?.SaveAllToDatabase();
+                            else if (header == "Load from Database")
+                                mi.Click += (s, e) => LoadAllFromDatabase();
+                            else if (header == "Export YAML from Database")
+                                mi.Click += async (s, e) => { LoadAllFromDatabase(); await _importExport?.ShowExportDialog()!; };
+                            else if (header == "Reset Database")
+                                mi.Click += (s, e) => ResetDatabase();
+                            else if (header == "Exit")
+                                mi.Click += (s, e) => this.Close();
+                        }
+                    }
+                }
+                else if (topItem.Header?.ToString() == "View")
+                {
+                    foreach (var viewItem in topItem.Items.Cast<object>())
+                    {
+                        if (viewItem is MenuItem mi)
+                        {
+                            var header = mi.Header?.ToString();
+                            if (header == "Toolbox")
+                                mi.Click += (s, e) => { if (_toolboxPanel != null) _toolboxPanel.IsVisible = !_toolboxPanel.IsVisible; };
+                            else if (header == "Properties")
+                                mi.Click += (s, e) => { if (_propertiesPanel != null) _propertiesPanel.IsVisible = !_propertiesPanel.IsVisible; };
+                            else if (header == "YAML Editor")
+                                mi.Click += (s, e) => { if (_editorPanel != null) _editorPanel.IsVisible = !_editorPanel.IsVisible; };
+                        }
+                    }
+                }
+                else if (topItem.Header?.ToString() == "Help")
+                {
+                    foreach (var helpItem in topItem.Items.Cast<object>())
+                    {
+                        if (helpItem is MenuItem mi && mi.Header?.ToString() == "About")
+                        {
+                            mi.Click += (s, e) => ShowAbout();
+                        }
+                    }
+                }
+            }
+        }
+
+        private Panel CreateYamlEditorPanel()
+        {
+            var panel = new Panel
+            {
+                Width = 780,
+                Height = 200,
+                Background = new SolidColorBrush(Colors.White)
+            };
+            Canvas.SetLeft(panel, 300);
+            Canvas.SetTop(panel, 680);
+            
+            var border = new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.Parse("#c0c0c0")),
+                BorderThickness = new Thickness(1)
+            };
+            
+            var stack = new StackPanel();
+            
+            var header = new Border
+            {
+                Background = new SolidColorBrush(Color.Parse("#e8eaf6")),
+                Padding = new Thickness(10, 5, 10, 5),
+                Child = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "📝 YAML OUTPUT",
+                            FontSize = 12,
+                            FontWeight = FontWeight.Bold,
+                            Foreground = new SolidColorBrush(Color.Parse("#3F51B5")),
+                            VerticalAlignment = VerticalAlignment.Center
+                        },
+                        new Button
+                        {
+                            Content = "▶ Preview",
+                            Margin = new Thickness(10, 0, 0, 0),
+                            Padding = new Thickness(8, 4, 8, 4),
+                            Background = new SolidColorBrush(Color.Parse("#4CAF50")),
+                            Foreground = new SolidColorBrush(Colors.White),
+                            BorderThickness = new Thickness(0),
+                            Cursor = new Cursor(StandardCursorType.Hand)
+                        }
+                    }
+                }
+            };
+            stack.Children.Add(header);
+            
+            _yamlEditor = new TextBox
+            {
+                Width = 778,
+                Height = 155,
+                FontFamily = new FontFamily("Consolas,Monaco,monospace"),
+                FontSize = 11,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.NoWrap,
+                Background = new SolidColorBrush(Color.Parse("#FAFAFA")),
+                IsReadOnly = true
+            };
+            
+            var scrollViewer = new ScrollViewer
+            {
+                Content = _yamlEditor,
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+            };
+            stack.Children.Add(scrollViewer);
+            
+            border.Child = stack;
+            panel.Children.Add(border);
+            
+            // Wire up preview button
+            var previewBtn = ((header.Child as StackPanel)?.Children[1] as Button);
+            if (previewBtn != null)
+            {
+                previewBtn.Click += (s, e) => LaunchPreview();
+            }
+            
+            return panel;
+        }
+
+	private Panel? BuildPanelFromDatabase(string panelType)
+        {
+            if (_scriptDatabase == null) return null;
+
+            try
+            {
+                var panelInfo = GetPanelDefinition(panelType);
+                if (panelInfo == null)
+                {
+                    Console.WriteLine($"❌ No panel definition found for: {panelType}");
+                    return null;
+                }
+
+                Console.WriteLine($"📦 Building {panelType} panel from database...");
+
+                var mainPanel = new Panel
+                {
+                    Width = panelInfo.Width,
+                    Height = panelInfo.Height,
+                    Background = new SolidColorBrush(Color.Parse(panelInfo.BackgroundColor))
+                };
+                
+                if (panelType == "toolbox")
+                {
+                    Canvas.SetLeft(mainPanel, 10);
+                    Canvas.SetTop(mainPanel, 30);
+                }
+                else if (panelType == "properties")
+                {
+                    Canvas.SetLeft(mainPanel, this.Width - panelInfo.Width - 10);
+                    Canvas.SetTop(mainPanel, 30);
                 }
                 else
                 {
-                    button.Content = caption.Replace("▼", "▶");
+                    Canvas.SetLeft(mainPanel, panelInfo.X);
+                    Canvas.SetTop(mainPanel, panelInfo.Y);
                 }
+                
+                var border = new Border
+                {
+                    BorderBrush = new SolidColorBrush(Color.Parse(panelInfo.BorderColor)),
+                    BorderThickness = new Thickness(1),
+                    Child = new ScrollViewer
+                    {
+                        VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                        Content = panelType == "toolbox" ? BuildToolboxContent(panelInfo.Id) : BuildPropertiesContent(panelInfo.Id)
+                    }
+                };
+                
+                mainPanel.Children.Add(border);
+                Console.WriteLine($"✅ Built {panelType} panel from database!");
+                return mainPanel;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error building {panelType} panel: {ex.Message}");
+                return null;
             }
         }
 
-	private void SetupPropertyEditors()
+        private PanelDefinition? GetPanelDefinition(string panelType)
         {
-            if (_propName != null)
+            if (_scriptDatabase == null) return null;
+
+            var sql = $@"SELECT id, x, y, width, height, background_color, border_color 
+                        FROM panel_definitions 
+                        WHERE panel_type = '{panelType}' 
+                        LIMIT 1";
+            
+            try
             {
-                _propName.LostFocus += (s, e) => UpdateControlFromProperty("name", _propName.Text);
-                _propName.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+                    $"Data Source={Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/VisualisedDesigner/designer.db");
+                connection.Open();
+                
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = sql;
+                
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    return new PanelDefinition
                     {
-                        UpdateControlFromProperty("name", _propName.Text);
-                        e.Handled = true;
-                    }
-                };
+                        Id = reader.GetInt32(0),
+                        X = reader.GetDouble(1),
+                        Y = reader.GetDouble(2),
+                        Width = reader.GetDouble(3),
+                        Height = reader.GetDouble(4),
+                        BackgroundColor = reader.GetString(5),
+                        BorderColor = reader.GetString(6)
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error reading panel definition: {ex.Message}");
             }
             
-            if (_propX != null)
-            {
-                _propX.LostFocus += (s, e) => UpdateControlFromProperty("x", _propX.Text);
-                _propX.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
-                    {
-                        UpdateControlFromProperty("x", _propX.Text);
-                        e.Handled = true;
-                    }
-                };
-            }
+            return null;
+        }
+
+        private StackPanel BuildToolboxContent(int panelId)
+        {
+            var stack = new StackPanel { Margin = new Thickness(10) };
             
-            if (_propY != null)
+            var header = new Border
             {
-                _propY.LostFocus += (s, e) => UpdateControlFromProperty("y", _propY.Text);
-                _propY.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
-                    {
-                        UpdateControlFromProperty("y", _propY.Text);
-                        e.Handled = true;
-                    }
-                };
+                Background = new SolidColorBrush(Color.Parse("#e3f2fd")),
+                Padding = new Thickness(10),
+                Margin = new Thickness(-10, -10, -10, 10),
+                Child = new TextBlock
+                {
+                    Text = "🧰 TOOLBOX",
+                    FontSize = 14,
+                    FontWeight = FontWeight.Bold,
+                    Foreground = new SolidColorBrush(Color.Parse("#1976D2")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                }
+            };
+            stack.Children.Add(header);
+
+            var controls = GetPanelControls(panelId);
+            var groupedControls = controls.GroupBy(c => c.GroupName).OrderBy(g => g.First().DisplayOrder);
+
+            foreach (var group in groupedControls)
+            {
+                var groupColor = GetGroupColor(group.Key);
+                var expander = CreateToolboxGroup($"▼ {group.Key}", groupColor);
+                var groupStack = new StackPanel { Margin = new Thickness(5) };
+                
+                foreach (var control in group.OrderBy(c => c.DisplayOrder))
+                {
+                    AddDatabaseToolboxButton(groupStack, control);
+                }
+                
+                expander.Content = groupStack;
+                expander.IsExpanded = group.First().DisplayOrder < 20;
+                stack.Children.Add(expander);
             }
+
+            return stack;
+        }
+
+        private void AddDatabaseToolboxButton(StackPanel parent, PanelControlDefinition control)
+        {
+            var button = new Button
+            {
+                Content = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new TextBlock { Text = control.Icon, FontSize = 14, Margin = new Thickness(0, 0, 8, 0), Width = 20 },
+                        new TextBlock { Text = control.Label, FontSize = 11, VerticalAlignment = VerticalAlignment.Center }
+                    }
+                },
+                Width = control.Width,
+                Height = control.Height,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 0, 4),
+                Padding = new Thickness(8, 6, 8, 6),
+                Background = new SolidColorBrush(Color.Parse("#fafafa")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#e0e0e0")),
+                BorderThickness = new Thickness(1),
+                Cursor = new Cursor(StandardCursorType.Hand)
+            };
             
-            if (_propWidth != null)
+            var controlType = control.ActionValue;
+            button.AddHandler(PointerPressedEvent, (EventHandler<PointerPressedEventArgs>)((s, e) =>
             {
-                _propWidth.LostFocus += (s, e) => UpdateControlFromProperty("width", _propWidth.Text);
-                _propWidth.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
+                if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed)
+                {
+                    _draggingControlType = controlType;
+                    
+                    var pointerPosInButton = e.GetPosition(button);
+                    _ghostOffset = new Point(pointerPosInButton.X, pointerPosInButton.Y);
+                    
+                    CreateGhostControl(controlType);
+                    
+                    if (_ghostControl != null && _designCanvas != null)
                     {
-                        UpdateControlFromProperty("width", _propWidth.Text);
-                        e.Handled = true;
+                        var pointerPosInCanvas = e.GetPosition(_designCanvas);
+                        Canvas.SetLeft(_ghostControl, pointerPosInCanvas.X - _ghostOffset.X);
+                        Canvas.SetTop(_ghostControl, pointerPosInCanvas.Y - _ghostOffset.Y);
                     }
-                };
-            }
+                    
+                    Console.WriteLine($"👻 Started dragging {controlType}");
+                }
+            }), RoutingStrategies.Tunnel);
             
-            if (_propHeight != null)
-            {
-                _propHeight.LostFocus += (s, e) => UpdateControlFromProperty("height", _propHeight.Text);
-                _propHeight.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
-                    {
-                        UpdateControlFromProperty("height", _propHeight.Text);
-                        e.Handled = true;
-                    }
-                };
-            }
+            parent.Children.Add(button);
+        }
+
+        private StackPanel BuildPropertiesContent(int panelId)
+        {
+            var stack = new StackPanel { Margin = new Thickness(10) };
             
-            if (_propCaption != null)
+            var header = new Border
             {
-                _propCaption.LostFocus += (s, e) => UpdateControlFromProperty("caption", _propCaption.Text);
-                _propCaption.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
-                    {
-                        UpdateControlFromProperty("caption", _propCaption.Text);
-                        e.Handled = true;
-                    }
-                };
-            }
+                Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
+                Padding = new Thickness(10),
+                Margin = new Thickness(-10, -10, -10, 10),
+                Child = new TextBlock
+                {
+                    Text = "⚙️ PROPERTIES",
+                    FontSize = 14,
+                    FontWeight = FontWeight.Bold,
+                    Foreground = new SolidColorBrush(Color.Parse("#2E7D32")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                }
+            };
+            stack.Children.Add(header);
             
-            if (_propText != null)
+            _selectedControlLabel = new TextBlock
             {
-                _propText.LostFocus += (s, e) => UpdateControlFromProperty("text", _propText.Text);
-                _propText.KeyDown += (s, e) => 
-                { 
-                    if (e.Key == Key.Enter) 
+                Text = "No control selected",
+                FontSize = 11,
+                FontWeight = FontWeight.Bold,
+                Foreground = new SolidColorBrush(Color.Parse("#1565C0")),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            stack.Children.Add(_selectedControlLabel);
+
+            var properties = GetPropertyDefinitions();
+            var groupedProps = properties.GroupBy(p => p.PropertyGroup).OrderBy(g => g.First().DisplayOrder);
+
+            foreach (var group in groupedProps)
+            {
+                var firstProp = group.First();
+                var groupColor = Color.Parse(firstProp.GroupColor);
+                var expander = CreatePropertyGroup($"▼ {group.Key}", groupColor);
+                var groupStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
+                
+                foreach (var prop in group.OrderBy(p => p.DisplayOrder))
+                {
+                    AddPropertyEditor(groupStack, prop);
+                }
+                
+                expander.Content = groupStack;
+                expander.IsExpanded = firstProp.GroupExpanded;
+                stack.Children.Add(expander);
+            }
+
+            return stack;
+        }
+
+	  private void AddPropertyEditor(StackPanel parent, PropertyDefinition prop)
+        {
+            if (prop.EditorType == "textbox")
+            {
+                var grid = new Grid
+                {
+                    Margin = new Thickness(0, 0, 0, 8),
+                    ColumnDefinitions = new ColumnDefinitions("70,*")
+                };
+                
+                var label = new TextBlock
+                {
+                    Text = $"{prop.PropertyLabel}:",
+                    FontSize = 11,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetColumn(label, 0);
+                grid.Children.Add(label);
+                
+                if (prop.PropertyName == "type")
+                {
+                    _propType = new TextBlock
                     {
-                        UpdateControlFromProperty("text", _propText.Text);
-                        e.Handled = true;
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.Parse("#666666")),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    Grid.SetColumn(_propType, 1);
+                    grid.Children.Add(_propType);
+                }
+                else
+                {
+                    var textBox = new TextBox
+                    {
+                        Width = 180,
+                        Height = 25,
+                        FontSize = 11,
+                        IsReadOnly = prop.IsReadonly,
+                        HorizontalAlignment = HorizontalAlignment.Left
+                    };
+                    
+                    if (prop.IsReadonly)
+                    {
+                        textBox.Foreground = new SolidColorBrush(Color.Parse("#666666"));
+                        textBox.Background = new SolidColorBrush(Color.Parse("#f5f5f5"));
+                    }
+                    else
+                    {
+                        var propName = prop.PropertyName;
+                        
+                        textBox.LostFocus += (s, e) =>
+                        {
+                            if (_selectedControl?.DatabaseId != null)
+                            {
+                                SaveControlProperty(_selectedControl.DatabaseId.Value, propName, textBox.Text ?? "");
+                                UpdateControlFromProperty(propName, textBox.Text);
+                            }
+                        };
+                        
+                        textBox.KeyDown += (s, e) =>
+                        {
+                            if (e.Key == Key.Enter)
+                            {
+                                if (_selectedControl?.DatabaseId != null)
+                                {
+                                    SaveControlProperty(_selectedControl.DatabaseId.Value, propName, textBox.Text ?? "");
+                                    UpdateControlFromProperty(propName, textBox.Text);
+                                }
+                                e.Handled = true;
+                            }
+                        };
+                    }
+                    
+                    _propertyEditors[prop.PropertyName] = textBox;
+                    Grid.SetColumn(textBox, 1);
+                    grid.Children.Add(textBox);
+                }
+                
+                parent.Children.Add(grid);
+            }
+            else if (prop.EditorType == "checkbox")
+            {
+                var checkBox = new CheckBox
+                {
+                    Content = prop.PropertyLabel,
+                    FontSize = 11,
+                    Margin = new Thickness(0, 0, 0, 8)
+                };
+                
+                var propName = prop.PropertyName;
+                
+                checkBox.Click += (s, e) =>
+                {
+                    if (_selectedControl?.DatabaseId != null)
+                    {
+                        SaveControlProperty(_selectedControl.DatabaseId.Value, propName, checkBox.IsChecked?.ToString() ?? "false");
                     }
                 };
+                
+                _propertyCheckboxes[prop.PropertyName] = checkBox;
+                parent.Children.Add(checkBox);
             }
-        }	
+        }
+
+        private List<PanelControlDefinition> GetPanelControls(int panelId)
+        {
+            var controls = new List<PanelControlDefinition>();
+            if (_scriptDatabase == null) return controls;
+
+            try
+            {
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+                    $"Data Source={Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/VisualisedDesigner/designer.db");
+                connection.Open();
+                
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = $@"
+                    SELECT control_name, label, icon, group_name, display_order, action_type, action_value, width, height
+                    FROM panel_controls 
+                    WHERE panel_id = {panelId}
+                    ORDER BY display_order";
+                
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    controls.Add(new PanelControlDefinition
+                    {
+                        ControlName = reader.GetString(0),
+                        Label = reader.GetString(1),
+                        Icon = reader.GetString(2),
+                        GroupName = reader.GetString(3),
+                        DisplayOrder = reader.GetInt32(4),
+                        ActionType = reader.GetString(5),
+                        ActionValue = reader.GetString(6),
+                        Width = reader.GetDouble(7),
+                        Height = reader.GetDouble(8)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error reading panel controls: {ex.Message}");
+            }
+
+            return controls;
+        }
+
+        private List<PropertyDefinition> GetPropertyDefinitions()
+        {
+            var properties = new List<PropertyDefinition>();
+            if (_scriptDatabase == null) return properties;
+
+            try
+            {
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+                    $"Data Source={Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/VisualisedDesigner/designer.db");
+                connection.Open();
+                
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT property_name, property_label, property_group, editor_type, 
+                           display_order, default_value, is_readonly, group_color, group_expanded
+                    FROM property_definitions 
+                    ORDER BY display_order";
+                
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    properties.Add(new PropertyDefinition
+                    {
+                        PropertyName = reader.GetString(0),
+                        PropertyLabel = reader.GetString(1),
+                        PropertyGroup = reader.GetString(2),
+                        EditorType = reader.GetString(3),
+                        DisplayOrder = reader.GetInt32(4),
+                        DefaultValue = reader.GetString(5),
+                        IsReadonly = reader.GetInt32(6) == 1,
+                        GroupColor = reader.GetString(7),
+                        GroupExpanded = reader.GetInt32(8) == 1
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error reading property definitions: {ex.Message}");
+            }
+
+            return properties;
+        }
+
+        private Dictionary<string, string> LoadControlProperties(int controlId)
+        {
+            var properties = new Dictionary<string, string>();
+            if (_scriptDatabase == null) return properties;
+
+            try
+            {
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+                    $"Data Source={Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/VisualisedDesigner/designer.db");
+                connection.Open();
+
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = $@"
+                    SELECT property_name, property_value
+                    FROM control_properties
+                    WHERE control_id = {controlId}";
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    properties[reader.GetString(0)] = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error loading control properties: {ex.Message}");
+            }
+
+            return properties;
+        }
+
+        private void SaveControlProperty(int controlId, string propertyName, string propertyValue)
+        {
+            if (_scriptDatabase == null) return;
+
+            try
+            {
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+                    $"Data Source={Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/VisualisedDesigner/designer.db");
+                connection.Open();
+
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = $@"
+                    INSERT INTO control_properties (control_id, property_name, property_value)
+                    VALUES ({controlId}, '{propertyName.Replace("'", "''")}', '{propertyValue.Replace("'", "''")}')
+                    ON CONFLICT(control_id, property_name)
+                    DO UPDATE SET property_value = '{propertyValue.Replace("'", "''")}'";
+
+                cmd.ExecuteNonQuery();
+                Console.WriteLine($"💾 Saved property: {propertyName} = {propertyValue}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error saving property: {ex.Message}");
+            }
+        }
+
+        private string GetPropertyValue(Dictionary<string, string> controlProps, string propertyName, string defaultValue)
+        {
+            return controlProps.ContainsKey(propertyName) ? controlProps[propertyName] : defaultValue;
+        }
+
+        private Color GetGroupColor(string groupName)
+        {
+            return groupName switch
+            {
+                "Common Controls" => Color.Parse("#1976D2"),
+                "Containers" => Color.Parse("#388E3C"),
+                "Lists & Data" => Color.Parse("#F57C00"),
+                "Menus & Toolbars" => Color.Parse("#7B1FA2"),
+                "Other" => Color.Parse("#5D4037"),
+                _ => Color.Parse("#757575")
+            };
+        }
+
+        private class PanelDefinition
+        {
+            public int Id { get; set; }
+            public double X { get; set; }
+            public double Y { get; set; }
+            public double Width { get; set; }
+            public double Height { get; set; }
+            public string BackgroundColor { get; set; } = "#FFFFFF";
+            public string BorderColor { get; set; } = "#c0c0c0";
+        }
+
+        private class PanelControlDefinition
+        {
+            public string ControlName { get; set; } = "";
+            public string Label { get; set; } = "";
+            public string Icon { get; set; } = "";
+            public string GroupName { get; set; } = "";
+            public int DisplayOrder { get; set; }
+            public string ActionType { get; set; } = "";
+            public string ActionValue { get; set; } = "";
+            public double Width { get; set; }
+            public double Height { get; set; }
+        }
+
+        private class PropertyDefinition
+        {
+            public string PropertyName { get; set; } = "";
+            public string PropertyLabel { get; set; } = "";
+            public string PropertyGroup { get; set; } = "";
+            public string EditorType { get; set; } = "";
+            public int DisplayOrder { get; set; }
+            public string DefaultValue { get; set; } = "";
+            public bool IsReadonly { get; set; }
+            public string GroupColor { get; set; } = "#000000";
+            public bool GroupExpanded { get; set; }
+        }
+
+// ... existing SetupCanvasSizeMenu method above ...
+        
+        // NEW RESIZE METHODS START HERE ⬇️⬇️⬇️
+        
+        private void CreateResizeHandles(Border controlBorder, DesignerControl control)
+        {
+            if (_designCanvas == null) return;
+            
+            // Remove any existing handles first
+            RemoveResizeHandles();
+            
+            var handleSize = 8.0;
+            var handleColor = Color.Parse("#2196F3");
+            var handleBorder = Colors.White;
+            
+            // 8 handle positions: NW, N, NE, E, SE, S, SW, W
+            var positions = new[]
+            {
+                ("nw", 0.0, 0.0),
+                ("n", 0.5, 0.0),
+                ("ne", 1.0, 0.0),
+                ("e", 1.0, 0.5),
+                ("se", 1.0, 1.0),
+                ("s", 0.5, 1.0),
+                ("sw", 0.0, 1.0),
+                ("w", 0.0, 0.5)
+            };
+            
+            foreach (var (direction, xRatio, yRatio) in positions)
+            {
+                var handle = new Rectangle
+                {
+                    Width = handleSize,
+                    Height = handleSize,
+                    Fill = new SolidColorBrush(handleColor),
+                    Stroke = new SolidColorBrush(handleBorder),
+                    StrokeThickness = 1,
+                    Cursor = GetResizeCursor(direction),
+                    Tag = direction,
+                    ZIndex = 1000
+                };
+                
+                var x = control.X + (control.Width * xRatio) - (handleSize / 2);
+                var y = control.Y + (control.Height * yRatio) - (handleSize / 2);
+                
+                Canvas.SetLeft(handle, x);
+                Canvas.SetTop(handle, y);
+                
+                // Handle events
+                handle.PointerPressed += (s, e) =>
+                {
+                    _activeResizeHandle = handle;
+                    _resizeDirection = handle.Tag?.ToString() ?? "";
+                    _resizeStartPoint = e.GetPosition(_designCanvas);
+                    _resizeStartSize = new Size(control.Width, control.Height);
+                    _resizeStartPosition = new Point(control.X, control.Y);
+                    e.Handled = true;
+                    Console.WriteLine($"🎯 Started resizing: {_resizeDirection}");
+                };
+                
+                _resizeHandles.Add(handle);
+                _designCanvas.Children.Add(handle);
+            }
+        }
+
+        private void RemoveResizeHandles()
+        {
+            if (_designCanvas == null) return;
+            
+            foreach (var handle in _resizeHandles)
+            {
+                _designCanvas.Children.Remove(handle);
+            }
+            _resizeHandles.Clear();
+        }
+
+        private Cursor GetResizeCursor(string direction)
+        {
+            return direction switch
+            {
+                "nw" or "se" => new Cursor(StandardCursorType.TopLeftCorner),
+                "ne" or "sw" => new Cursor(StandardCursorType.TopRightCorner),
+                "n" or "s" => new Cursor(StandardCursorType.SizeNorthSouth),
+                "e" or "w" => new Cursor(StandardCursorType.SizeWestEast),
+                _ => new Cursor(StandardCursorType.Arrow)
+            };
+        }
+
+        private void UpdateResizeHandles(DesignerControl control)
+        {
+            if (_resizeHandles.Count == 0) return;
+            
+            var handleSize = 8.0;
+            var positions = new[]
+            {
+                (0.0, 0.0),  // nw
+                (0.5, 0.0),  // n
+                (1.0, 0.0),  // ne
+                (1.0, 0.5),  // e
+                (1.0, 1.0),  // se
+                (0.5, 1.0),  // s
+                (0.0, 1.0),  // sw
+                (0.0, 0.5)   // w
+            };
+            
+            for (int i = 0; i < _resizeHandles.Count && i < positions.Length; i++)
+            {
+                var (xRatio, yRatio) = positions[i];
+                var x = control.X + (control.Width * xRatio) - (handleSize / 2);
+                var y = control.Y + (control.Height * yRatio) - (handleSize / 2);
+                
+                Canvas.SetLeft(_resizeHandles[i], x);
+                Canvas.SetTop(_resizeHandles[i], y);
+            }
+        }
+
+	private void ShowAbout()
+        {
+            var aboutWindow = new Window
+            {
+                Title = "About Visualised",
+                Width = 500,
+                Height = 400,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+            
+            var stack = new StackPanel
+            {
+                Margin = new Thickness(20)
+            };
+            
+            stack.Children.Add(new TextBlock
+            {
+                Text = "Visualised",
+                FontSize = 24,
+                FontWeight = FontWeight.Bold,
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+            
+            stack.Children.Add(new TextBlock
+            {
+                Text = "Language-Agnostic RAD IDE",
+                FontSize = 14,
+                Foreground = new SolidColorBrush(Color.Parse("#666")),
+                Margin = new Thickness(0, 0, 0, 20)
+            });
+            
+            stack.Children.Add(new TextBlock
+            {
+                Text = "Version 1.0 - Database-Driven Designer",
+                FontSize = 12,
+                Margin = new Thickness(0, 0, 0, 20)
+            });
+            
+            stack.Children.Add(new TextBlock
+            {
+                Text = "Built with recursive self-design principles.\nThe designer designs itself from SQLite.",
+                FontSize = 12,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 20)
+            });
+            
+            var okButton = new Button
+            {
+                Content = "OK",
+                Width = 100,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            okButton.Click += (s, e) => aboutWindow.Close();
+            stack.Children.Add(okButton);
+            
+            aboutWindow.Content = stack;
+            aboutWindow.ShowDialog(this);
+        }
 
         private void UpdateControlFromProperty(string property, string? value)
         {
@@ -418,162 +1508,107 @@ private void LoadDesignerUI()
             var border = _designCanvas.Children.OfType<Border>().FirstOrDefault(b => b.Tag == control);
             if (border == null) return;
             
-            var isSelected = border.BorderBrush is SolidColorBrush brush && brush.Color == Colors.Blue;
+            var isSelected = border.BorderBrush is SolidColorBrush brush && brush.Color == Color.Parse("#2196F3");
             
             _designCanvas.Children.Remove(border);
             
             var newBorder = CreateVisualControl(control);
             if (isSelected)
             {
-                newBorder.BorderBrush = new SolidColorBrush(Colors.Blue);
+                newBorder.BorderBrush = new SolidColorBrush(Color.Parse("#2196F3"));
                 newBorder.BorderThickness = new Thickness(2);
             }
             
             _designCanvas.Children.Add(newBorder);
         }
 
-        private void HookupToolboxButtons(Canvas mainCanvas)
-        {
-            Console.WriteLine("🔧 Hooking up toolbox buttons...");
-            HookupButton(mainCanvas, "PreviewButton", () => LaunchPreview());
-            SetupToolboxDrag(mainCanvas);
-            Console.WriteLine("✅ Toolbox buttons hooked up!");
-        }
-
-        private void SetupToolboxDrag(Canvas mainCanvas)
-        {
-            Console.WriteLine("🔧 Setting up toolbox drag events...");
-            
-            var toolboxButtons = new[] {
-                ("AddLabel", "label"), ("AddButton", "button"), ("AddTextBox", "textbox"),
-                ("AddCheckBox", "checkbox"), ("AddRadioButton", "radiobutton"),
-                ("AddComboBox", "combobox"), ("AddListBox", "listbox"),
-                ("AddPanel", "panel"), ("AddTabControl", "tabcontrol"),
-                ("AddMenuBar", "menubar"), ("AddToolBar", "toolbar"),
-                ("AddProgressBar", "progressbar"), ("AddTimer", "timer"),
-                ("AddData", "data"), ("AddGrid", "grid"), 
-                ("AddHScrollBar", "hscrollbar"), ("AddVScrollBar", "vscrollbar")
-            };
-
-            foreach (var (buttonName, controlType) in toolboxButtons)
-            {
-                var button = DesignerHelpers.FindControlByName<Button>(mainCanvas, buttonName);
-                if (button != null)
-                {
-                    button.AddHandler(PointerPressedEvent, (EventHandler<PointerPressedEventArgs>)((s, e) =>
-                    {
-                        if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed)
-                        {
-                            _draggingControlType = controlType;
-                            CreateGhostControl(controlType);
-                            
-                            if (_ghostControl != null && _designCanvas != null)
-                            {
-                                _ghostControl.Width = button.Bounds.Width;
-                                _ghostControl.Height = button.Bounds.Height;
-                                
-                                var buttonPos = button.TranslatePoint(new Point(0, 0), _designCanvas);
-                                if (buttonPos.HasValue)
-                                {
-                                    Canvas.SetLeft(_ghostControl, buttonPos.Value.X);
-                                    Canvas.SetTop(_ghostControl, buttonPos.Value.Y);
-                                }
-                            }
-                            
-                            Console.WriteLine($"👻 Started dragging {controlType}");
-                        }
-                    }), RoutingStrategies.Tunnel);
-                }
-            }
-            
-            Console.WriteLine("✅ Toolbox drag setup complete!");
-        }
-
-        private void HookupMenuItems(Canvas mainCanvas)
-        {
-            Console.WriteLine("🔧 Hooking up menu items...");
-            var menu = DesignerHelpers.FindControlByName<Menu>(mainCanvas, "MainMenu");
-            if (menu != null)
-            {
-                foreach (var topItem in menu.Items.Cast<MenuItem>())
-                {
-                    if (topItem.Header?.ToString() == "File")
-                    {
-                        foreach (var fileItem in topItem.Items.Cast<MenuItem>())
-                        {
-                            var header = fileItem.Header?.ToString();
-                            if (header == "Reload Form")
-                                fileItem.Click += (s, e) => LoadDesignerUI();
-                            else if (header == "Save Form...")
-                                fileItem.Click += async (s, e) => await _importExport?.ShowExportDialog()!;
-                            else if (header == "Open Form...")
-                                fileItem.Click += async (s, e) => await _importExport?.ShowImportDialog()!;
-                            else if (header == "Save to Database")
-                                fileItem.Click += (s, e) => _designerDatabase?.SaveAllToDatabase();
-                            else if (header == "Load from Database")
-                                fileItem.Click += (s, e) => LoadAllFromDatabase();
-                            else if (header == "Export YAML from Database")
-                                fileItem.Click += async (s, e) => { LoadAllFromDatabase(); await _importExport?.ShowExportDialog()!; };
-                            else if (header == "Reset Database")
-                                fileItem.Click += (s, e) => ResetDatabase();
-                        }
-                    }
-                    else if (topItem.Header?.ToString() == "View")
-                    {
-                        foreach (var viewItem in topItem.Items.Cast<MenuItem>())
-                        {
-                            var header = viewItem.Header?.ToString();
-                            if (header == "Toolbox")
-                                viewItem.Click += (s, e) => { if (_toolboxPanel != null) _toolboxPanel.IsVisible = !_toolboxPanel.IsVisible; };
-                            else if (header == "Properties")
-                                viewItem.Click += (s, e) => { if (_propertiesPanel != null) _propertiesPanel.IsVisible = !_propertiesPanel.IsVisible; };
-                            else if (header == "YAML Editor")
-                                viewItem.Click += (s, e) => { if (_editorPanel != null) _editorPanel.IsVisible = !_editorPanel.IsVisible; };
-                        }
-                    }
-                    else if (topItem.Header?.ToString() == "Help")
-                    {
-                        foreach (var helpItem in topItem.Items.Cast<MenuItem>())
-                        {
-                            if (helpItem.Header?.ToString() == "About")
-                            {
-                                helpItem.Click += (s, e) => ShowAbout();
-                            }
-                        }
-                    }
-                }
-            }
-            Console.WriteLine("✅ Menu items hooked up!");
-        }
-
-        private void ShowAbout()
-        {
-            var aboutPath = DesignerHelpers.FindYamlFile("about-form.yaml");
-            if (aboutPath != null)
-            {
-                var aboutWindow = new MainWindow(aboutPath);
-                aboutWindow.Show();
-            }
-        }
-
-        private void HookupButton(Canvas canvas, string buttonName, Action action)
-        {
-            var button = DesignerHelpers.FindControlByName<Button>(canvas, buttonName);
-            if (button != null)
-            {
-                button.Click += (s, e) => action();
-            }
-        }
-
         private void SetupCanvasEvents(Canvas canvas)
         {
-            this.PointerMoved += (s, e) =>
+            this.AddHandler(PointerMovedEvent, (EventHandler<PointerEventArgs>)((s, e) =>
             {
                 if (_draggingControlType != null && _ghostControl != null && _designCanvas != null)
                 {
                     var pos = e.GetPosition(_designCanvas);
-                    Canvas.SetLeft(_ghostControl, pos.X - (_ghostControl.Width / 2));
-                    Canvas.SetTop(_ghostControl, pos.Y - (_ghostControl.Height / 2));
+                    Canvas.SetLeft(_ghostControl, pos.X - _ghostOffset.X);
+                    Canvas.SetTop(_ghostControl, pos.Y - _ghostOffset.Y);
+                }
+
+                                if (_activeResizeHandle != null && _selectedControl != null && _designCanvas != null)
+                {
+                    var currentPos = e.GetPosition(_designCanvas);
+                    var deltaX = currentPos.X - _resizeStartPoint.X;
+                    var deltaY = currentPos.Y - _resizeStartPoint.Y;
+                    
+                    var newWidth = _resizeStartSize.Width;
+                    var newHeight = _resizeStartSize.Height;
+                    var newX = _resizeStartPosition.X;
+                    var newY = _resizeStartPosition.Y;
+                    
+                    // Calculate new dimensions based on direction
+                    switch (_resizeDirection)
+                    {
+                        case "e": // East - width only
+                            newWidth = Math.Max(30, _resizeStartSize.Width + deltaX);
+                            break;
+                        case "w": // West - width and x
+                            newWidth = Math.Max(30, _resizeStartSize.Width - deltaX);
+                            newX = _resizeStartPosition.X + (_resizeStartSize.Width - newWidth);
+                            break;
+                        case "s": // South - height only
+                            newHeight = Math.Max(20, _resizeStartSize.Height + deltaY);
+                            break;
+                        case "n": // North - height and y
+                            newHeight = Math.Max(20, _resizeStartSize.Height - deltaY);
+                            newY = _resizeStartPosition.Y + (_resizeStartSize.Height - newHeight);
+                            break;
+                        case "se": // Southeast - both
+                            newWidth = Math.Max(30, _resizeStartSize.Width + deltaX);
+                            newHeight = Math.Max(20, _resizeStartSize.Height + deltaY);
+                            break;
+                        case "sw": // Southwest
+                            newWidth = Math.Max(30, _resizeStartSize.Width - deltaX);
+                            newX = _resizeStartPosition.X + (_resizeStartSize.Width - newWidth);
+                            newHeight = Math.Max(20, _resizeStartSize.Height + deltaY);
+                            break;
+                        case "ne": // Northeast
+                            newWidth = Math.Max(30, _resizeStartSize.Width + deltaX);
+                            newHeight = Math.Max(20, _resizeStartSize.Height - deltaY);
+                            newY = _resizeStartPosition.Y + (_resizeStartSize.Height - newHeight);
+                            break;
+                        case "nw": // Northwest
+                            newWidth = Math.Max(30, _resizeStartSize.Width - deltaX);
+                            newX = _resizeStartPosition.X + (_resizeStartSize.Width - newWidth);
+                            newHeight = Math.Max(20, _resizeStartSize.Height - deltaY);
+                            newY = _resizeStartPosition.Y + (_resizeStartSize.Height - newHeight);
+                            break;
+                    }
+                    
+                    // Update the control
+                    _selectedControl.Width = newWidth;
+                    _selectedControl.Height = newHeight;
+                    _selectedControl.X = newX;
+                    _selectedControl.Y = newY;
+                    
+                    // Update the visual
+                    var border = _designCanvas.Children.OfType<Border>().FirstOrDefault(b => b.Tag == _selectedControl);
+                    if (border != null)
+                    {
+                        border.Width = newWidth;
+                        border.Height = newHeight;
+                        Canvas.SetLeft(border, newX);
+                        Canvas.SetTop(border, newY);
+                    }
+                    
+                    // Update properties panel
+                    _updatingProperties = true;
+                    if (_propertyEditors.ContainsKey("width")) _propertyEditors["width"]!.Text = newWidth.ToString("F0");
+                    if (_propertyEditors.ContainsKey("height")) _propertyEditors["height"]!.Text = newHeight.ToString("F0");
+                    if (_propertyEditors.ContainsKey("x")) _propertyEditors["x"]!.Text = newX.ToString("F0");
+                    if (_propertyEditors.ContainsKey("y")) _propertyEditors["y"]!.Text = newY.ToString("F0");
+                    _updatingProperties = false;
+                    
+                    UpdateResizeHandles(_selectedControl);
+                    return;
                 }
                 
                 if (_draggedControl != null && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && _designCanvas != null)
@@ -592,13 +1627,15 @@ private void LoadDesignerUI()
                     }
                     
                     _updatingProperties = true;
-                    if (_propX != null) _propX.Text = _draggedControl.X.ToString("F0");
-                    if (_propY != null) _propY.Text = _draggedControl.Y.ToString("F0");
+                    if (_propertyEditors.ContainsKey("x") && _propertyEditors["x"] != null)
+                        _propertyEditors["x"]!.Text = _draggedControl.X.ToString("F0");
+                    if (_propertyEditors.ContainsKey("y") && _propertyEditors["y"] != null)
+                        _propertyEditors["y"]!.Text = _draggedControl.Y.ToString("F0");
                     _updatingProperties = false;
                 }
-            };
+            }), RoutingStrategies.Tunnel);
             
-            this.PointerReleased += (s, e) =>
+            this.AddHandler(PointerReleasedEvent, (EventHandler<PointerReleasedEventArgs>)((s, e) =>
             {
                 if (_draggingControlType != null && _ghostControl != null)
                 {
@@ -611,9 +1648,12 @@ private void LoadDesignerUI()
                         if (releasePos.X >= 0 && releasePos.Y >= 0 && 
                             releasePos.X <= _designCanvas.Width && releasePos.Y <= _designCanvas.Height)
                         {
-                            Console.WriteLine($"🎯 Creating at ({releasePos.X}, {releasePos.Y})");
+                            var finalX = releasePos.X - _ghostOffset.X;
+                            var finalY = releasePos.Y - _ghostOffset.Y;
+                            
+                            Console.WriteLine($"🎯 Creating at ({finalX}, {finalY})");
                             RemoveGhostControl();
-                            AddControlAtPosition(_draggingControlType, releasePos.X, releasePos.Y);
+                            AddControlAtPosition(_draggingControlType, finalX, finalY);
                         }
                         else
                         {
@@ -624,8 +1664,22 @@ private void LoadDesignerUI()
                     
                     _draggingControlType = null;
                     Console.WriteLine($"✅ Drag complete");
+                    e.Handled = true;
                 }
-                
+                                if (_activeResizeHandle != null && _selectedControl != null)
+                {
+                    if (_designerDatabase != null)
+                    {
+                        _designerDatabase.SaveControl(_selectedControl);
+                    }
+                    UpdateYamlEditor();
+                    _activeResizeHandle = null;
+                    _resizeDirection = "";
+                    Console.WriteLine("✅ Resize complete");
+                    e.Handled = true;
+                }
+
+
                 if (_draggedControl != null)
                 {
                     if (_designerDatabase != null)
@@ -635,7 +1689,7 @@ private void LoadDesignerUI()
                     UpdateYamlEditor();
                     _draggedControl = null;
                 }
-            };
+            }), RoutingStrategies.Tunnel);
             
             canvas.PointerPressed += (s, e) =>
             {
@@ -643,12 +1697,36 @@ private void LoadDesignerUI()
                 
                 var clickedElement = e.Source as Control;
                 var clickedBorder = clickedElement as Border ?? (clickedElement?.Parent as Border);
+                
                 if (clickedBorder != null && clickedBorder.Tag is DesignerControl control)
                 {
                     SelectControl(control);
-                    _draggedControl = control;
-                    _dragStartPoint = e.GetPosition(canvas);
-                    _dragStartControlPosition = new Point(control.X, control.Y);
+                    
+                    if (e.GetCurrentPoint(canvas).Properties.IsLeftButtonPressed)
+                    {
+                        _draggedControl = control;
+                        _dragStartPoint = e.GetPosition(canvas);
+                        _dragStartControlPosition = new Point(control.X, control.Y);
+                    }
+                }
+                                else
+                {
+                    // Clicked canvas background - deselect
+                    _selectedControl = null;
+                    RemoveResizeHandles();
+                    if (_selectedControlLabel != null)
+                        _selectedControlLabel.Text = "No control selected";
+                    
+                    // Remove selection highlighting
+                    foreach (var child in canvas.Children.OfType<Border>())
+                    {
+                        child.BorderBrush = new SolidColorBrush(Color.Parse("#BDBDBD"));
+                        child.BorderThickness = new Thickness(1);
+                        var controlTag = child.Tag as DesignerControl;
+                        child.BoxShadow = controlTag?.Type == "button" ? 
+                            new BoxShadows(new BoxShadow { Blur = 2, OffsetY = 1, Color = Color.FromArgb(40, 0, 0, 0) }) : 
+                            default;
+                    }
                 }
             };
         }
@@ -782,7 +1860,13 @@ private void LoadDesignerUI()
         {
             var bgColor = !string.IsNullOrEmpty(control.BackgroundColor) 
                 ? Color.Parse(control.BackgroundColor) 
-                : Colors.White;
+                : control.Type switch
+                {
+                    "button" => Color.Parse("#e3f2fd"),
+                    "textbox" => Colors.White,
+                    "panel" => Color.Parse("#fafafa"),
+                    _ => Colors.White
+                };
             
             var mainBorder = new Border
             {
@@ -790,23 +1874,25 @@ private void LoadDesignerUI()
                 Height = control.Height,
                 Background = new SolidColorBrush(bgColor),
                 BorderBrush = new SolidColorBrush(Colors.Black),
-                BorderThickness = new Thickness(1), 
-                Tag = control
+                BorderThickness = new Thickness(1),
+                CornerRadius = control.Type == "button" ? new CornerRadius(4) : new CornerRadius(0),
+                Tag = control,
+                BoxShadow = control.Type == "button" ? new BoxShadows(new BoxShadow { Blur = 2, OffsetY = 1, Color = Color.FromArgb(40, 0, 0, 0) }) : default
             };
             Canvas.SetLeft(mainBorder, control.X);
             Canvas.SetTop(mainBorder, control.Y);
             
             var fgColor = !string.IsNullOrEmpty(control.ForegroundColor)
                 ? Color.Parse(control.ForegroundColor)
-                : Colors.Black;
+                : control.Type == "button" ? Color.Parse("#1976D2") : Colors.Black;
             
             var fontSize = control.FontSize ?? 12;
-            var fontWeight = control.FontBold ? FontWeight.Bold : FontWeight.Normal;
+            var fontWeight = control.FontBold ? FontWeight.Bold : (control.Type == "button" ? FontWeight.SemiBold : FontWeight.Normal);
             
             Control innerControl = control.Type switch
             {
                 "label" => new TextBlock { 
-                    Text = control.Name,
+                    Text = control.Caption ?? control.Name,
                     VerticalAlignment = VerticalAlignment.Center, 
                     Margin = new Thickness(5), 
                     IsHitTestVisible = false,
@@ -815,7 +1901,7 @@ private void LoadDesignerUI()
                     FontWeight = fontWeight
                 },
                 "button" => new TextBlock { 
-                    Text = control.Name,
+                    Text = control.Caption ?? control.Name,
                     VerticalAlignment = VerticalAlignment.Center, 
                     HorizontalAlignment = HorizontalAlignment.Center, 
                     IsHitTestVisible = false,
@@ -824,25 +1910,38 @@ private void LoadDesignerUI()
                     FontWeight = fontWeight
                 },
                 "textbox" => new TextBlock { 
-                    Text = control.Name,
+                    Text = string.IsNullOrEmpty(control.Text) ? control.Name : control.Text,
                     VerticalAlignment = VerticalAlignment.Center, 
                     Margin = new Thickness(5), 
-                    Foreground = new SolidColorBrush(Colors.Gray), 
+                    Foreground = string.IsNullOrEmpty(control.Text) ? new SolidColorBrush(Color.Parse("#999999")) : new SolidColorBrush(fgColor), 
                     IsHitTestVisible = false,
-                    FontSize = fontSize
+                    FontSize = fontSize,
+                    FontStyle = string.IsNullOrEmpty(control.Text) ? FontStyle.Italic : FontStyle.Normal
                 },
                 "checkbox" => new TextBlock { 
-                    Text = "☐ " + control.Name,
+                    Text = "☐ " + (control.Caption ?? control.Name),
                     VerticalAlignment = VerticalAlignment.Center, 
                     Margin = new Thickness(5), 
                     IsHitTestVisible = false,
-                    FontSize = fontSize
+                    FontSize = fontSize,
+                    Foreground = new SolidColorBrush(fgColor)
+                },
+                "panel" => new TextBlock {
+                    Text = "📦 " + control.Name,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(5),
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.Parse("#999999")),
+                    IsHitTestVisible = false
                 },
                 _ => new TextBlock { 
-                    Text = control.Name,
+                    Text = control.Caption ?? control.Name,
                     VerticalAlignment = VerticalAlignment.Center, 
                     Margin = new Thickness(5), 
-                    IsHitTestVisible = false 
+                    IsHitTestVisible = false,
+                    FontSize = fontSize,
+                    Foreground = new SolidColorBrush(fgColor)
                 }
             };
             
@@ -959,43 +2058,132 @@ private void LoadDesignerUI()
             Console.WriteLine("✅ Sent to back");
         }
 
-        private void SelectControl(DesignerControl control)
+private void SelectControl(DesignerControl control)
+    {
+        _selectedControl = control;
+        if (_designCanvas != null)
         {
-            _selectedControl = control;
-            if (_designCanvas != null)
+            var borders = _designCanvas.Children.OfType<Border>().ToList();
+            
+            Border? selectedBorder = null;
+            
+            foreach (var child in borders)
             {
-                foreach (var child in _designCanvas.Children.OfType<Border>())
+                if (child.Tag == control)
                 {
-                    if (child.Tag == control)
-                    {
-                        child.BorderBrush = new SolidColorBrush(Colors.Blue);
-                        child.BorderThickness = new Thickness(2);
-                    }
-                    else
-                    {
-                        child.BorderBrush = new SolidColorBrush(Colors.Black);
-                        child.BorderThickness = new Thickness(1);
-                    }
+                    child.BorderBrush = new SolidColorBrush(Color.Parse("#2196F3"));
+                    child.BorderThickness = new Thickness(2);
+                    child.BoxShadow = new BoxShadows(new BoxShadow 
+                    { 
+                        Blur = 8, 
+                        Color = Color.FromArgb(80, 33, 150, 243),
+                        Spread = 1
+                    });
+                    
+                    selectedBorder = child;
+                }
+                else
+                {
+                    child.BorderBrush = new SolidColorBrush(Color.Parse("#BDBDBD"));
+                    child.BorderThickness = new Thickness(1);
+                    var controlTag = child.Tag as DesignerControl;
+                    child.BoxShadow = controlTag?.Type == "button" ? 
+                        new BoxShadows(new BoxShadow { Blur = 2, OffsetY = 1, Color = Color.FromArgb(40, 0, 0, 0) }) : 
+                        default;
                 }
             }
-            if (_selectedControlLabel != null)
-            {
-                _selectedControlLabel.Text = $"{control.Name} ({control.Type})";
-            }
             
-            _updatingProperties = true;
-            if (_propType != null) _propType.Text = control.Type;
-            if (_propName != null) _propName.Text = control.Name;
-            if (_propX != null) _propX.Text = control.X.ToString("F0");
-            if (_propY != null) _propY.Text = control.Y.ToString("F0");
-            if (_propWidth != null) _propWidth.Text = control.Width.ToString("F0");
-            if (_propHeight != null) _propHeight.Text = control.Height.ToString("F0");
-            if (_propCaption != null) _propCaption.Text = control.Caption ?? "";
-            if (_propText != null) _propText.Text = control.Text ?? "";
-            if (_propBackgroundColor != null) _propBackgroundColor.Text = control.BackgroundColor ?? "";
-            if (_propForegroundColor != null) _propForegroundColor.Text = control.ForegroundColor ?? "";
-            _updatingProperties = false;
+            if (selectedBorder != null)
+            {
+                CreateResizeHandles(selectedBorder, control);
+            }
         }
+        
+        if (_selectedControlLabel != null)
+        {
+            _selectedControlLabel.Text = $"🎯 {control.Name} ({control.Type})";
+        }
+        
+        _updatingProperties = true;
+        
+        if (_propType != null) _propType.Text = control.Type;
+        
+        // Load all properties from database
+        Dictionary<string, string> controlProps = new Dictionary<string, string>();
+        if (control.DatabaseId.HasValue)
+        {
+            controlProps = LoadControlProperties(control.DatabaseId.Value);
+        }
+        
+        // Get property definitions to know defaults
+        var propDefs = GetPropertyDefinitions();
+        
+        // Populate all property editors from database or defaults
+        foreach (var propDef in propDefs)
+        {
+            var value = GetPropertyValue(controlProps, propDef.PropertyName, propDef.DefaultValue);
+            
+            if (propDef.EditorType == "textbox" && _propertyEditors.ContainsKey(propDef.PropertyName))
+            {
+                // Special handling for core properties that come from DesignerControl object
+                switch (propDef.PropertyName)
+                {
+                    case "name":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.Name ?? "";
+                        break;
+                    case "x":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.X.ToString("F0");
+                        break;
+                    case "y":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.Y.ToString("F0");
+                        break;
+                    case "width":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.Width.ToString("F0");
+                        break;
+                    case "height":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.Height.ToString("F0");
+                        break;
+                    case "caption":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.Caption ?? "";
+                        break;
+                    case "text":
+                        _propertyEditors[propDef.PropertyName]!.Text = control.Text ?? "";
+                        break;
+                    default:
+                        _propertyEditors[propDef.PropertyName]!.Text = value;
+                        break;
+                }
+            }
+            else if (propDef.EditorType == "checkbox" && _propertyCheckboxes.ContainsKey(propDef.PropertyName))
+            {
+                // Special handling for core boolean properties
+                switch (propDef.PropertyName)
+                {
+                    case "visible":
+                        _propertyCheckboxes[propDef.PropertyName]!.IsChecked = control.Visible;
+                        break;
+                    case "enabled":
+                        _propertyCheckboxes[propDef.PropertyName]!.IsChecked = control.Enabled;
+                        break;
+                    case "font_bold":
+                        _propertyCheckboxes[propDef.PropertyName]!.IsChecked = control.FontBold;
+                        break;
+                    case "font_italic":
+                        _propertyCheckboxes[propDef.PropertyName]!.IsChecked = control.FontItalic;
+                        break;
+                    case "font_underline":
+                        _propertyCheckboxes[propDef.PropertyName]!.IsChecked = control.FontUnderline;
+                        break;
+                    default:
+                        _propertyCheckboxes[propDef.PropertyName]!.IsChecked = bool.Parse(value);
+                        break;
+                }
+            }
+        }
+        
+        _updatingProperties = false;
+    }
+
 
         private void UpdateYamlEditor()
         {
@@ -1035,339 +2223,39 @@ private void LoadDesignerUI()
             UpdateYamlEditor();
         }
 
-private void AddPropertyRow(StackPanel parent, string label, ref TextBox? textBox, bool isReadOnly = false, double width = 205)
+        private void ResetDatabase()
         {
-            var grid = new Grid
-            {
-                Margin = new Thickness(0, 0, 0, 8),
-                ColumnDefinitions = new ColumnDefinitions("70,*")
-            };
+            if (_designerDatabase == null || _designCanvas == null) return;
             
-            var labelControl = new TextBlock
-            {
-                Text = label,
-                FontSize = 11,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            Grid.SetColumn(labelControl, 0);
-            grid.Children.Add(labelControl);
-            
-            textBox = new TextBox
-            {
-                Width = width,
-                Height = 25,
-                FontSize = 11,
-                IsReadOnly = isReadOnly,
-                HorizontalAlignment = HorizontalAlignment.Left
-            };
-            
-            if (isReadOnly)
-            {
-                textBox.Foreground = new SolidColorBrush(Color.Parse("#666666"));
-                textBox.Background = new SolidColorBrush(Color.Parse("#f5f5f5"));
-            }
-            
-            Grid.SetColumn(textBox, 1);
-            grid.Children.Add(textBox);
-            
-            parent.Children.Add(grid);
+            _designerDatabase.ResetDatabase();
+            _designerControls.Clear();
+            _designCanvas.Children.Clear();
+            UpdateYamlEditor();
         }
 
-        private void AddPropertyRowLabel(StackPanel parent, string label, ref TextBlock? textBlock)
+        private Expander CreateToolboxGroup(string header, Color color)
         {
-            var grid = new Grid
+            var expander = new Expander
             {
-                Margin = new Thickness(0, 0, 0, 8),
-                ColumnDefinitions = new ColumnDefinitions("70,*")
-            };
-            
-            var labelControl = new TextBlock
-            {
-                Text = label,
-                FontSize = 11,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            Grid.SetColumn(labelControl, 0);
-            grid.Children.Add(labelControl);
-            
-            textBlock = new TextBlock
-            {
-                FontSize = 11,
-                Foreground = new SolidColorBrush(Color.Parse("#666666")),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            Grid.SetColumn(textBlock, 1);
-            grid.Children.Add(textBlock);
-            
-            parent.Children.Add(grid);
-        }
-
-        private void AddSeparator(StackPanel parent)
-        {
-            var separator = new Border
-            {
-                Height = 1,
-                Background = new SolidColorBrush(Color.Parse("#e0e0e0")),
-                Margin = new Thickness(0, 10, 0, 10)
-            };
-            parent.Children.Add(separator);
-        }
-
-        private void AddCheckBoxRow(StackPanel parent, string label, ref CheckBox? checkBox)
-        {
-            checkBox = new CheckBox
-            {
-                Content = label,
-                FontSize = 11,
+                IsExpanded = true,
                 Margin = new Thickness(0, 0, 0, 8)
             };
-            parent.Children.Add(checkBox);
-        }
-
-        private Panel CreatePropertiesPanel()
-        {
-            var mainPanel = new Panel
-            {
-                Width = 300,
-                Height = 870,
-                Background = new SolidColorBrush(Colors.White)
-            };
             
-            Canvas.SetLeft(mainPanel, 1100);
-            Canvas.SetTop(mainPanel, 30);
-            
-            var border = new Border
+            var headerBorder = new Border
             {
-                BorderBrush = new SolidColorBrush(Color.Parse("#c0c0c0")),
-                BorderThickness = new Thickness(1),
-                Child = new ScrollViewer
-                {
-                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-                    Content = CreatePropertiesContent()
-                }
-            };
-            
-            mainPanel.Children.Add(border);
-            return mainPanel;
-        }
-
-private StackPanel CreatePropertiesContent()
-        {
-            var stack = new StackPanel
-            {
-                Margin = new Thickness(10)
-            };
-            
-            // Header
-            var header = new Border
-            {
-                Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
-                Padding = new Thickness(10),
-                Margin = new Thickness(-10, -10, -10, 10),
+                Background = new SolidColorBrush(Color.FromArgb(30, color.R, color.G, color.B)),
+                Padding = new Thickness(8, 6, 8, 6),
                 Child = new TextBlock
                 {
-                    Text = "⚙️ PROPERTIES",
-                    FontSize = 14,
-                    FontWeight = FontWeight.Bold,
-                    Foreground = new SolidColorBrush(Color.Parse("#2E7D32")),
-                    HorizontalAlignment = HorizontalAlignment.Center
+                    Text = header,
+                    FontSize = 11,
+                    FontWeight = FontWeight.SemiBold,
+                    Foreground = new SolidColorBrush(color)
                 }
             };
-            stack.Children.Add(header);
             
-            // Selected control label
-            _selectedControlLabel = new TextBlock
-            {
-                Text = "No control selected",
-                FontSize = 11,
-                FontWeight = FontWeight.Bold,
-                Foreground = new SolidColorBrush(Color.Parse("#1565C0")),
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-            stack.Children.Add(_selectedControlLabel);
-            
-            // ═══════════════════════════════════════
-            // IDENTITY GROUP
-            // ═══════════════════════════════════════
-            var identityExpander = CreatePropertyGroup("▼ Identity", Color.Parse("#1976D2"));
-            var identityStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            AddPropertyRowLabel(identityStack, "Type:", ref _propType);
-            AddPropertyRow(identityStack, "Name:", ref _propName);
-            
-            identityExpander.Content = identityStack;
-            stack.Children.Add(identityExpander);
-            
-            // ═══════════════════════════════════════
-            // POSITION GROUP
-            // ═══════════════════════════════════════
-            var positionExpander = CreatePropertyGroup("▼ Position", Color.Parse("#388E3C"));
-            var positionStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            // X and Y on same row
-            var posGrid = new Grid
-            {
-                Margin = new Thickness(0, 0, 0, 8),
-                ColumnDefinitions = new ColumnDefinitions("60,60,30,60")
-            };
-            
-            var xLabel = new TextBlock { Text = "X:", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetColumn(xLabel, 0);
-            posGrid.Children.Add(xLabel);
-            
-            _propX = new TextBox { Width = 60, Height = 25, FontSize = 11 };
-            Grid.SetColumn(_propX, 1);
-            posGrid.Children.Add(_propX);
-            
-            var yLabel = new TextBlock { Text = "Y:", FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
-            Grid.SetColumn(yLabel, 2);
-            posGrid.Children.Add(yLabel);
-            
-            _propY = new TextBox { Width = 60, Height = 25, FontSize = 11 };
-            Grid.SetColumn(_propY, 3);
-            posGrid.Children.Add(_propY);
-            
-            positionStack.Children.Add(posGrid);
-            
-            positionExpander.Content = positionStack;
-            stack.Children.Add(positionExpander);
-            
-            // ═══════════════════════════════════════
-            // SIZE GROUP
-            // ═══════════════════════════════════════
-            var sizeExpander = CreatePropertyGroup("▼ Size", Color.Parse("#F57C00"));
-            var sizeStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            // Width and Height on same row
-            var sizeGrid = new Grid
-            {
-                Margin = new Thickness(0, 0, 0, 8),
-                ColumnDefinitions = new ColumnDefinitions("60,60,40,60")
-            };
-            
-            var wLabel = new TextBlock { Text = "Width:", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetColumn(wLabel, 0);
-            sizeGrid.Children.Add(wLabel);
-            
-            _propWidth = new TextBox { Width = 60, Height = 25, FontSize = 11 };
-            Grid.SetColumn(_propWidth, 1);
-            sizeGrid.Children.Add(_propWidth);
-            
-            var hLabel = new TextBlock { Text = "Height:", FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(5, 0, 0, 0) };
-            Grid.SetColumn(hLabel, 2);
-            sizeGrid.Children.Add(hLabel);
-            
-            _propHeight = new TextBox { Width = 60, Height = 25, FontSize = 11 };
-            Grid.SetColumn(_propHeight, 3);
-            sizeGrid.Children.Add(_propHeight);
-            
-            sizeStack.Children.Add(sizeGrid);
-            
-            sizeExpander.Content = sizeStack;
-            stack.Children.Add(sizeExpander);
-            
-            // ═══════════════════════════════════════
-            // CONTENT GROUP
-            // ═══════════════════════════════════════
-            var contentExpander = CreatePropertyGroup("▼ Content", Color.Parse("#7B1FA2"));
-            var contentStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            AddPropertyRow(contentStack, "Caption:", ref _propCaption, width: 180);
-            AddPropertyRow(contentStack, "Text:", ref _propText, width: 180);
-            
-            contentExpander.Content = contentStack;
-            stack.Children.Add(contentExpander);
-            
-            // ═══════════════════════════════════════
-            // APPEARANCE GROUP
-            // ═══════════════════════════════════════
-            var appearanceExpander = CreatePropertyGroup("▼ Appearance", Color.Parse("#C62828"));
-            var appearanceStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            AddPropertyRow(appearanceStack, "BgColor:", ref _propBackgroundColor, width: 180);
-            AddPropertyRow(appearanceStack, "FgColor:", ref _propForegroundColor, width: 180);
-            
-            appearanceExpander.Content = appearanceStack;
-            stack.Children.Add(appearanceExpander);
-            
-            // ═══════════════════════════════════════
-            // FONT GROUP
-            // ═══════════════════════════════════════
-            var fontExpander = CreatePropertyGroup("▼ Font", Color.Parse("#00796B"));
-            var fontStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            AddPropertyRow(fontStack, "Family:", ref _propFontFamily, width: 180);
-            
-            // Size and Bold on same row
-            var fontGrid = new Grid
-            {
-                Margin = new Thickness(0, 0, 0, 8),
-                ColumnDefinitions = new ColumnDefinitions("60,60,*")
-            };
-            
-            var sizeLabel = new TextBlock { Text = "Size:", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetColumn(sizeLabel, 0);
-            fontGrid.Children.Add(sizeLabel);
-            
-            _propFontSize = new TextBox { Width = 60, Height = 25, FontSize = 11 };
-            Grid.SetColumn(_propFontSize, 1);
-            fontGrid.Children.Add(_propFontSize);
-            
-            _propFontBold = new CheckBox { Content = "Bold", FontSize = 11, Margin = new Thickness(10, 0, 0, 0) };
-            Grid.SetColumn(_propFontBold, 2);
-            fontGrid.Children.Add(_propFontBold);
-            
-            fontStack.Children.Add(fontGrid);
-            
-            fontExpander.Content = fontStack;
-            stack.Children.Add(fontExpander);
-            
-            // ═══════════════════════════════════════
-            // BEHAVIOR GROUP
-            // ═══════════════════════════════════════
-            var behaviorExpander = CreatePropertyGroup("▼ Behavior", Color.Parse("#5D4037"));
-            var behaviorStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            var stateGrid = new Grid
-            {
-                Margin = new Thickness(0, 0, 0, 8),
-                ColumnDefinitions = new ColumnDefinitions("*,*")
-            };
-            
-            _propVisible = new CheckBox { Content = "Visible", FontSize = 11 };
-            Grid.SetColumn(_propVisible, 0);
-            stateGrid.Children.Add(_propVisible);
-            
-            _propEnabled = new CheckBox { Content = "Enabled", FontSize = 11 };
-            Grid.SetColumn(_propEnabled, 1);
-            stateGrid.Children.Add(_propEnabled);
-            
-            behaviorStack.Children.Add(stateGrid);
-            
-            behaviorExpander.Content = behaviorStack;
-            stack.Children.Add(behaviorExpander);
-            
-            // ═══════════════════════════════════════
-            // SCRIPTS GROUP
-            // ═══════════════════════════════════════
-            var scriptsExpander = CreatePropertyGroup("▼ Scripts", Color.Parse("#E65100"));
-            var scriptsStack = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
-            
-            var scriptsInfo = new TextBlock
-            {
-                Text = "Right-click control → Edit Scripts",
-                FontSize = 10,
-                FontStyle = FontStyle.Italic,
-                Foreground = new SolidColorBrush(Color.Parse("#757575")),
-                TextWrapping = TextWrapping.Wrap
-            };
-            scriptsStack.Children.Add(scriptsInfo);
-            
-            scriptsExpander.Content = scriptsStack;
-            scriptsExpander.IsExpanded = false; // Collapsed by default
-            stack.Children.Add(scriptsExpander);
-            
-            return stack;
+            expander.Header = headerBorder;
+            return expander;
         }
 
         private Expander CreatePropertyGroup(string header, Color color)
@@ -1392,20 +2280,139 @@ private StackPanel CreatePropertiesContent()
             };
             
             expander.Header = headerBorder;
-            
             return expander;
         }
 
-        private void ResetDatabase()
+        private void SetupCanvasSizeMenu(Menu menu)
         {
-            if (_designerDatabase == null || _designCanvas == null) return;
-            
-            _designerDatabase.ResetDatabase();
-            _designerControls.Clear();
-            _designCanvas.Children.Clear();
-            UpdateYamlEditor();
+            foreach (var topItem in menu.Items.Cast<MenuItem>())
+            {
+                if (topItem.Header?.ToString() == "View")
+                {
+                    var canvasSizeMenu = new MenuItem { Header = "Canvas Size" };
+                    
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "800x600 (Default)", 800, 600);
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "1024x768 (XGA)", 1024, 768);
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "1280x720 (HD)", 1280, 720);
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "1920x1080 (Full HD)", 1920, 1080);
+                    
+                    canvasSizeMenu.Items.Add(new Separator());
+                    
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "375x667 (iPhone SE)", 375, 667);
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "390x844 (iPhone 13)", 390, 844);
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "412x915 (Android)", 412, 915);
+                    AddCanvasSizeMenuItem(canvasSizeMenu, "768x1024 (iPad)", 768, 1024);
+                    
+                    canvasSizeMenu.Items.Add(new Separator());
+                    
+                    var customItem = new MenuItem { Header = "Custom Size..." };
+                    customItem.Click += async (s, e) => await ShowCustomCanvasSizeDialog();
+                    canvasSizeMenu.Items.Add(customItem);
+                    
+                    topItem.Items.Add(canvasSizeMenu);
+                    break;
+                }
+            }
         }
-
-
+        
+        private void AddCanvasSizeMenuItem(MenuItem parent, string label, double width, double height)
+        {
+            var item = new MenuItem { Header = label };
+            item.Click += (s, e) => SetCanvasSize(width, height);
+            parent.Items.Add(item);
+        }
+        
+        private void SetCanvasSize(double width, double height)
+        {
+            if (_designCanvas == null) return;
+            
+            _designCanvas.Width = width;
+            _designCanvas.Height = height;
+            
+            Console.WriteLine($"✅ Canvas resized to {width}x{height}");
+        }
+        
+        private async System.Threading.Tasks.Task ShowCustomCanvasSizeDialog()
+        {
+            var dialog = new Window
+            {
+                Title = "Custom Canvas Size",
+                Width = 350,
+                Height = 200,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+            
+            var stack = new StackPanel
+            {
+                Margin = new Thickness(20)
+            };
+            
+            var title = new TextBlock
+            {
+                Text = "Enter custom canvas dimensions:",
+                FontSize = 13,
+                FontWeight = FontWeight.SemiBold,
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            stack.Children.Add(title);
+            
+            var widthPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            widthPanel.Children.Add(new TextBlock { Text = "Width:", Width = 60, VerticalAlignment = VerticalAlignment.Center });
+            var widthBox = new TextBox { Width = 100, Text = _designCanvas?.Width.ToString() ?? "800" };
+            widthPanel.Children.Add(widthBox);
+            widthPanel.Children.Add(new TextBlock { Text = " px", Margin = new Thickness(5, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
+            stack.Children.Add(widthPanel);
+            
+            var heightPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            heightPanel.Children.Add(new TextBlock { Text = "Height:", Width = 60, VerticalAlignment = VerticalAlignment.Center });
+            var heightBox = new TextBox { Width = 100, Text = _designCanvas?.Height.ToString() ?? "600" };
+            heightPanel.Children.Add(heightBox);
+            heightPanel.Children.Add(new TextBlock { Text = " px", Margin = new Thickness(5, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
+            stack.Children.Add(heightPanel);
+            
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+            
+            var okButton = new Button
+            {
+                Content = "OK",
+                Width = 80,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+            okButton.Click += (s, e) =>
+            {
+                if (double.TryParse(widthBox.Text, out double w) && double.TryParse(heightBox.Text, out double h))
+                {
+                    SetCanvasSize(w, h);
+                    dialog.Close();
+                }
+            };
+            
+            var cancelButton = new Button
+            {
+                Content = "Cancel",
+                Width = 80
+            };
+            cancelButton.Click += (s, e) => dialog.Close();
+            
+            buttonPanel.Children.Add(okButton);
+            buttonPanel.Children.Add(cancelButton);
+            stack.Children.Add(buttonPanel);
+            
+            dialog.Content = stack;
+            await dialog.ShowDialog(this);
+        }
     }
-}
+}	

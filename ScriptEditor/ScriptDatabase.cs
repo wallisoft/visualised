@@ -85,6 +85,26 @@ namespace ConfigUI
             Console.WriteLine($"✅ Database initialized at: {_dbPath}");
         }
 
+        // ========== GENERIC SQL EXECUTION METHODS ==========
+        
+        public void ExecuteSql(string sql)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = sql;
+            cmd.ExecuteNonQuery();
+        }
+
+        public object? ExecuteScalarSql(string sql)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = sql;
+            return cmd.ExecuteScalar();
+        }
+
         // ========== CONTROL METHODS ==========
 
         public int SaveControl(string type, string name, int? parentId, double x, double y, 

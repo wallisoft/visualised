@@ -1,29 +1,11 @@
-# Build artifacts
 bin/
 obj/
-*.dll
-*.exe
-*.pdb
-
-# User data
-*.db
-*.db-journal
-
-# Backups and temp
-*.bak
-*.backup
-*.tmp
-*.swp
-*~
-
-# IDE
 .vs/
 .vscode/
-.idea/
-
-# OS
+*.user
+*.suo
+*.swp
+*~
 .DS_Store
-Thumbs.db
-
-# Logs
-*.log
+*.bak
+*.tmp

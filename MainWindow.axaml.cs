@@ -706,6 +706,48 @@ private Control CreateTabControl(Dictionary<object, object> data)
                 }
             };
             
+	            foreach (var kvp in _controls)
+        {
+            var controlName = kvp.Key;
+            var control = kvp.Value;
+
+            try
+            {
+                if (control is TextBox tb)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = tb.Text ?? "";
+                }
+                else if (control is TextBlock label)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = label.Text ?? "";
+                }
+                else if (control is CheckBox cb)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = cb.IsChecked?.ToString() ?? "false";
+                }
+                else if (control is Button btn)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = btn.Content?.ToString() ?? "";
+                }
+                else if (control is ComboBox combo)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = combo.SelectedItem?.ToString() ?? "";
+                }
+                else if (control is RadioButton radio)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = radio.IsChecked?.ToString() ?? "false";
+                }
+                else if (control is ListBox listBox)
+                {
+                    process.StartInfo.Environment[$"ctrl_{controlName}"] = listBox.SelectedItem?.ToString() ?? "";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Could not export {controlName}: {ex.Message}");
+            }
+        }
+
             process.Start();
             string output = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
@@ -738,11 +780,103 @@ private Control CreateTabControl(Dictionary<object, object> data)
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => this.Close());
             }
+	            else if (line.StartsWith("__SET__"))
+        {
+            try
+            {
+                // Format: __SET__ controlName propertyName value
+                var parts = line.Substring(7).Trim().Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 3)
+                {
+                    var controlName = parts[0];
+                    var propertyName = parts[1];
+                    var value = parts[2].Trim('\'', '"'); // Remove quotes
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        SetControlProperty(controlName, propertyName, value);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Failed to parse __SET__ command: {ex.Message}");
+            }
+        }
             else
             {
                 Console.WriteLine(line);
             }
         }
     }
+    private void SetControlProperty(string controlName, string propertyName, string value)
+    {
+        if (!_controls.ContainsKey(controlName))
+        {
+            Console.WriteLine($"⚠️ Control not found: {controlName}");
+            return;
+        }
+        
+        var control = _controls[controlName];
+        
+        try
+        {
+            switch (propertyName.ToLower())
+            {
+                case "text":
+                    if (control is TextBox tb)
+                        tb.Text = value;
+                    else if (control is TextBlock label)
+                        label.Text = value;
+                    else if (control is Button btn)
+                        btn.Content = value;
+                    Console.WriteLine($"✅ Set {controlName}.Text = '{value}'");
+                    break;
+                    
+                case "caption":
+                    if (control is TextBlock label2)
+                        label2.Text = value;
+                    else if (control is Button btn2)
+                        btn2.Content = value;
+                    Console.WriteLine($"✅ Set {controlName}.Caption = '{value}'");
+                    break;
+                    
+                case "visible":
+                    control.IsVisible = bool.Parse(value);
+                    Console.WriteLine($"✅ Set {controlName}.Visible = {value}");
+                    break;
+                    
+                case "enabled":
+                    control.IsEnabled = bool.Parse(value);
+                    Console.WriteLine($"✅ Set {controlName}.Enabled = {value}");
+                    break;
+                    
+                case "checked":
+                    if (control is CheckBox cb)
+                        cb.IsChecked = bool.Parse(value);
+                    else if (control is RadioButton rb)
+                        rb.IsChecked = bool.Parse(value);
+                    Console.WriteLine($"✅ Set {controlName}.Checked = {value}");
+                    break;
+                    
+                case "selectedindex":
+                    if (control is ComboBox combo)
+                        combo.SelectedIndex = int.Parse(value);
+                    else if (control is ListBox listBox)
+                        listBox.SelectedIndex = int.Parse(value);
+                    Console.WriteLine($"✅ Set {controlName}.SelectedIndex = {value}");
+                    break;
+                    
+                default:
+                    Console.WriteLine($"⚠️ Unknown property: {propertyName}");
+                    break;
+            }               
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Failed to set {controlName}.{propertyName}: {ex.Message}");
+        }
+    }
     }
 }
+    

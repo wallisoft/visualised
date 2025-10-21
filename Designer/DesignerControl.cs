@@ -18,6 +18,8 @@ namespace ConfigUI.Designer
         public string? FontFamily { get; set; }
         public double? FontSize { get; set; } = 12;
         public bool FontBold { get; set; } = false;
+	public bool FontItalic { get; set; } = false;    
+        public bool FontUnderline { get; set; } = false;  
         public string? Caption { get; set; }
         public string? Text { get; set; }
         public string Alignment { get; set; } = "Left";
