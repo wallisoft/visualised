@@ -1,0 +1,8 @@
+# Designer Window Configuration
+Title=Visualised Form Editor
+Width=1361
+Height=761
+MenuTemplate=VisualisedFormEditor
+ContextMenuTemplate=VisualisedEditor
+
+
