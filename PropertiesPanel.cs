@@ -199,7 +199,7 @@ public class PropertiesPanel
                     Text = currentValue?.ToString() ?? "0",
                     Width = 50,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(2)
+                    Padding = new Avalonia.Thickness(3, 1, 3, 1)
                 };
                 
                 numBox.KeyDown += (s, e) =>
@@ -240,7 +240,7 @@ public class PropertiesPanel
                     Text = currentValue?.ToString() ?? "",
                     Width = 60,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(2),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
                 };
                 
                 // Enter key = save and focus next
@@ -305,7 +305,7 @@ public class PropertiesPanel
                     Text = $"{thickness.Left},{thickness.Top},{thickness.Right},{thickness.Bottom}",
                     Width = 60,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(2),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
                     Watermark = "L,T,R,B"
                 };
                 thickBox.LostFocus += (s, e) =>
@@ -332,7 +332,7 @@ public class PropertiesPanel
                     Text = currentValue?.ToString() ?? "#FFF",
                     Width = 50,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(2),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
                     Watermark = "#RGB"
                 };
                 colorBox.LostFocus += (s, e) =>
@@ -367,7 +367,7 @@ public class PropertiesPanel
                     FontStyle = FontStyle.Italic,
                     VerticalAlignment = VerticalAlignment.Center,
                     MaxWidth = 60,
-                    Padding = new Avalonia.Thickness(2),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
                     TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
                 };
                 editor = display;
