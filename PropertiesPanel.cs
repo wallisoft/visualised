@@ -58,7 +58,16 @@ public class PropertiesPanel
             
             if (name == "ZIndex" || name == "BuildOrder" || name == "Tag")
                 groups["Custom"].Add(prop);
-            else if (new[] { "Name", "Content", "Text", "IsEnabled", "IsVisible" }.Contains(name))
+            else if (new[] { 
+                "Name",           // Identity
+                "Content", "Text", // Content  
+                "Width", "Height", // Dimensions
+                "Margin", "Padding", // Spacing
+                "HorizontalAlignment", "VerticalAlignment", // Alignment
+                "Background", "Foreground", // Appearance
+                "FontSize", "FontWeight", // Text Style
+                "IsVisible", "IsEnabled" // State
+            }.Contains(name))
                 groups["Common"].Add(prop);
             else if (name.Contains("Width") || name.Contains("Height") || name.Contains("Margin") || 
                      name.Contains("Padding") || name.Contains("Alignment") || name.Contains("Stretch"))
@@ -335,6 +344,7 @@ public class PropertiesPanel
         }
     }
 }
+
 
 
 
