@@ -10,7 +10,14 @@ public static class PropertyStore
 {
     private static string GetDbPath()
     {
-        // Check if running from system install location
+        // 1. Check for local database (dev/testing)
+        var localDb = Path.Combine(Directory.GetCurrentDirectory(), "visualised.db");
+        if (File.Exists(localDb))
+        {
+            return localDb;
+        }
+
+        // 2. Check if running from system install location
         var exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
         var exeDir = Path.GetDirectoryName(exePath);
         
@@ -21,29 +28,31 @@ public static class PropertyStore
         {
             // System-wide install: /var/lib/visualised/
             var dbPath = "/var/lib/visualised/visualised.db";
-            var dbDir = Path.GetDirectoryName(dbPath);
+            if (File.Exists(dbPath))
+            {
+                return dbPath;
+            }
             
             // Try to create system directory (needs sudo/root)
+            var dbDir = Path.GetDirectoryName(dbPath);
             if (!Directory.Exists(dbDir))
             {
                 try
                 {
                     Directory.CreateDirectory(dbDir!);
+                    return dbPath;
                 }
                 catch
                 {
                     // Fallback to user dir if cant write to /var/lib
-                    goto UserInstall;
                 }
             }
-            return dbPath;
         }
         
-        UserInstall:
-        // User install or fallback: ~/.visualised/
+        // 3. User install or fallback: ~/.config/visualised/
         return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".visualised",
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "visualised",
             "visualised.db"
         );
     }

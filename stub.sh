@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO="https://github.com/wallisoft/visualised"
+DB_FILE="visualised.db"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local}"
 SYSTEM_INSTALL=false
 
@@ -10,6 +10,15 @@ echo "║  Visualised Markup Installer v1.0     ║"
 echo "╚════════════════════════════════════════╝"
 echo ""
 
+# Check for database
+if [ ! -f "$DB_FILE" ]; then
+    echo "✗ visualised.db not found!"
+    echo ""
+    echo "Download it first:"
+    echo "  curl -O https://raw.githubusercontent.com/wallisoft/visualised/main/visualised.db"
+    exit 1
+fi
+
 # Check for sudo/root for system install
 if [ "$EUID" -eq 0 ] || [ "$1" = "--system" ]; then
     SYSTEM_INSTALL=true
@@ -17,7 +26,7 @@ if [ "$EUID" -eq 0 ] || [ "$1" = "--system" ]; then
     DB_DIR="/var/lib/visualised"
     echo "→ System-wide install to $INSTALL_DIR"
 else
-    DB_DIR="$HOME/.visualised"
+    DB_DIR="$HOME/.config/visualised"
     echo "→ User install to $INSTALL_DIR"
 fi
 
@@ -25,19 +34,39 @@ fi
 echo ""
 echo "Checking dependencies..."
 command -v dotnet >/dev/null 2>&1 || { echo "✗ .NET 9 SDK required. Install from: https://dot.net"; exit 1; }
-command -v git >/dev/null 2>&1 || { echo "✗ git required"; exit 1; }
+command -v sqlite3 >/dev/null 2>&1 || { echo "✗ sqlite3 required"; exit 1; }
 echo "✓ Dependencies OK"
 
-# Clone or download
+# Extract source from database
 echo ""
-if [ ! -d "visualised-src" ]; then
-    echo "Downloading source..."
-    git clone --depth 1 "$REPO" visualised-src
-else
-    echo "Using existing source (visualised-src/)"
-fi
+echo "Extracting source from database..."
+rm -rf /tmp/vb-build
+mkdir -p /tmp/vb-build
+cd /tmp/vb-build
 
-cd visualised-src
+# Extract all files using Python (handles binary properly)
+python3 << 'ENDPYTHON'
+import sqlite3
+import os
+
+conn = sqlite3.connect("${DB_FILE}")
+cursor = conn.cursor()
+
+cursor.execute("SELECT path, content FROM source_files")
+for row in cursor.fetchall():
+    filepath, content = row
+    dirpath = os.path.dirname(filepath)
+    if dirpath:
+        os.makedirs(dirpath, exist_ok=True)
+    
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"  → {filepath}")
+
+conn.close()
+ENDPYTHON
+
+echo "✓ Extracted $(find . -type f | wc -l) files"
 
 # Build
 echo ""
@@ -47,31 +76,18 @@ echo "✓ Build successful"
 
 # Install binary
 echo ""
-echo "Installing binary..."
+echo "Installing..."
 mkdir -p "$INSTALL_DIR/bin"
 cp bin/Release/net9.0/VB "$INSTALL_DIR/bin/"
 cp bin/Release/net9.0/*.dll "$INSTALL_DIR/bin/" 2>/dev/null || true
 chmod +x "$INSTALL_DIR/bin/VB"
-echo "✓ Installed to $INSTALL_DIR/bin/VB"
 
-# Install VML files
-echo "Installing VML files..."
-mkdir -p "$INSTALL_DIR/share/visualised/vml"
-cp vml/*.vml "$INSTALL_DIR/share/visualised/vml/"
-# Copy VML flat to bin directory for runtime access
+# Install VML files (copied flat to bin for runtime)
 cp vml/*.vml "$INSTALL_DIR/bin/"
-echo "✓ VML files installed"
 
-# Setup database
-echo ""
-echo "Setting up database..."
+# Setup runtime database
 mkdir -p "$DB_DIR"
-if [ -f "seed.db" ]; then
-    cp seed.db "$DB_DIR/visualised.db"
-else
-    echo "Warning: seed.db not found, creating empty database"
-    sqlite3 "$DB_DIR/visualised.db" "CREATE TABLE properties (control_name TEXT, property_name TEXT, property_value TEXT, PRIMARY KEY (control_name, property_name));"
-fi
+cp "${DB_FILE}" "$DB_DIR/visualised.db"
 
 if [ "$SYSTEM_INSTALL" = true ]; then
     chmod 755 "$DB_DIR"
@@ -80,7 +96,6 @@ else
     chmod 700 "$DB_DIR"
     chmod 600 "$DB_DIR/visualised.db"
 fi
-echo "✓ Database: $DB_DIR/visualised.db"
 
 # Add to PATH (user install only)
 if [ "$SYSTEM_INSTALL" = false ]; then
@@ -94,6 +109,10 @@ if [ "$SYSTEM_INSTALL" = false ]; then
     fi
 fi
 
+# Cleanup
+cd /
+rm -rf /tmp/vb-build
+
 echo ""
 echo "╔════════════════════════════════════════╗"
 echo "║  Installation Complete! ✓              ║"
@@ -101,7 +120,6 @@ echo "╚═══════════════════════�
 echo ""
 echo "Binary:   $INSTALL_DIR/bin/VB"
 echo "Database: $DB_DIR/visualised.db"
-echo "VML:      $INSTALL_DIR/share/visualised/vml/"
 echo ""
 if [ "$SYSTEM_INSTALL" = false ]; then
     echo "Run: source ~/.bashrc && VB"
@@ -109,3 +127,4 @@ else
     echo "Run: VB"
 fi
 echo ""
+echo "The database contains full source - VB is self-replicating!"
