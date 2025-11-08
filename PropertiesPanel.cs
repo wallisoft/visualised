@@ -197,9 +197,9 @@ public class PropertiesPanel
                 var numBox = new TextBox 
                 { 
                     Text = currentValue?.ToString() ?? "0",
-                    Width = 50,
+                    Width = 55,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(3, 1, 3, 1)
+                    Padding = new Avalonia.Thickness(3, 1, 3, 0)
                 };
                 
                 numBox.KeyDown += (s, e) =>
@@ -238,9 +238,9 @@ public class PropertiesPanel
                 var textBox = new TextBox 
                 { 
                     Text = currentValue?.ToString() ?? "",
-                    Width = 60,
+                    Width = 120,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 0),
                 };
                 
                 // Enter key = save and focus next
@@ -303,9 +303,9 @@ public class PropertiesPanel
                 var thickBox = new TextBox 
                 { 
                     Text = $"{thickness.Left},{thickness.Top},{thickness.Right},{thickness.Bottom}",
-                    Width = 60,
+                    Width = 80,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 0),
                     Watermark = "L,T,R,B"
                 };
                 thickBox.LostFocus += (s, e) =>
@@ -330,9 +330,9 @@ public class PropertiesPanel
                 var colorBox = new TextBox 
                 { 
                     Text = currentValue?.ToString() ?? "#FFF",
-                    Width = 50,
+                    Width = 70,
                     FontSize = 11,
-                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 0),
                     Watermark = "#RGB"
                 };
                 colorBox.LostFocus += (s, e) =>
@@ -353,6 +353,7 @@ public class PropertiesPanel
                     Text = currentValue?.ToString()?.Replace("Horizontal", "H").Replace("Vertical", "V") ?? "-",
                     Foreground = new SolidColorBrush(Color.Parse("#666")),
                     FontSize = 11,
+                    MinWidth = 80,
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 editor = display;
@@ -367,7 +368,7 @@ public class PropertiesPanel
                     FontStyle = FontStyle.Italic,
                     VerticalAlignment = VerticalAlignment.Center,
                     MaxWidth = 60,
-                    Padding = new Avalonia.Thickness(3, 1, 3, 1),
+                    Padding = new Avalonia.Thickness(3, 1, 3, 0),
                     TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
                 };
                 editor = display;
