@@ -1,0 +1,182 @@
+# VB App Manager - Test Application
+
+@Window MainWindow
+Title=VB App Manager
+Width=900
+Height=600
+Background=#f5f5f5
+
+@DockPanel MainLayout
+LastChildFill=true
+Parent=MainWindow
+
+@Menu TopMenu
+DockPanel.Dock=Top
+Height=30
+Background=#2c3e50
+Parent=MainLayout
+
+@MenuItem FileMenu
+Header=_File
+
+@MenuItem FileNew
+Header=_New App
+Parent=FileMenu
+
+@MenuItem FileOpen
+Header=_Open VML
+Parent=FileMenu
+
+@MenuItem FileSeparator1
+Header=-
+Parent=FileMenu
+
+@MenuItem FileExit
+Header=E_xit
+Parent=FileMenu
+
+@MenuItem HelpMenu
+Header=_Help
+
+@MenuItem HelpAbout
+Header=_About VB Runtime
+Parent=HelpMenu
+
+@Grid ContentGrid
+Background=White
+Margin=20
+Parent=MainLayout
+
+@StackPanel LeftPanel
+Grid.Column=0
+Width=250
+Background=#ecf0f1
+Padding=15
+
+@TextBlock TitleText
+Text=📦 Installed Apps
+FontSize=18
+FontWeight=Bold
+Foreground=#2c3e50
+Margin=0,0,0,20
+Parent=LeftPanel
+
+@ListBox AppList
+Height=400
+Background=White
+Margin=0,0,0,15
+Parent=LeftPanel
+
+@Button btnRefresh
+Content=🔄 Refresh
+Width=220
+Height=35
+Background=#3498db
+Foreground=White
+CornerRadius=4
+Parent=LeftPanel
+
+@StackPanel RightPanel
+Grid.Column=1
+Padding=30
+Margin=20,0,0,0
+
+@TextBlock WelcomeTitle
+Text=Welcome to VB Runtime!
+FontSize=24
+FontWeight=Bold
+Foreground=#2c3e50
+Margin=0,0,0,10
+Parent=RightPanel
+
+@TextBlock WelcomeSubtitle
+Text=Revolutionary Visual Markup Runtime Environment
+FontSize=14
+Foreground=#7f8c8d
+Margin=0,0,0,30
+Parent=RightPanel
+
+@Border InfoBox
+Background=#e8f4f8
+BorderBrush=#3498db
+BorderThickness=2
+CornerRadius=8
+Padding=20
+Margin=0,0,0,20
+Parent=RightPanel
+
+@StackPanel InfoContent
+Parent=InfoBox
+
+@TextBlock InfoTitle
+Text=🚀 How It Works
+FontSize=16
+FontWeight=Bold
+Foreground=#2c3e50
+Margin=0,0,0,15
+Parent=InfoContent
+
+@TextBlock Info1
+Text=1. Download VML apps from websites
+FontSize=13
+Foreground=#34495e
+Margin=0,0,0,8
+Parent=InfoContent
+
+@TextBlock Info2
+Text=2. VB Runtime registers them automatically
+FontSize=13
+Foreground=#34495e
+Margin=0,0,0,8
+Parent=InfoContent
+
+@TextBlock Info3
+Text=3. Apps appear in your Start Menu / Launcher
+FontSize=13
+Foreground=#34495e
+Margin=0,0,0,8
+Parent=InfoContent
+
+@TextBlock Info4
+Text=4. One runtime, unlimited apps!
+FontSize=13
+Foreground=#34495e
+Parent=InfoContent
+
+@StackPanel ButtonPanel
+Orientation=Horizontal
+HorizontalAlignment=Center
+Margin=0,30,0,0
+Parent=RightPanel
+
+@Button btnInstall
+Content=📥 Install New App
+Width=150
+Height=40
+Background=#27ae60
+Foreground=White
+CornerRadius=4
+Margin=0,0,10,0
+Parent=ButtonPanel
+
+@Button btnWebsite
+Content=🌐 Visit no-stick.uk
+Width=150
+Height=40
+Background=#9b59b6
+Foreground=White
+CornerRadius=4
+Parent=ButtonPanel
+
+@StatusBar StatusBar
+DockPanel.Dock=Bottom
+Height=25
+Background=#34495e
+Parent=MainLayout
+
+@TextBlock StatusText
+Text=VB Runtime v1.0 - Ready
+Foreground=White
+VerticalAlignment=Center
+Margin=10,0,0,0
+Parent=StatusBar

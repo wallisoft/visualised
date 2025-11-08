@@ -1,0 +1,93 @@
+# Script Editor Window - Pure VML!
+WindowType=ScriptEditor
+Title=Script Editor
+Width=900
+Height=650
+Background=#1e1e1e
+
+# Top section with combos
+Border.0.Dock=Top
+Border.0.Background=#2d2d2d
+Border.0.BorderBrush=#444
+Border.0.BorderThickness=0,0,0,1
+Border.0.Padding=15,10
+
+Grid.0.ColumnDefinitions=Auto,200,Auto,200,*
+
+TextBlock.0.Column=0
+TextBlock.0.Text=Event:
+TextBlock.0.Foreground=#d4d4d4
+TextBlock.0.FontSize=13
+TextBlock.0.VerticalAlignment=Center
+TextBlock.0.Margin=0,0,10,0
+
+ComboBox.0.Column=1
+ComboBox.0.Name=eventCombo
+ComboBox.0.SelectedIndex=0
+ComboBox.0.Items=onClick,onLoad,onFocus,onBlur,onKeyPress,onMouseEnter,onMouseLeave
+
+TextBlock.1.Column=2
+TextBlock.1.Text=Interpreter:
+TextBlock.1.Foreground=#d4d4d4
+TextBlock.1.FontSize=13
+TextBlock.1.VerticalAlignment=Center
+TextBlock.1.Margin=20,0,10,0
+
+ComboBox.1.Column=3
+ComboBox.1.Name=interpreterCombo
+ComboBox.1.SelectedIndex=0
+ComboBox.1.Items=bash,python,node,ruby,C# (coming soon),perl
+
+# Button bar
+Border.1.Dock=Top
+Border.1.Background=#1e1e1e
+Border.1.BorderBrush=#444
+Border.1.BorderThickness=0,0,0,1
+Border.1.Padding=10,8
+
+StackPanel.0.Orientation=Horizontal
+StackPanel.0.Spacing=10
+
+Button.0.Name=btnSave
+Button.0.Content=💾 Save & Close
+Button.0.Padding=12,6
+Button.0.Background=#0e7490
+Button.0.Foreground=White
+Button.0.BorderThickness=0
+Button.0.OnClick=script:save_and_close.sh
+
+Button.1.Name=btnCancel
+Button.1.Content=❌ Cancel
+Button.1.Padding=12,6
+Button.1.OnClick=script:cancel.sh
+
+Button.2.Name=btnTest
+Button.2.Content=▶ Test Run
+Button.2.Padding=12,6
+Button.2.Background=#16a34a
+Button.2.Foreground=White
+Button.2.BorderThickness=0
+Button.2.OnClick=script:test_run.sh
+
+Button.3.Name=btnClear
+Button.3.Content=📋 Clear
+Button.3.Padding=12,6
+Button.3.OnClick=script:clear.sh
+
+# Editor - BLACK with GREEN text
+ScrollViewer.0.HorizontalScrollBarVisibility=Auto
+ScrollViewer.0.VerticalScrollBarVisibility=Auto
+
+TextBox.0.Name=scriptEditor
+TextBox.0.AcceptsReturn=true
+TextBox.0.AcceptsTab=true
+TextBox.0.TextWrapping=NoWrap
+TextBox.0.FontFamily=Courier New, monospace
+TextBox.0.FontSize=14
+TextBox.0.Padding=10
+TextBox.0.Background=#000000
+TextBox.0.Foreground=#00ff00
+TextBox.0.CaretBrush=#00ff00
+
+
+

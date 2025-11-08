@@ -1,0 +1,11 @@
+@Window MainWindow
+Title=Test Window
+Width=500
+Height=500
+
+@Button btnTest
+Content=Click Me
+X=200
+Y=225
+Width=100
+Height=50

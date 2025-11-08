@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+build/
+
+# User files
+*.user
+*.suo
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+*.bak
+*~
+
+# Keep database and stub!
+!vb-source.db
+!stub.sh
