@@ -27,3 +27,6 @@ Thumbs.db
 !stub.sh
 *.db
 *.db-*
+
+# Except seed database
+!seed.db
