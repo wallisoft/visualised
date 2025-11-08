@@ -133,6 +133,7 @@ public class PropertiesPanel
             var enabledCheck = new CheckBox 
             { 
                 Content = "En",
+                FontSize = 11,
                 IsChecked = enabledValue,
                 Margin = new Avalonia.Thickness(0, 0, 8, 0)
             };
@@ -144,6 +145,7 @@ public class PropertiesPanel
             var visibleCheck = new CheckBox 
             { 
                 Content = "Vis",
+                FontSize = 11,
                 IsChecked = visibleValue
             };
             ToolTip.SetTip(visibleCheck, "IsVisible");
@@ -174,6 +176,7 @@ public class PropertiesPanel
             { 
                 Text = displayName + ":",
                 Width = 50,
+                FontSize = 11,
                 VerticalAlignment = VerticalAlignment.Center
             };
             ToolTip.SetTip(label, propName);
@@ -195,6 +198,7 @@ public class PropertiesPanel
                 { 
                     Text = currentValue?.ToString() ?? "0",
                     Width = 50,
+                    FontSize = 11,
                     Padding = new Avalonia.Thickness(2)
                 };
                 
@@ -235,6 +239,7 @@ public class PropertiesPanel
                 { 
                     Text = currentValue?.ToString() ?? "",
                     Width = 60,
+                    FontSize = 11,
                     Padding = new Avalonia.Thickness(2),
                 };
                 
@@ -285,7 +290,7 @@ public class PropertiesPanel
             }
             else if (propType.IsEnum)
             {
-                var combo = new ComboBox { Width = 60 };
+                var combo = new ComboBox { Width = 60, FontSize = 11 };
                 foreach (var val in Enum.GetValues(propType))
                     combo.Items.Add(val);
                 combo.SelectedItem = currentValue;
@@ -299,6 +304,8 @@ public class PropertiesPanel
                 { 
                     Text = $"{thickness.Left},{thickness.Top},{thickness.Right},{thickness.Bottom}",
                     Width = 60,
+                    FontSize = 11,
+                    Padding = new Avalonia.Thickness(2),
                     Watermark = "L,T,R,B"
                 };
                 thickBox.LostFocus += (s, e) =>
@@ -324,6 +331,8 @@ public class PropertiesPanel
                 { 
                     Text = currentValue?.ToString() ?? "#FFF",
                     Width = 50,
+                    FontSize = 11,
+                    Padding = new Avalonia.Thickness(2),
                     Watermark = "#RGB"
                 };
                 colorBox.LostFocus += (s, e) =>
