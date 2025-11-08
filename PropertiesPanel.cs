@@ -98,6 +98,17 @@ public class PropertiesPanel
             
             foreach (var prop in group.Value)
             {
+                // Special handling: combine IsEnabled and IsVisible on one line
+                if (prop.Name == "IsEnabled" && group.Value.Any(p => p.Name == "IsVisible"))
+                {
+                    var enabledProp = prop;
+                    var visibleProp = group.Value.First(p => p.Name == "IsVisible");
+                    var checkRow = CreateCheckboxRow(control, enabledProp, visibleProp);
+                    if (checkRow != null) groupPanel.Children.Add(checkRow);
+                    continue;
+                }
+                if (prop.Name == "IsVisible") continue; // Already handled with IsEnabled
+                
                 var propControl = CreatePropertyControl(control, prop);
                 if (propControl != null)
                 {
@@ -110,6 +121,49 @@ public class PropertiesPanel
         }
         
         Console.WriteLine($"[PROPS] {props.Count} props for {control.GetType().Name}");
+    }
+    
+    private Control? CreateCheckboxRow(Control target, PropertyInfo enabledProp, PropertyInfo visibleProp)
+    {
+        try
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            
+            var label = new TextBlock 
+            { 
+                Text = "State:",
+                Width = 50,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            row.Children.Add(label);
+            
+            var enabledValue = (bool?)enabledProp.GetValue(target);
+            var enabledCheck = new CheckBox 
+            { 
+                Content = "En",
+                IsChecked = enabledValue,
+                Margin = new Avalonia.Thickness(0, 0, 8, 0)
+            };
+            ToolTip.SetTip(enabledCheck, "IsEnabled");
+            enabledCheck.Click += (s, e) => SetProperty(target, enabledProp, enabledCheck.IsChecked);
+            row.Children.Add(enabledCheck);
+            
+            var visibleValue = (bool?)visibleProp.GetValue(target);
+            var visibleCheck = new CheckBox 
+            { 
+                Content = "Vis",
+                IsChecked = visibleValue
+            };
+            ToolTip.SetTip(visibleCheck, "IsVisible");
+            visibleCheck.Click += (s, e) => SetProperty(target, visibleProp, visibleCheck.IsChecked);
+            row.Children.Add(visibleCheck);
+            
+            return row;
+        }
+        catch
+        {
+            return null;
+        }
     }
     
     private Control? CreatePropertyControl(Control target, PropertyInfo prop)
@@ -127,7 +181,7 @@ public class PropertiesPanel
             var label = new TextBlock 
             { 
                 Text = displayName + ":",
-                Width = 65,
+                Width = 50,
                 VerticalAlignment = VerticalAlignment.Center
             };
             ToolTip.SetTip(label, propName);
@@ -144,34 +198,52 @@ public class PropertiesPanel
             else if (propType == typeof(int) || propType == typeof(double) || 
                      propType == typeof(int?) || propType == typeof(double?))
             {
-                var decimalValue = Convert.ToDecimal(currentValue ?? (propType == typeof(double) || propType == typeof(double?) ? 0.0 : 0));
-                
-                var numeric = new NumericUpDown 
+                // Use TextBox for cleaner, more compact UI
+                var numBox = new TextBox 
                 { 
-                    Width = 80,
-                    Value = decimalValue,
-                    Minimum = propName.Contains("ZIndex") || propName.Contains("BuildOrder") ? -100 : 0,
-                    Maximum = 10000
+                    Text = currentValue?.ToString() ?? "0",
+                    Width = 50,
+                    Padding = new Avalonia.Thickness(2)
                 };
                 
-                numeric.ValueChanged += (s, e) => 
+                numBox.KeyDown += (s, e) =>
                 {
-                    if (numeric.Value.HasValue)
+                    if (e.Key == Key.Enter)
                     {
-                        if (propType == typeof(int) || propType == typeof(int?))
-                            SetProperty(target, prop, (int)numeric.Value.Value);
-                        else
-                            SetProperty(target, prop, (double)numeric.Value.Value);
+                        try
+                        {
+                            if (propType == typeof(int) || propType == typeof(int?))
+                                SetProperty(target, prop, int.Parse(numBox.Text ?? "0"));
+                            else
+                                SetProperty(target, prop, double.Parse(numBox.Text ?? "0"));
+                        }
+                        catch { }
+                        FocusNextProperty(numBox);
+                        e.Handled = true;
                     }
                 };
-                editor = numeric;
+                
+                numBox.LostFocus += (s, e) =>
+                {
+                    try
+                    {
+                        if (propType == typeof(int) || propType == typeof(int?))
+                            SetProperty(target, prop, int.Parse(numBox.Text ?? "0"));
+                        else
+                            SetProperty(target, prop, double.Parse(numBox.Text ?? "0"));
+                    }
+                    catch { }
+                };
+                
+                editor = numBox;
             }
             else if (propType == typeof(string))
             {
                 var textBox = new TextBox 
                 { 
                     Text = currentValue?.ToString() ?? "",
-                    Width = 100
+                    Width = 60,
+                    Padding = new Avalonia.Thickness(2),
                 };
                 
                 // Enter key = save and focus next
@@ -221,7 +293,7 @@ public class PropertiesPanel
             }
             else if (propType.IsEnum)
             {
-                var combo = new ComboBox { Width = 100 };
+                var combo = new ComboBox { Width = 60 };
                 foreach (var val in Enum.GetValues(propType))
                     combo.Items.Add(val);
                 combo.SelectedItem = currentValue;
@@ -234,7 +306,7 @@ public class PropertiesPanel
                 var thickBox = new TextBox 
                 { 
                     Text = $"{thickness.Left},{thickness.Top},{thickness.Right},{thickness.Bottom}",
-                    Width = 100,
+                    Width = 60,
                     Watermark = "L,T,R,B"
                 };
                 thickBox.LostFocus += (s, e) =>
@@ -259,7 +331,7 @@ public class PropertiesPanel
                 var colorBox = new TextBox 
                 { 
                     Text = currentValue?.ToString() ?? "#FFF",
-                    Width = 80,
+                    Width = 50,
                     Watermark = "#RGB"
                 };
                 colorBox.LostFocus += (s, e) =>
@@ -293,7 +365,8 @@ public class PropertiesPanel
                     FontSize = 11,
                     FontStyle = FontStyle.Italic,
                     VerticalAlignment = VerticalAlignment.Center,
-                    MaxWidth = 100,
+                    MaxWidth = 60,
+                    Padding = new Avalonia.Thickness(2),
                     TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
                 };
                 editor = display;
