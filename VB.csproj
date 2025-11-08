@@ -23,7 +23,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="*.vml">
+    <None Update="vml/*.vml">
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -25,3 +25,5 @@ Thumbs.db
 # Keep database and stub!
 !vb-source.db
 !stub.sh
+*.db
+*.db-*

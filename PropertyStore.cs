@@ -9,8 +9,9 @@ namespace VB;
 public static class PropertyStore
 {
     private static string DbPath => Path.Combine(
-        Path.GetTempPath(), 
-        "vb-runtime.db"
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "visualised",
+        "visualised.db"
     );
     
     private static SqliteConnection? connection;
@@ -19,10 +20,11 @@ public static class PropertyStore
     {
         try
         {
-            // Delete old database
-            if (File.Exists(DbPath))
-                File.Delete(DbPath);
-            
+            // Create config directory if needed
+            var dbDir = Path.GetDirectoryName(DbPath);
+            if (!Directory.Exists(dbDir))
+                Directory.CreateDirectory(dbDir!);
+                
             connection = new SqliteConnection($"Data Source={DbPath}");
             connection.Open();
             
@@ -48,20 +50,17 @@ public static class PropertyStore
     public static void Set(string controlName, string propertyName, string? value)
     {
         if (connection == null) Initialize();
-        if (connection == null) return;
         
         try
         {
-            var cmd = connection.CreateCommand();
+            var cmd = connection!.CreateCommand();
             cmd.CommandText = @"
                 INSERT OR REPLACE INTO properties (control_name, property_name, property_value)
-                VALUES (@control, @property, @value)";
-            cmd.Parameters.AddWithValue("@control", controlName);
-            cmd.Parameters.AddWithValue("@property", propertyName);
-            cmd.Parameters.AddWithValue("@value", value ?? "");
+                VALUES (@name, @prop, @value)";
+            cmd.Parameters.AddWithValue("@name", controlName);
+            cmd.Parameters.AddWithValue("@prop", propertyName);
+            cmd.Parameters.AddWithValue("@value", value ?? string.Empty);
             cmd.ExecuteNonQuery();
-            
-            //             Console.WriteLine($"[PROPERTY STORE] Set {controlName}.{propertyName} = {value}");
         }
         catch (Exception ex)
         {
@@ -72,16 +71,15 @@ public static class PropertyStore
     public static string? Get(string controlName, string propertyName)
     {
         if (connection == null) Initialize();
-        if (connection == null) return null;
         
         try
         {
-            var cmd = connection.CreateCommand();
+            var cmd = connection!.CreateCommand();
             cmd.CommandText = @"
                 SELECT property_value FROM properties 
-                WHERE control_name = @control AND property_name = @property";
-            cmd.Parameters.AddWithValue("@control", controlName);
-            cmd.Parameters.AddWithValue("@property", propertyName);
+                WHERE control_name = @name AND property_name = @prop";
+            cmd.Parameters.AddWithValue("@name", controlName);
+            cmd.Parameters.AddWithValue("@prop", propertyName);
             
             var result = cmd.ExecuteScalar();
             return result?.ToString();
@@ -95,39 +93,50 @@ public static class PropertyStore
     
     public static void SyncControl(Avalonia.Controls.Control control)
     {
-        if (string.IsNullOrEmpty(control.Name)) return;
+        if (control.Name == null) return;
         
-        // Sync all important properties to database
         var props = control.GetType().GetProperties();
         foreach (var prop in props)
         {
-            if (!prop.CanRead) continue;
-            
             try
             {
                 var value = prop.GetValue(control);
-                if (value != null && IsSimpleType(prop.PropertyType))
-                {
+                if (value != null)
                     Set(control.Name, prop.Name, value.ToString());
-                }
             }
-            catch { }
+            catch
+            {
+                // Skip properties that can't be read
+            }
         }
     }
     
-    private static bool IsSimpleType(Type type)
+    private static Dictionary<string, object?> GetControlProperties(string controlName)
     {
-        return type.IsPrimitive || 
-               type == typeof(string) || 
-               type == typeof(decimal) || 
-               type == typeof(DateTime);
+        var props = new Dictionary<string, object?>();
+        
+        try
+        {
+            var cmd = connection!.CreateCommand();
+            cmd.CommandText = "SELECT property_name, property_value FROM properties WHERE control_name = @name";
+            cmd.Parameters.AddWithValue("@name", controlName);
+            
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                props[reader.GetString(0)] = reader.GetString(1);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PROPERTY STORE] Query error: {ex.Message}");
+        }
+        
+        return props;
     }
     
     public static void Close()
     {
         connection?.Close();
-        connection?.Dispose();
-        connection = null;
     }
 }
-
