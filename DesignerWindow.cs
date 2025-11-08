@@ -348,7 +348,7 @@ public class DesignerWindow
         
         var propsBorder = new Border
         {
-            Background = new SolidColorBrush(Color.Parse("#f5f5f5")),
+            Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
             BorderBrush = new SolidColorBrush(Color.Parse("#ccc")),
             BorderThickness = new Avalonia.Thickness(1, 0, 0, 0)
         };
@@ -529,6 +529,9 @@ public class DesignerWindow
         commonStack.Children.Add(CreateToolboxButton("TextBox"));
         commonStack.Children.Add(CreateToolboxButton("TextBlock"));
         commonStack.Children.Add(CreateToolboxButton("CheckBox"));
+        commonStack.Children.Add(CreateToolboxButton("ListBox"));
+        commonStack.Children.Add(CreateToolboxButton("Label"));
+        commonStack.Children.Add(CreateToolboxButton("Separator"));
         common.Content = commonStack;
         toolboxStack.Children.Add(common);
         
@@ -1110,6 +1113,7 @@ public class DesignerWindow
         };
     }
 }
+
 
 
 
