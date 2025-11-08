@@ -129,14 +129,6 @@ public class PropertiesPanel
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             
-            var label = new TextBlock 
-            { 
-                Text = "State:",
-                Width = 50,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            row.Children.Add(label);
-            
             var enabledValue = (bool?)enabledProp.GetValue(target);
             var enabledCheck = new CheckBox 
             { 
