@@ -8,11 +8,47 @@ namespace VB;
 
 public static class PropertyStore
 {
-    private static string DbPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "visualised",
-        "visualised.db"
-    );
+    private static string GetDbPath()
+    {
+        // Check if running from system install location
+        var exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        var exeDir = Path.GetDirectoryName(exePath);
+        
+        bool isSystemInstall = exeDir?.StartsWith("/usr/") == true || 
+                               exeDir?.StartsWith("/opt/") == true;
+        
+        if (isSystemInstall)
+        {
+            // System-wide install: /var/lib/visualised/
+            var dbPath = "/var/lib/visualised/visualised.db";
+            var dbDir = Path.GetDirectoryName(dbPath);
+            
+            // Try to create system directory (needs sudo/root)
+            if (!Directory.Exists(dbDir))
+            {
+                try
+                {
+                    Directory.CreateDirectory(dbDir!);
+                }
+                catch
+                {
+                    // Fallback to user dir if cant write to /var/lib
+                    goto UserInstall;
+                }
+            }
+            return dbPath;
+        }
+        
+        UserInstall:
+        // User install or fallback: ~/.visualised/
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".visualised",
+            "visualised.db"
+        );
+    }
+    
+    private static string DbPath => GetDbPath();
     
     private static SqliteConnection? connection;
     
@@ -20,7 +56,7 @@ public static class PropertyStore
     {
         try
         {
-            // Create config directory if needed
+            // Create directory if needed
             var dbDir = Path.GetDirectoryName(DbPath);
             if (!Directory.Exists(dbDir))
                 Directory.CreateDirectory(dbDir!);
@@ -106,7 +142,7 @@ public static class PropertyStore
             }
             catch
             {
-                // Skip properties that can't be read
+                // Skip properties that cant be read
             }
         }
     }
