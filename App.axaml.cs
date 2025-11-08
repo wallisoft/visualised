@@ -43,7 +43,7 @@ public partial class App : Application
                     
                     // Fallback to designer
                     var mainWindow = new MainWindow();
-                    DesignerWindow.LoadAndApply(mainWindow, "designer.vml");
+                    DesignerWindow.LoadAndApply(mainWindow, "vml/designer.vml");
                     desktop.MainWindow = mainWindow;
                 }
             }
@@ -53,7 +53,7 @@ public partial class App : Application
                 Console.WriteLine("🎨 IDE Mode: Loading designer");
                 
                 var mainWindow = new MainWindow();
-                DesignerWindow.LoadAndApply(mainWindow, "designer.vml");
+                DesignerWindow.LoadAndApply(mainWindow, "vml/designer.vml");
                 desktop.MainWindow = mainWindow;
             }
         }
@@ -61,3 +61,4 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 }
+
