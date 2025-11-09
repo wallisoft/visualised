@@ -165,8 +165,8 @@ public class PropertiesPanel
         var dropBtn = new Button
         {
             Content = "@",
-            Width = 19,
-            Height = 19,
+            Width = 16,
+            Height = 16,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(0),
