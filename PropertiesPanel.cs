@@ -109,7 +109,21 @@ public class PropertiesPanel
             realTextBox.LostFocus += (s2, e2) =>
             {
                 fakeTextBox.Content = realTextBox.Text;
-                prop.SetValue(control, realTextBox.Text);
+                
+                // Convert to correct type
+                object value = realTextBox.Text;
+                if (prop.PropertyType == typeof(double))
+                {
+                    if (double.TryParse(realTextBox.Text, out var d))
+                        value = d;
+                }
+                else if (prop.PropertyType == typeof(int))
+                {
+                    if (int.TryParse(realTextBox.Text, out var i))
+                        value = i;
+                }
+                
+                prop.SetValue(control, value);
                 
                 // Swap back
                 var idx = parent.Children.IndexOf(realTextBox);
