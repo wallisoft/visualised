@@ -235,7 +235,7 @@ public class DesignerWindow
         DockPanel.SetDock(statusBar, Dock.Bottom);
         root.Children.Add(statusBar);
         
-        var workspace = new Grid();
+        var workspace = new Grid { Margin = new Avalonia.Thickness(8) };
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
@@ -405,12 +405,18 @@ designCanvas = new Canvas
         propsHeader.Children.Add(propsCloseBtn);
         
         propsStack.Children.Add(propsHeader);
-        propsStack.Children.Add(new TextBlock 
+        
+        // Control type label (updated when control selected)
+        var controlTypeLabel = new TextBlock 
         { 
-            Text = "Drag from toolbox or click!",
-            FontStyle = FontStyle.Italic,
-            Foreground = new SolidColorBrush(Color.Parse("#666"))
-        });
+            Name = "controlTypeLabel",
+            Text = "No control selected",
+            FontSize = 13,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = new SolidColorBrush(Color.Parse("#1b5e20")),
+            Margin = new Avalonia.Thickness(0, 0, 0, 10)
+        };
+        propsStack.Children.Add(controlTypeLabel);
         
         propsScroll.Content = propsStack;
         propsBorder.Child = propsScroll;
