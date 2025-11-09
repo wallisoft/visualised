@@ -83,7 +83,7 @@ public class PropertiesPanel
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            MinHeight = 17,
+            MinHeight = 19,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(4, 2, 4, 2),
@@ -96,7 +96,9 @@ public class PropertiesPanel
         
         fakeTextBox.PointerPressed += (s, e) =>
         {
-            // Replace with real textbox
+            var parent = fakeTextBox.Parent as Panel;
+            if (parent == null) return;
+            
             var realTextBox = new TextBox
             {
                 Text = fakeTextBox.Content?.ToString() ?? "",
@@ -108,10 +110,17 @@ public class PropertiesPanel
             {
                 fakeTextBox.Content = realTextBox.Text;
                 prop.SetValue(control, realTextBox.Text);
-                // Swap back - would need parent access
+                
+                // Swap back
+                var idx = parent.Children.IndexOf(realTextBox);
+                parent.Children.RemoveAt(idx);
+                parent.Children.Insert(idx, fakeTextBox);
             };
             
-            // Would need SwapControls helper here
+            // Swap fake for real
+            var index = parent.Children.IndexOf(fakeTextBox);
+            parent.Children.RemoveAt(index);
+            parent.Children.Insert(index, realTextBox);
             realTextBox.Focus();
         };
         
@@ -127,7 +136,7 @@ public class PropertiesPanel
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            MinHeight = 17,
+            MinHeight = 19,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(4, 2, 4, 2),
@@ -142,8 +151,8 @@ public class PropertiesPanel
         var dropBtn = new Button
         {
             Content = "@",
-            Width = 17,
-            Height = 17,
+            Width = 19,
+            Height = 19,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(0),
