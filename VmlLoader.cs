@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -86,12 +87,54 @@ public class VmlLoader
             
         return controls;
     }
+    
+    public static List<VmlControl> LoadFromDatabase(string controlName, string dbPath = "visualised.db")
+    {
+        var controls = new List<VmlControl>();
+        
+        using var conn = new SqliteConnection($"Data Source={dbPath}");
+        conn.Open();
+        
+        // Find root control by name
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT id, control_type FROM ui_tree WHERE name = @name";
+        cmd.Parameters.AddWithValue("@name", controlName);
+        
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            var id = reader.GetInt32(0);
+            var type = reader.GetString(1);
+            reader.Close();
+            
+            var control = LoadControlRecursive(conn, id, type, controlName);
+            if (control != null)
+                controls.Add(control);
+        }
+        
+        return controls;
+    }
+    
+    private static VmlControl? LoadControlRecursive(SqliteConnection conn, int id, string type, string name)
+    {
+        var control = new VmlControl
+        {
+            Type = type,
+            Name = name,
+            Properties = new Dictionary<string, string>()
+        };
+        
+        // Load properties
+        using var propCmd = conn.CreateCommand();
+        propCmd.CommandText = "SELECT property_name, property_value FROM ui_properties WHERE ui_tree_id = @id";
+        propCmd.Parameters.AddWithValue("@id", id);
+        
+        using var propReader = propCmd.ExecuteReader();
+        while (propReader.Read())
+        {
+            control.Properties[propReader.GetString(0)] = propReader.GetString(1);
+        }
+        
+        return control;
+    }
 }
-
-public class VmlControl
-{
-    public string Type { get; set; } = "";
-    public string? Name { get; set; }
-    public Dictionary<string, string> Properties { get; set; } = new();
-}
-
