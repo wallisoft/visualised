@@ -60,8 +60,6 @@ public class PropertiesPanel
         panel.Children.Add(typeRow);
         
         // Add control type combo as first property
-        typeRow.Children.Add(typeCombo);
-        panel.Children.Add(typeRow);
         propertyControls.Clear();
 
         if (control == null) return;
