@@ -59,17 +59,14 @@ public class PropertiesPanel
             if (name == "ZIndex" || name == "BuildOrder" || name == "Tag")
                 groups["Custom"].Add(prop);
             else if (new[] {
-                "Name",           // Identity
-                "Content", "Text", // Content  
-                "Width", "Height", // Dimensions
-                "Margin", "Padding", // Spacing
-                "HorizontalAlignment", "VerticalAlignment", // Alignment
-                "Background", "Foreground", // Appearance
-                "BorderBrush", "BorderThickness", "CornerRadius", // Border
-                "FontSize", "FontWeight", // Text Style
-                "IsVisible", "IsEnabled" // State
+                "Name", "Content", "Text", "Width", "Height", "Margin", "Padding",
+                "HorizontalAlignment", "VerticalAlignment", "Background", "Foreground",
+                "BorderBrush", "BorderThickness", "CornerRadius", "FontSize", "FontWeight",
+                "IsVisible", "IsEnabled"
             }.Contains(name))
-                groups["Common"].Add(prop);
+            {
+                // Skip - handled by BuildCommonPropertiesPanel
+            }
             else if (name.Contains("Width") || name.Contains("Height") || name.Contains("Margin") ||
                      name.Contains("Padding") || name.Contains("Alignment") || name.Contains("Stretch"))
                 groups["Layout"].Add(prop);
@@ -84,77 +81,21 @@ public class PropertiesPanel
                 groups["Adv"].Add(prop);
         }
 
+        // Render Common properties with custom controls
+        BuildCommonPropertiesPanel(control, panel);
+        
+        // Render all other properties as flat list
         foreach (var group in groups)
         {
-            if (group.Value.Count == 0) continue;
-
-            var expander = new Expander
+            foreach (var prop in group.Value)
             {
-                Header = group.Key,
-                IsExpanded = group.Key == "Common" || group.Key == "Custom",
-                Margin = new Avalonia.Thickness(0, 3, 0, 3),
-                HorizontalAlignment = HorizontalAlignment.Stretch
-            };
-
-            var groupPanel = new StackPanel { Spacing = 1, Margin = new Avalonia.Thickness(5, 3, 0, 3) };
-
-            // Special handling for Common group - use custom tiny controls
-            if (group.Key == "Common")
-            {
-                BuildCommonPropertiesPanel(control, groupPanel);
+                var propControl = CreatePropertyControl(control, prop);
+                if (propControl != null)
+                    panel.Children.Add(propControl);
             }
-            else
-            {
-                foreach (var prop in group.Value)
-                {
-                    var propControl = CreatePropertyControl(control, prop);
-                    if (propControl != null)
-                    {
-                        groupPanel.Children.Add(propControl);
-                    }
-                }
-            }
-
-            expander.Content = groupPanel;
-            panel.Children.Add(expander);
         }
         
-        foreach (var group in groups)
-        {
-            if (group.Value.Count == 0) continue;
-            
-            var expander = new Expander
-            {
-                Header = group.Key,
-                IsExpanded = group.Key == "Common" || group.Key == "Custom",
-                Margin = new Avalonia.Thickness(0, 3, 0, 3),
-                HorizontalAlignment = HorizontalAlignment.Stretch
-            };
-            
-            var groupPanel = new StackPanel { Spacing = 1, Margin = new Avalonia.Thickness(5, 3, 0, 3) };
-            
-            // Special handling for Common group - use custom tiny controls
-            if (group.Key == "Common")
-            {
-                BuildCommonPropertiesPanel(control, groupPanel);
-            }
-            else
-            {
-                foreach (var prop in group.Value)
-                {
-                    var propControl = CreatePropertyControl(control, prop);
-                    if (propControl != null)
-                    {
-                        groupPanel.Children.Add(propControl);
-                    }
-                }
-            }
-            
-            expander.Content = groupPanel;
-            panel.Children.Add(expander);
-        }
-        
-        Console.WriteLine($"[PROPS] {props.Count} props for {control.GetType().Name}");
+                Console.WriteLine($"[PROPS] {props.Count} props for {control.GetType().Name}");
     }
 
     private void AddCommonTextProperty(Control control, StackPanel groupPanel, string label, PropertyInfo prop, int width)

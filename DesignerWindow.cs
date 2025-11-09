@@ -348,25 +348,48 @@ public class DesignerWindow
         
         var propsBorder = new Border
         {
+            Name = "propsBorder",
             Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
             BorderBrush = new SolidColorBrush(Color.Parse("#ccc")),
-            BorderThickness = new Avalonia.Thickness(1, 0, 0, 0)
+            BorderThickness = new Avalonia.Thickness(1),
+            CornerRadius = new CornerRadius(2),
+            Padding = new Avalonia.Thickness(4)
         };
         
         var propsScroll = new ScrollViewer 
         { 
-            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
             Padding = new Avalonia.Thickness(10)
         };
         
         var propsStack = new StackPanel { Spacing = 5 };
-        propsStack.Children.Add(new TextBlock 
+        
+        // Properties header with X button
+        var propsHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+        propsHeader.Children.Add(new TextBlock 
         { 
             Text = "Properties",
             FontSize = 14,
             FontWeight = FontWeight.Bold,
-            Margin = new Avalonia.Thickness(0, 0, 0, 10)
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
         });
+        
+        var propsCloseBtn = new Button
+        {
+            Content = "✕",
+            Width = 20,
+            Height = 20,
+            FontSize = 14,
+            Padding = new Avalonia.Thickness(0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Avalonia.Thickness(0),
+            Foreground = new SolidColorBrush(Color.Parse("#666"))
+        };
+        propsCloseBtn.Click += (s, e) => { propsBorder.IsVisible = false; };
+        Grid.SetColumn(propsCloseBtn, 1);
+        propsHeader.Children.Add(propsCloseBtn);
+        
+        propsStack.Children.Add(propsHeader);
         propsStack.Children.Add(new TextBlock 
         { 
             Text = "Drag from toolbox or click!",
@@ -508,20 +531,41 @@ public class DesignerWindow
     {
         var toolboxBorder = new Border
         {
+            Name = "toolboxBorder",
             Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Avalonia.Thickness(0, 0, 1, 0)
+            BorderThickness = new Avalonia.Thickness(1),
+            CornerRadius = new CornerRadius(2),
+            Padding = new Avalonia.Thickness(4)
         };
         
         var toolboxStack = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 5 };
         
-        toolboxStack.Children.Add(new TextBlock 
+        var toolboxHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+        toolboxHeader.Children.Add(new TextBlock 
         { 
             Text = "Toolbox",
             FontSize = 14,
             FontWeight = FontWeight.Bold,
-            Margin = new Avalonia.Thickness(0, 0, 0, 10)
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
         });
+        
+        var toolboxCloseBtn = new Button
+        {
+            Content = "✕",
+            Width = 20,
+            Height = 20,
+            FontSize = 14,
+            Padding = new Avalonia.Thickness(0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Avalonia.Thickness(0),
+            Foreground = new SolidColorBrush(Color.Parse("#666"))
+        };
+        toolboxCloseBtn.Click += (s, e) => { toolboxBorder.IsVisible = false; };
+        Grid.SetColumn(toolboxCloseBtn, 1);
+        toolboxHeader.Children.Add(toolboxCloseBtn);
+        
+        toolboxStack.Children.Add(toolboxHeader);
         
         var common = new Expander { Header = "Common", IsExpanded = true, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch };
         var commonStack = new StackPanel { Spacing = 3 };
@@ -555,7 +599,7 @@ public class DesignerWindow
         return toolboxBorder;
     }
     
-                                    private static Button CreateToolboxButton(string controlType)
+    private static Button CreateToolboxButton(string controlType)
     {
         var btn = new Button 
         { 

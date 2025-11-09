@@ -166,3 +166,11 @@
 [20:43:49.028] [DESIGNER] Added Button 'btnGrubDefaults' at (NaN,NaN) 100x30
 [20:43:49.727] [DESIGNER] Added Button 'btnGrubSave' at (NaN,NaN) 100x30
 [20:43:50.566] [DESIGNER] Added TextBlock 'GrubWarning' at (NaN,NaN) NaNxNaN
+[02:02:40.572] [CONTROL] Named: Button_1
+[02:02:41.003] [ADD] Button → Button_1
+[02:33:23.343] [CONTROL] Named: Button_1
+[02:33:24.757] [ADD] Button → Button_1
+[02:43:46.815] [CONTROL] Named: Button_1
+[02:43:47.237] [ADD] Button → Button_1
+[02:50:33.270] [CONTROL] Named: Button_1
+[02:50:33.674] [ADD] Button → Button_1
