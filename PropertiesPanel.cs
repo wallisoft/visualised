@@ -30,7 +30,6 @@ public class PropertiesPanel
             .OrderBy(p => p.Name);
         
         // Control type selector as first property
-        AddControlSelector();
         
         foreach (var prop in props)
         {
@@ -71,7 +70,7 @@ public class PropertiesPanel
     private TextBlock CreateLabel(string text) => new() 
     { 
         Text = text,
-        Width = 60,
+        Width = 60, FontSize = 11, FontWeight = FontWeight.Bold,
         TextAlignment = TextAlignment.Right,
         Margin = new Thickness(0, 0, 5, 0)
     };
@@ -131,19 +130,6 @@ public class PropertiesPanel
         return combo;
     }
     
-    private void AddControlSelector()
-    {
-        var row = CreateRow();
-        row.Children.Add(CreateLabel("Add:"));
-        
-        var combo = new ComboBox { Width = 120, Height = 20, MinHeight = 20, MaxHeight = 20, Padding = new Thickness(4,2,4,2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
-        var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "Grid", "StackPanel", "Border" };
-        foreach (var t in types) combo.Items.Add(t);
-        combo.SelectedIndex = 0;
-        
-        row.Children.Add(combo);
-        panel.Children.Add(row);
-    }
     
     private bool ShouldSkip(PropertyInfo prop)
     {
