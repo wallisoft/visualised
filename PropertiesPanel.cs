@@ -90,6 +90,7 @@ public class PropertiesPanel
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(2),
             HorizontalContentAlignment = HorizontalAlignment.Left,
             VerticalContentAlignment = VerticalAlignment.Center
         };
@@ -157,6 +158,7 @@ public class PropertiesPanel
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(2),
             HorizontalContentAlignment = HorizontalAlignment.Left,
             VerticalContentAlignment = VerticalAlignment.Center
         };
