@@ -236,7 +236,6 @@ public class DesignerWindow
         root.Children.Add(statusBar);
         
         var workspace = new Grid { Margin = new Avalonia.Thickness(8), Background = new SolidColorBrush(Color.Parse("#f1f8e9")) };
-        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
         
@@ -361,7 +360,7 @@ designCanvas = new Canvas
         };
         canvasScroll.Content = designCanvas;
         
-        Grid.SetColumn(canvasScroll, 1);
+        Grid.SetColumn(canvasScroll, 0);
         workspace.Children.Add(canvasScroll);
         
         var propsBorder = new Border
@@ -416,7 +415,7 @@ designCanvas = new Canvas
         
         propertiesPanel = new PropertiesPanel(propsStack);
         
-        Grid.SetColumn(propsBorder, 2);
+        Grid.SetColumn(propsBorder, 1);
         workspace.Children.Add(propsBorder);
         
         root.Children.Add(workspace);
