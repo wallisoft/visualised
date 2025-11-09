@@ -145,9 +145,8 @@ public class PropertiesPanel
         {
             Content = content,
             Width = width,
-            Height = 18,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
+            Height = 17,
+            FontSize = 11, FontWeight = FontWeight.Bold,
             Padding = new Thickness(2, 1, 2, 3),
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
