@@ -29,6 +29,9 @@ public class PropertiesPanel
             .Where(p => p.CanWrite && p.CanRead)
             .OrderBy(p => p.Name);
         
+        // Control type selector as first property
+        AddControlSelector();
+        
         foreach (var prop in props)
         {
             // Skip complex types we don't want to edit
@@ -126,6 +129,20 @@ public class PropertiesPanel
                 prop.SetValue(control, combo.SelectedItem);
         };
         return combo;
+    }
+    
+    private void AddControlSelector()
+    {
+        var row = CreateRow();
+        row.Children.Add(CreateLabel("Add:"));
+        
+        var combo = new ComboBox { Width = 120, Height = 20, Padding = new Thickness(4,2,4,2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
+        var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "Grid", "StackPanel", "Border" };
+        foreach (var t in types) combo.Items.Add(t);
+        combo.SelectedIndex = 0;
+        
+        row.Children.Add(combo);
+        panel.Children.Add(row);
     }
     
     private bool ShouldSkip(PropertyInfo prop)

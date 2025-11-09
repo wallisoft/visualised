@@ -432,6 +432,9 @@ designCanvas = new Canvas
         propsStack.Children.Add(innerPropsStack);
         propertiesPanel = new PropertiesPanel(innerPropsStack);
         
+        // Show MainWindow properties on open
+        propertiesPanel.ShowPropertiesFor(window);
+        
         Grid.SetColumn(propsBorder, 0);
         workspace.Children.Add(propsBorder);
         
