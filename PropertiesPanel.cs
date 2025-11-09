@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using System;
@@ -24,118 +24,151 @@ public class PropertiesPanel
         selectedControl = control;
         panel.Children.Clear();
         
-        // Get all settable properties via reflection
         var props = control.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanWrite && p.CanRead)
-            .OrderBy(p => {
-            // TODO: Query property_order table for display_order
-            return p.Name;
-        });
-        
-        // Control type selector as first property
+            .Where(p => p.CanWrite && p.CanRead && !ShouldSkip(p))
+            .OrderBy(p => p.Name);
         
         foreach (var prop in props)
         {
-            // Skip complex types we don't want to edit
-            if (ShouldSkip(prop)) continue;
-            
-            AddPropertyEditor(control, prop);
+            AddPropertyRow(control, prop);
         }
     }
     
-
-    private void AddPropertyEditor(Control control, PropertyInfo prop)
+    private void AddPropertyRow(Control control, PropertyInfo prop)
     {
-        var row = CreateRow();
-        row.Children.Add(CreateLabel(prop.Name + ":"));
-        
-        Control editor = prop.PropertyType.Name switch
-        {
-            "String" => CreateTextBox(control, prop),
-            "Double" or "Int32" => CreateNumberBox(control, prop),
-            "Boolean" => CreateCheckBox(control, prop),
-            "Brush" or "IBrush" => CreateColorPicker(control, prop),
-            _ when prop.PropertyType.IsEnum => CreateEnumCombo(control, prop),
-            _ => new TextBlock { Text = "(complex)" }
+        var row = new StackPanel 
+        { 
+            Orientation = Orientation.Horizontal, 
+            Spacing = 5,
+            Margin = new Thickness(0, 0, 0, 2)
         };
         
-        row.Children.Add(editor);
+        // Left label - 11px normal
+        var label = new TextBlock 
+        { 
+            Text = prop.Name + ":",
+            Width = 60,
+            FontSize = 11,
+            TextAlignment = TextAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        row.Children.Add(label);
+        
+        // Create appropriate editor based on type
+        if (prop.PropertyType == typeof(string))
+            row.Children.Add(CreateTinyTextBox(control, prop));
+        else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
+            row.Children.Add(CreateTinyTextBox(control, prop));
+        else if (prop.PropertyType == typeof(bool))
+            row.Children.Add(new CheckBox { IsChecked = (bool?)prop.GetValue(control) });
+        else if (prop.PropertyType.IsEnum)
+            row.Children.Add(CreateTinyCombo(control, prop));
+        else
+            row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
+        
         panel.Children.Add(row);
     }
     
-    private StackPanel CreateRow() => new() 
-    { 
-        Orientation = Orientation.Horizontal, 
-        Spacing = 2, 
-        Margin = new Thickness(0, 0, 0, 3) 
-    };
-    
-    private TextBlock CreateLabel(string text) => new() 
-    { 
-        Text = text,
-        Width = 60, FontSize = 11,
-        TextAlignment = TextAlignment.Right,
-        Margin = new Thickness(0, 0, 5, 0)
-    };
-    
-    private Button CreateTextBox(Control control, PropertyInfo prop)
+    private Control CreateTinyTextBox(Control control, PropertyInfo prop)
     {
-        var btn = new Button
+        // Label that looks like textbox
+        var fakeTextBox = new Label
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            Height = 17,
+            MinHeight = 17,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
-            Padding = new Thickness(2, 0, 2, 0),
+            Padding = new Thickness(4, 2, 4, 2),
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(1),
-            HorizontalContentAlignment = HorizontalAlignment.Left
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            VerticalContentAlignment = VerticalAlignment.Center
         };
-        return btn;
-    }
-    
-    private Button CreateNumberBox(Control control, PropertyInfo prop)
-    {
-        var btn = new Button { Content = prop.GetValue(control)?.ToString() ?? "0", Width = 120, Height = 17, FontSize = 11, FontWeight = FontWeight.Bold, Padding = new Thickness(2, 0, 2, 0), Background = Brushes.White, BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1), HorizontalContentAlignment = HorizontalAlignment.Left };
-        return btn;
-        /*tb.LostFocus += (s, e) => {
-            if (double.TryParse(tb.Text, out var val))
-                prop.SetValue(control, Convert.ChangeType(val, prop.PropertyType));
+        
+        fakeTextBox.PointerPressed += (s, e) =>
+        {
+            // Replace with real textbox
+            var realTextBox = new TextBox
+            {
+                Text = fakeTextBox.Content?.ToString() ?? "",
+                Width = 120,
+                MinHeight = 17
+            };
+            
+            realTextBox.LostFocus += (s2, e2) =>
+            {
+                fakeTextBox.Content = realTextBox.Text;
+                prop.SetValue(control, realTextBox.Text);
+                // Swap back - would need parent access
+            };
+            
+            // Would need SwapControls helper here
+            realTextBox.Focus();
         };
-*/
+        
+        return fakeTextBox;
     }
     
-    private CheckBox CreateCheckBox(Control control, PropertyInfo prop)
+    private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
-        var cb = new CheckBox { IsChecked = (bool?)prop.GetValue(control) };
-        cb.Click += (s, e) => prop.SetValue(control, cb.IsChecked);
-        return cb;
-    }
-    
-    private Button CreateColorPicker(Control control, PropertyInfo prop)
-    {
-        var btn = new Button { Content = "📎", Width = 30, Height = 20 };
-        btn.Click += async (s, e) => {
-            // TODO: Color picker dialog
+        var container = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 1 };
+        
+        // Fake textbox showing current value
+        var fakeTextBox = new Label
+        {
+            Content = prop.GetValue(control)?.ToString() ?? "",
+            Width = 120,
+            MinHeight = 17,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Padding = new Thickness(4, 2, 4, 2),
+            Background = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Thickness(1),
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            VerticalContentAlignment = VerticalAlignment.Center
         };
-        return btn;
-    }
-    
-    private ComboBox CreateEnumCombo(Control control, PropertyInfo prop)
-    {
-        var combo = new ComboBox { Width = 120, Height = 20, MinHeight = 20, MaxHeight = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
-        foreach (var val in Enum.GetValues(prop.PropertyType))
-            combo.Items.Add(val);
-        combo.SelectedItem = prop.GetValue(control);
-        combo.SelectionChanged += (s, e) => {
-            if (combo.SelectedItem != null)
-                prop.SetValue(control, combo.SelectedItem);
+        
+        // @ button
+        var dropBtn = new Button
+        {
+            Content = "@",
+            Width = 17,
+            Height = 17,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Padding = new Thickness(0),
+            Background = Brushes.White,
+            Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Thickness(1)
         };
-        return combo;
+        
+        dropBtn.Click += (s, e) =>
+        {
+            // Show multi-line textbox with all enum values
+            var multiLine = new TextBox
+            {
+                Width = 138,
+                MinHeight = 100,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap
+            };
+            
+            // Fill with enum values
+            var values = string.Join("\n", Enum.GetNames(prop.PropertyType));
+            multiLine.Text = values;
+            
+            // Would need SwapControls and selection logic here
+        };
+        
+        container.Children.Add(fakeTextBox);
+        container.Children.Add(dropBtn);
+        
+        return container;
     }
-    
     
     private bool ShouldSkip(PropertyInfo prop)
     {
@@ -143,21 +176,5 @@ public class PropertiesPanel
         return skip.Contains(prop.Name) || 
                prop.PropertyType.IsGenericType ||
                prop.PropertyType.IsArray;
-    }
-
-    private Button CreateTinyButton(string content, int width)
-    {
-        return new Button
-        {
-            Content = content,
-            Width = width,
-            Height = 17,
-            FontSize = 11, FontWeight = FontWeight.Bold,
-            Padding = new Thickness(2, 1, 2, 3),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            HorizontalContentAlignment = HorizontalAlignment.Left
-        };
     }
 }
