@@ -377,7 +377,7 @@ designCanvas = new Canvas
             Padding = new Avalonia.Thickness(5)
         };
         
-        var propsStack = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 5 };
+        var propsStack = new StackPanel { Margin = new Avalonia.Thickness(15), Spacing = 5 };
         
         // Properties header with X button
         var propsHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
@@ -554,7 +554,7 @@ designCanvas = new Canvas
             Padding = new Avalonia.Thickness(5)
         };
         
-        var toolboxStack = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 5 };
+        var toolboxStack = new StackPanel { Margin = new Avalonia.Thickness(15), Spacing = 5 };
         
         var toolboxHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
         toolboxHeader.Children.Add(new TextBlock 
