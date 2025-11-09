@@ -427,7 +427,10 @@ designCanvas = new Canvas
         propsScroll.Content = propsStack;
         propsBorder.Child = propsScroll;
         
-        propertiesPanel = new PropertiesPanel(propsStack);
+        // Create inner stack for properties
+        var innerPropsStack = new StackPanel { Spacing = 5 };
+        propsStack.Children.Add(innerPropsStack);
+        propertiesPanel = new PropertiesPanel(innerPropsStack);
         
         Grid.SetColumn(propsBorder, 0);
         workspace.Children.Add(propsBorder);
