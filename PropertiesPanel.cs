@@ -153,3 +153,20 @@ public class PropertiesPanel
                prop.PropertyType.IsArray;
     }
 }
+
+    private Button CreateTinyButton(string content, int width)
+    {
+        return new Button
+        {
+            Content = content,
+            Width = width,
+            Height = 18,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Padding = new Thickness(2, 1, 2, 3),
+            Background = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Thickness(1),
+            HorizontalContentAlignment = HorizontalAlignment.Left
+        };
+    }
