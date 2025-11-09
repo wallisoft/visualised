@@ -1,0 +1,168 @@
+[08:45:32.347] [CONTROL] Named: Button_1
+[08:45:32.770] [ADD] Button → Button_1
+[08:45:38.734] [CONTROL] Named: TextBox_1
+[08:45:39.103] [ADD] TextBox → TextBox_1
+[09:32:11.882] [CONTROL] Named: Button_1
+[09:32:12.306] [ADD] Button → Button_1
+[09:45:19.997] [CONTROL] Named: Button_1
+[09:45:20.438] [ADD] Button → Button_1
+[09:54:36.530] [CONTROL] Named: Button_1
+[09:54:36.930] [ADD] Button → Button_1
+[10:14:11.868] [CONTROL] Named: Button_1
+[10:14:12.294] [ADD] Button → Button_1
+[10:21:15.963] [CONTROL] Named: Button_1
+[10:21:16.377] [ADD] Button → Button_1
+[10:25:30.778] [CONTROL] Named: Button_1
+[10:25:31.158] [ADD] Button → Button_1
+[10:34:17.951] [CONTROL] Named: Button_1
+[10:34:18.344] [ADD] Button → Button_1
+[13:44:35.124] [CONTROL] Named: Button_1
+[13:44:36.030] [ADD] Button → Button_1
+[15:38:44.946] [CONTROL] Named: Button_1
+[15:38:45.355] [ADD] Button → Button_1
+[15:47:02.745] [CONTROL] Named: Button_1
+[15:47:03.158] [ADD] Button → Button_1
+[15:49:06.128] [CONTROL] Named: Button_1
+[15:49:07.057] [ADD] Button → Button_1
+[15:49:42.861] [CONTROL] Named: TextBox_1
+[15:49:43.273] [ADD] TextBox → TextBox_1
+[16:02:38.101] [CONTROL] Named: Button_1
+[16:02:38.539] [ADD] Button → Button_1
+[16:02:46.674] [CONTROL] Named: TextBox_1
+[16:02:47.580] [ADD] TextBox → TextBox_1
+[16:06:32.588] [CONTROL] Named: Button_1
+[16:06:33.018] [ADD] Button → Button_1
+[16:29:14.293] [CONTROL] Named: Button_1
+[16:29:14.722] [ADD] Button → Button_1
+[16:37:10.481] [CONTROL] Named: Button_1
+[16:37:10.875] [ADD] Button → Button_1
+[16:42:56.277] [CONTROL] Named: Button_1
+[16:42:56.673] [ADD] Button → Button_1
+[16:51:03.047] [CONTROL] Named: Button_1
+[16:51:03.459] [ADD] Button → Button_1
+[16:57:44.294] [CONTROL] Named: Button_1
+[16:57:44.695] [ADD] Button → Button_1
+[17:02:34.525] [CONTROL] Named: Button_1
+[17:02:34.963] [ADD] Button → Button_1
+[17:10:52.530] [CONTROL] Named: Button_1
+[17:10:52.928] [ADD] Button → Button_1
+[17:13:23.396] [CONTROL] Named: Button_1
+[17:13:23.808] [ADD] Button → Button_1
+[17:16:55.039] [CONTROL] Named: Button_1
+[17:16:55.442] [ADD] Button → Button_1
+[17:19:06.253] [CONTROL] Named: Button_1
+[17:19:06.646] [ADD] Button → Button_1
+[17:24:47.236] [CONTROL] Named: Button_1
+[17:24:47.624] [ADD] Button → Button_1
+[17:28:32.943] [CONTROL] Named: Button_1
+[17:28:33.392] [ADD] Button → Button_1
+[17:34:34.226] [CONTROL] Named: Button_1
+[17:34:34.613] [ADD] Button → Button_1
+[17:37:39.716] [CONTROL] Named: Button_1
+[17:37:40.128] [ADD] Button → Button_1
+[17:43:45.008] [CONTROL] Named: Button_1
+[17:43:45.654] [ADD] Button → Button_1
+[17:50:14.051] [CONTROL] Named: Button_1
+[17:50:14.455] [ADD] Button → Button_1
+[17:54:57.215] [CONTROL] Named: Button_1
+[17:54:57.638] [ADD] Button → Button_1
+[17:55:57.945] [CONTROL] Named: Button_1
+[17:55:58.628] [ADD] Button → Button_1
+[18:19:28.587] [CONTROL] Named: Button_1
+[18:19:28.986] [ADD] Button → Button_1
+[18:23:18.294] [CONTROL] Named: TextBox_1
+[18:23:18.705] [ADD] TextBox → TextBox_1
+[18:32:38.526] [CONTROL] Named: Button_1
+[18:32:38.960] [ADD] Button → Button_1
+[18:37:36.336] [CONTROL] Named: Button_1
+[18:38:08.571] [CONTROL] Named: Button_1
+[18:42:34.000] [CONTROL] Named: Button_1
+[18:42:34.389] [ADD] Button → Button_1
+[18:52:43.720] [CONTROL] Named: Button_1
+[18:52:44.131] [ADD] Button → Button_1
+[18:58:28.241] [CONTROL] Named: Button_1
+[18:58:29.126] [ADD] Button → Button_1
+[19:07:29.388] [CONTROL] Named: TextBox_1
+[19:07:29.759] [ADD] TextBox → TextBox_1
+[19:11:57.336] [CONTROL] Named: Button_1
+[19:11:57.737] [ADD] Button → Button_1
+[19:17:22.554] [CONTROL] Named: Button_1
+[19:17:22.848] [ADD] Button → Button_1
+[19:23:16.099] [CONTROL] Named: Button_1
+[19:23:17.049] [ADD] Button → Button_1
+[20:13:35.332] [CONTROL] Named: Button_1
+[20:13:36.724] [ADD] Button → Button_1
+[20:15:23.279] [CONTROL] Named: Button_1
+[20:15:23.662] [ADD] Button → Button_1
+[20:25:19.796] [CONTROL] Named: Button_1
+[20:25:20.219] [ADD] Button → Button_1
+[20:28:11.257] [CONTROL] Named: Button_1
+[20:28:11.650] [ADD] Button → Button_1
+[20:38:34.203] [CONTROL] Named: Button_1
+[20:38:34.900] [ADD] Button → Button_1
+[20:39:55.348] [CONTROL] Named: Button_1
+[20:39:55.735] [ADD] Button → Button_1
+[20:42:38.691] [DESIGNER] Canvas cleared
+[20:42:39.407] [DESIGNER] Added Button 'btnTest' at (NaN,NaN) 100x30
+[20:43:07.034] [DESIGNER] Canvas cleared
+[20:43:07.769] [DESIGNER] Added Grid 'QuickGrid' at (NaN,NaN) 200x150
+[20:43:08.439] [DESIGNER] Added StackPanel 'QuickLeftPanel' at (NaN,NaN) 200x150
+[20:43:09.275] [DESIGNER] Added TextBlock 'QuickTitle' at (NaN,NaN) NaNxNaN
+[20:43:09.969] [DESIGNER] Added Border 'MethodBorder' at (NaN,NaN) 150x100
+[20:43:10.637] [DESIGNER] Added StackPanel 'MethodPanel' at (NaN,NaN) 200x150
+[20:43:11.439] [DESIGNER] Added TextBlock 'MethodLabel' at (NaN,NaN) NaNxNaN
+[20:43:12.106] [DESIGNER] Added RadioButton 'RadioLocalFile' at (NaN,NaN) NaNxNaN
+[20:43:12.777] [DESIGNER] Added RadioButton 'RadioDownload' at (NaN,NaN) NaNxNaN
+[20:43:13.478] [DESIGNER] Added Border 'LocalFileBorder' at (NaN,NaN) 150x100
+[20:43:14.150] [DESIGNER] Added StackPanel 'LocalFilePanel' at (NaN,NaN) 200x150
+[20:43:14.934] [DESIGNER] Added TextBlock 'LocalFileLabel' at (NaN,NaN) NaNxNaN
+[20:43:15.658] [DESIGNER] Added TextBox 'txtIsoPath' at (NaN,NaN) 150x25
+[20:43:16.336] [DESIGNER] Added Button 'btnBrowse' at (NaN,NaN) 100x30
+[20:43:17.032] [DESIGNER] Added Border 'DownloadBorder' at (NaN,NaN) 150x100
+[20:43:17.709] [DESIGNER] Added StackPanel 'DownloadPanel' at (NaN,NaN) 200x150
+[20:43:18.504] [DESIGNER] Added TextBlock 'DownloadLabel' at (NaN,NaN) NaNxNaN
+[20:43:19.210] [DESIGNER] Added ListBox 'lstIsoDownloads' at (NaN,NaN) 150x100
+[20:43:19.869] [DESIGNER] Added StackPanel 'QuickRightPanel' at (NaN,NaN) 200x150
+[20:43:20.638] [DESIGNER] Added TextBlock 'StatusTitle' at (NaN,NaN) NaNxNaN
+[20:43:21.298] [DESIGNER] Added Border 'StatusBorder' at (NaN,NaN) 150x100
+[20:43:21.965] [DESIGNER] Added StackPanel 'StatusPanel' at (NaN,NaN) 200x150
+[20:43:22.764] [DESIGNER] Added TextBlock 'StatusText' at (NaN,NaN) NaNxNaN
+[20:43:23.607] [DESIGNER] Added TextBlock 'SwapInfoText' at (NaN,NaN) NaNxNaN
+[20:43:24.410] [DESIGNER] Added TextBlock 'IsoInfoText' at (NaN,NaN) NaNxNaN
+[20:43:25.205] [DESIGNER] Added TextBlock 'GrubInfoText' at (NaN,NaN) NaNxNaN
+[20:43:25.908] [DESIGNER] Added StackPanel 'ActionPanel' at (NaN,NaN) 200x150
+[20:43:26.607] [DESIGNER] Added Button 'btnDownloadInstall' at (NaN,NaN) 100x30
+[20:43:27.305] [DESIGNER] Added Button 'btnInstallLocal' at (NaN,NaN) 100x30
+[20:43:28.003] [DESIGNER] Added Button 'btnManageBoot' at (NaN,NaN) 100x30
+[20:43:28.694] [DESIGNER] Added Border 'ProgressBorder' at (NaN,NaN) 150x100
+[20:43:29.394] [DESIGNER] Added StackPanel 'ProgressPanel' at (NaN,NaN) 200x150
+[20:43:30.213] [DESIGNER] Added TextBlock 'ProgressLabel' at (NaN,NaN) NaNxNaN
+[20:43:30.994] [DESIGNER] Added TextBlock 'ProgressText' at (NaN,NaN) NaNxNaN
+[20:43:31.634] [DESIGNER] Added Grid 'AdvancedGrid' at (NaN,NaN) 200x150
+[20:43:32.204] [DESIGNER] Added StackPanel 'AdvancedLeftPanel' at (NaN,NaN) 200x150
+[20:43:32.807] [DESIGNER] Added TextBlock 'AdvancedTitle' at (NaN,NaN) NaNxNaN
+[20:43:33.258] [DESIGNER] Added Border 'SwapBorder' at (NaN,NaN) 150x100
+[20:43:33.891] [DESIGNER] Added StackPanel 'SwapPanel' at (NaN,NaN) 200x150
+[20:43:34.689] [DESIGNER] Added TextBlock 'SwapTitle' at (NaN,NaN) NaNxNaN
+[20:43:35.352] [DESIGNER] Added RadioButton 'RadioSwapAuto' at (NaN,NaN) NaNxNaN
+[20:43:36.010] [DESIGNER] Added RadioButton 'RadioSwapCustom' at (NaN,NaN) NaNxNaN
+[20:43:36.671] [DESIGNER] Added RadioButton 'RadioSwapPartition' at (NaN,NaN) NaNxNaN
+[20:43:37.507] [DESIGNER] Added TextBlock 'SwapPathLabel' at (NaN,NaN) NaNxNaN
+[20:43:38.210] [DESIGNER] Added TextBox 'txtSwapPath' at (NaN,NaN) 150x25
+[20:43:38.909] [DESIGNER] Added Button 'btnBrowseSwap' at (NaN,NaN) 100x30
+[20:43:39.718] [DESIGNER] Added TextBlock 'SwapSizeLabel' at (NaN,NaN) NaNxNaN
+[20:43:40.425] [DESIGNER] Added Border 'PartitionBorder' at (NaN,NaN) 150x100
+[20:43:41.129] [DESIGNER] Added StackPanel 'PartitionPanel' at (NaN,NaN) 200x150
+[20:43:41.970] [DESIGNER] Added TextBlock 'PartitionTitle' at (NaN,NaN) NaNxNaN
+[20:43:42.670] [DESIGNER] Added Button 'btnCheckPartitions' at (NaN,NaN) 100x30
+[20:43:43.332] [DESIGNER] Added Button 'btnCheckBitLocker' at (NaN,NaN) 100x30
+[20:43:43.983] [DESIGNER] Added StackPanel 'AdvancedRightPanel' at (NaN,NaN) 200x150
+[20:43:44.748] [DESIGNER] Added TextBlock 'GrubTitle' at (NaN,NaN) NaNxNaN
+[20:43:45.451] [DESIGNER] Added Border 'GrubBorder' at (NaN,NaN) 150x100
+[20:43:46.143] [DESIGNER] Added StackPanel 'GrubPanel' at (NaN,NaN) 200x150
+[20:43:46.945] [DESIGNER] Added TextBlock 'GrubEditorLabel' at (NaN,NaN) NaNxNaN
+[20:43:47.632] [DESIGNER] Added TextBox 'txtGrubConfig' at (NaN,NaN) 150x25
+[20:43:48.327] [DESIGNER] Added StackPanel 'GrubButtonPanel' at (NaN,NaN) 200x150
+[20:43:49.028] [DESIGNER] Added Button 'btnGrubDefaults' at (NaN,NaN) 100x30
+[20:43:49.727] [DESIGNER] Added Button 'btnGrubSave' at (NaN,NaN) 100x30
+[20:43:50.566] [DESIGNER] Added TextBlock 'GrubWarning' at (NaN,NaN) NaNxNaN
