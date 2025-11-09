@@ -237,7 +237,7 @@ public class DesignerWindow
         root.Children.Add(statusBar);
         
         var workspace = new Grid { Margin = new Avalonia.Thickness(8), Background = new SolidColorBrush(Color.Parse("#f1f8e9")) };
-        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
+        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(258) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         
         // var toolbox = BuildToolbox();
