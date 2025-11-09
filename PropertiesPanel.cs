@@ -75,7 +75,14 @@ public class PropertiesPanel
     
     private TextBox CreateTextBox(Control control, PropertyInfo prop)
     {
-        var tb = new TextBox { Width = 120, Height = 20 };
+        var tb = new TextBox 
+        { 
+            Width = 120, 
+            Height = 20,
+            Padding = new Thickness(4, 2, 4, 2),
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Thickness(1)
+        };
         tb.Text = prop.GetValue(control)?.ToString() ?? "";
         tb.LostFocus += (s, e) => prop.SetValue(control, tb.Text);
         return tb;
@@ -83,7 +90,7 @@ public class PropertiesPanel
     
     private TextBox CreateNumberBox(Control control, PropertyInfo prop)
     {
-        var tb = new TextBox { Width = 120, Height = 20 };
+        var tb = new TextBox { Width = 120, Height = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
         tb.Text = prop.GetValue(control)?.ToString() ?? "0";
         tb.LostFocus += (s, e) => {
             if (double.TryParse(tb.Text, out var val))
