@@ -244,12 +244,27 @@ public class DesignerWindow
         Grid.SetColumn(toolbox, 0);
         workspace.Children.Add(toolbox);
         
-        designCanvas = new Canvas 
+designCanvas = new Canvas 
         { 
             Width = DefaultCanvasWidth,
             Height = DefaultCanvasHeight,
             Background = new SolidColorBrush(Color.Parse("#f1f8e9"))
         };
+
+        // Center overlay
+        var overlay = new TextBlock
+        {
+            Text = "Drop controls here or click Toolbox",
+            FontSize = 16,
+            Foreground = new SolidColorBrush(Color.Parse("#999")),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            IsHitTestVisible = false
+        };
+        
+        designCanvas.Children.Add(overlay);
+        Canvas.SetLeft(overlay, 400);
+        Canvas.SetTop(overlay, 300);
         
         designCanvas.PointerMoved += (s, e) =>
         {
@@ -359,7 +374,7 @@ public class DesignerWindow
         var propsScroll = new ScrollViewer 
         { 
             VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-            Padding = new Avalonia.Thickness(10)
+            Padding = new Avalonia.Thickness(5)
         };
         
         var propsStack = new StackPanel { Spacing = 5 };
