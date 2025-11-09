@@ -420,7 +420,24 @@ designCanvas = new Canvas
         workspace.Children.Add(propsBorder);
         
         root.Children.Add(workspace);
-        window.Content = root;
+        
+        // Parent container for switching designer/app views
+        var appContainer = new Grid 
+        { 
+            Name = "appContainer",
+            Background = new SolidColorBrush(Color.Parse("#f1f8e9"))
+        };
+        
+        // Designer view (current)
+        var designerView = root;
+        designerView.Name = "designerView";
+        appContainer.Children.Add(designerView);
+        
+        // App view (initially hidden) - TODO: populated by Preview
+        var appView = new Grid { Name = "appView", IsVisible = false };
+        appContainer.Children.Add(appView);
+        
+        window.Content = appContainer;
         
         // Update status bar on window resize
         window.PropertyChanged += (s, e) =>
