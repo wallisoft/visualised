@@ -42,6 +42,7 @@ public class DesignerWindow
     private static double overlayWidth = 800;
     private static double overlayHeight = 600;
     private static TextBlock? statusText;
+    private static TextBlock? instructionsOverlay;
     private static Point dragStart;
     private static bool isDragging;
     private const double EdgeTolerance = 8.0;
@@ -236,8 +237,8 @@ public class DesignerWindow
         root.Children.Add(statusBar);
         
         var workspace = new Grid { Margin = new Avalonia.Thickness(8), Background = new SolidColorBrush(Color.Parse("#f1f8e9")) };
-        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
+        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         
         var toolbox = BuildToolbox();
         Grid.SetColumn(toolbox, 0);
@@ -360,7 +361,7 @@ designCanvas = new Canvas
         };
         canvasScroll.Content = designCanvas;
         
-        Grid.SetColumn(canvasScroll, 0);
+        Grid.SetColumn(canvasScroll, 1);
         workspace.Children.Add(canvasScroll);
         
         var propsBorder = new Border
@@ -415,7 +416,7 @@ designCanvas = new Canvas
         
         propertiesPanel = new PropertiesPanel(propsStack);
         
-        Grid.SetColumn(propsBorder, 1);
+        Grid.SetColumn(propsBorder, 0);
         workspace.Children.Add(propsBorder);
         
         root.Children.Add(workspace);
@@ -542,6 +543,8 @@ designCanvas = new Canvas
         
         MakeDraggableWithCursors(control);
         designCanvas.Children.Add(control);
+        CheckAndHideInstructions();
+        CheckAndHideInstructions();
         SelectControl(control);
         PropertyStore.SyncControl(control);
         
@@ -555,6 +558,15 @@ designCanvas = new Canvas
         var controlType = selectedControl?.GetType().Name.Replace("Design", "") ?? "";
         var display = controlName != "None" ? $"{controlName} ({controlType})" : "None";
         statusText.Text = $"{display} | Win: {window.ClientSize.Width:F0}x{window.ClientSize.Height:F0}";
+    }
+    
+    private static void CheckAndHideInstructions()
+    {
+        if (instructionsOverlay != null && designCanvas != null)
+        {
+            if (designCanvas.Children.Count > 1) // More than just the overlay
+                instructionsOverlay.IsVisible = false;
+        }
     }
     
     private static Border BuildToolbox()
@@ -710,6 +722,8 @@ designCanvas = new Canvas
                 Canvas.SetTop(control, testY);
                 MakeDraggableWithCursors(control);
                 designCanvas.Children.Add(control);
+        CheckAndHideInstructions();
+        CheckAndHideInstructions();
                 SelectControl(control);
                 PropertyStore.SyncControl(control);
                 DebugLog($"[ADD] {controlType} → {control.Name}");
@@ -752,6 +766,8 @@ designCanvas = new Canvas
             {
                 designCanvas.Children.Remove(control);
                 designCanvas.Children.Add(control);
+        CheckAndHideInstructions();
+        CheckAndHideInstructions();
                 UpdateSelectionBorder();
                 Console.WriteLine($"[Z-ORDER] Brought to front ({control.Name})");
             }

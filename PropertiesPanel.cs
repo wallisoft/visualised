@@ -24,9 +24,6 @@ public class PropertiesPanel
         selectedControl = control;
         panel.Children.Clear();
         
-        // Control type as first property
-        AddTypeProperty(control);
-        
         // Get all settable properties via reflection
         var props = control.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanWrite && p.CanRead)
@@ -41,19 +38,7 @@ public class PropertiesPanel
         }
     }
     
-    private void AddTypeProperty(Control control)
-    {
-        var row = CreateRow();
-        row.Children.Add(CreateLabel("Type:"));
-        
-        var combo = new ComboBox { Width = 120, Height = 20, IsEnabled = false };
-        combo.Items.Add(control.GetType().Name);
-        combo.SelectedIndex = 0;
-        row.Children.Add(combo);
-        
-        panel.Children.Add(row);
-    }
-    
+
     private void AddPropertyEditor(Control control, PropertyInfo prop)
     {
         var row = CreateRow();
