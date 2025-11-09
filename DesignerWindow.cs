@@ -235,7 +235,7 @@ public class DesignerWindow
         DockPanel.SetDock(statusBar, Dock.Bottom);
         root.Children.Add(statusBar);
         
-        var workspace = new Grid { Margin = new Avalonia.Thickness(8) };
+        var workspace = new Grid { Margin = new Avalonia.Thickness(8), Background = new SolidColorBrush(Color.Parse("#f1f8e9")) };
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
@@ -262,9 +262,10 @@ designCanvas = new Canvas
             IsHitTestVisible = false
         };
         
+        overlay.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+        overlay.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        overlay.Margin = new Avalonia.Thickness(0);
         designCanvas.Children.Add(overlay);
-        Canvas.SetLeft(overlay, 400);
-        Canvas.SetTop(overlay, 300);
         
         designCanvas.PointerMoved += (s, e) =>
         {
@@ -406,17 +407,15 @@ designCanvas = new Canvas
         
         propsStack.Children.Add(propsHeader);
         
-        // Control type label (updated when control selected)
-        var controlTypeLabel = new TextBlock 
+        // Control type ComboBox
+        var controlTypeCombo = new ComboBox 
         { 
-            Name = "controlTypeLabel",
-            Text = "No control selected",
-            FontSize = 13,
-            FontWeight = FontWeight.SemiBold,
-            Foreground = new SolidColorBrush(Color.Parse("#1b5e20")),
+            Name = "controlTypeCombo",
+            Width = 200,
+            IsEnabled = false,
             Margin = new Avalonia.Thickness(0, 0, 0, 10)
         };
-        propsStack.Children.Add(controlTypeLabel);
+        propsStack.Children.Add(controlTypeCombo);
         
         propsScroll.Content = propsStack;
         propsBorder.Child = propsScroll;
