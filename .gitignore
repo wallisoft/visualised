@@ -30,3 +30,4 @@ Thumbs.db
 
 # Except seed database
 !seed.db
+vml/options.vml
