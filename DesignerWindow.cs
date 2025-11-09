@@ -415,7 +415,7 @@ designCanvas = new Canvas
         var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "RadioButton", "StackPanel", "Grid", "Border" };
         foreach (var t in types) controlCombo.Items.Add(t);
         controlCombo.SelectedIndex = 0;
-        var addBtn = new Button { Content = "Add", Width = 60, Height = 24, Background = new SolidColorBrush(Color.Parse("#66bb6a")), Foreground = Brushes.White };
+        var addBtn = new Button { Content = "Add", Width = 60, Height = 20, FontSize = 11, Padding = new Avalonia.Thickness(4, 2, 4, 2), Background = new SolidColorBrush(Color.Parse("#66bb6a")), Foreground = Brushes.White };
         addBtn.Click += (s, e) => { if (controlCombo.SelectedItem != null) AddControlToCanvas(controlCombo.SelectedItem.ToString()!); };
         selectorRow.Children.Add(controlCombo);
         selectorRow.Children.Add(addBtn);
