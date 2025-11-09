@@ -120,8 +120,18 @@ public partial class MainWindow : Window
     public void HandleEditVML(object? s, RoutedEventArgs e) => Console.WriteLine("[EDIT] Edit VML Source - F12");
     
     // VIEW
-    public void HandleToolbox(object? s, RoutedEventArgs e) => Console.WriteLine("[VIEW] Toolbox");
-    public void HandleProperties(object? s, RoutedEventArgs e) => Console.WriteLine("[VIEW] Properties");
+    public void HandleToolbox(object? s, RoutedEventArgs e) 
+    { 
+        var designer = Content as Control; 
+        var toolbox = designer?.FindControl<Border>("toolboxBorder"); 
+        if (toolbox != null) toolbox.IsVisible = true; 
+    }
+    public void HandleProperties(object? s, RoutedEventArgs e) 
+    { 
+        var designer = Content as Control; 
+        var props = designer?.FindControl<Border>("propsBorder"); 
+        if (props != null) props.IsVisible = true; 
+    }
     public void HandleOutput(object? s, RoutedEventArgs e) => Console.WriteLine("[VIEW] Output");
     public void HandleZoomIn(object? s, RoutedEventArgs e) => Console.WriteLine("[VIEW] Zoom In");
     public void HandleZoomOut(object? s, RoutedEventArgs e) => Console.WriteLine("[VIEW] Zoom Out");
