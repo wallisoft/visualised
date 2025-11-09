@@ -252,7 +252,7 @@ designCanvas = new Canvas
         };
 
         // Center overlay
-        var overlay = new TextBlock
+        instructionsOverlay = new TextBlock
         {
             Text = "Drop controls here or click Toolbox",
             FontSize = 16,
@@ -262,11 +262,11 @@ designCanvas = new Canvas
             IsHitTestVisible = false
         };
         
-        designCanvas.Children.Add(overlay);
+        designCanvas.Children.Add(instructionsOverlay);
         // Position will be updated when canvas size is known
         designCanvas.LayoutUpdated += (s, e) => {
-            Canvas.SetLeft(overlay, (designCanvas.Bounds.Width - 250) / 2);
-            Canvas.SetTop(overlay, designCanvas.Bounds.Height / 2 - 20);
+            Canvas.SetLeft(instructionsOverlay, (designCanvas.Bounds.Width - 250) / 2);
+            Canvas.SetTop(instructionsOverlay, designCanvas.Bounds.Height / 2 - 20);
         };
         
         designCanvas.PointerMoved += (s, e) =>
@@ -408,6 +408,19 @@ designCanvas = new Canvas
         propsHeader.Children.Add(propsCloseBtn);
         
         propsStack.Children.Add(propsHeader);
+        
+        // Control selector
+        var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+        var controlCombo = new ComboBox { Width = 140, Height = 24 };
+        var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "RadioButton", "StackPanel", "Grid", "Border" };
+        foreach (var t in types) controlCombo.Items.Add(t);
+        controlCombo.SelectedIndex = 0;
+        var addBtn = new Button { Content = "Add", Width = 60, Height = 24, Background = new SolidColorBrush(Color.Parse("#66bb6a")), Foreground = Brushes.White };
+        addBtn.Click += (s, e) => { if (controlCombo.SelectedItem != null) AddControlToCanvas(controlCombo.SelectedItem.ToString()!); };
+        selectorRow.Children.Add(controlCombo);
+        selectorRow.Children.Add(addBtn);
+        propsStack.Children.Add(selectorRow);
+
         
 
         
