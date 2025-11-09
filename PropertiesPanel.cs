@@ -80,6 +80,32 @@ public class PropertiesPanel
     
     private Control CreateTinyTextBox(Control control, PropertyInfo prop)
     {
+        // Load TinyTextBox template from database
+        var vmlControls = VmlLoader.LoadFromDatabase("TinyTextBox");
+        if (vmlControls.Count > 0)
+        {
+            var builder = new ControlBuilder(vmlControls);
+            var controls = builder.BuildControls();
+            if (controls.Count > 0)
+            {
+                var tinyTextBox = controls[0];
+                
+                // Set initial value on fakeBox
+                if (tinyTextBox is Panel panel)
+                {
+                    var fakeBox = panel.Children.OfType<Label>().FirstOrDefault();
+                    if (fakeBox != null)
+                    {
+                        fakeBox.Content = prop.GetValue(control)?.ToString() ?? "";
+                    }
+                }
+                
+                return tinyTextBox;
+            }
+        }
+        
+        // Fallback to simple textbox if loading fails
+
         // Label that looks like textbox
         var fakeTextBox = new Label
         {
