@@ -81,7 +81,7 @@ public class PropertiesPanel
         var tb = new TextBox 
         { 
             Width = 120, 
-            Height = 20,
+            Height = 20, MinHeight = 20, MaxHeight = 20,
             Padding = new Thickness(4, 2, 4, 2),
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(1)
@@ -93,7 +93,7 @@ public class PropertiesPanel
     
     private TextBox CreateNumberBox(Control control, PropertyInfo prop)
     {
-        var tb = new TextBox { Width = 120, Height = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
+        var tb = new TextBox { Width = 120, Height = 20, MinHeight = 20, MaxHeight = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
         tb.Text = prop.GetValue(control)?.ToString() ?? "0";
         tb.LostFocus += (s, e) => {
             if (double.TryParse(tb.Text, out var val))
@@ -120,7 +120,7 @@ public class PropertiesPanel
     
     private ComboBox CreateEnumCombo(Control control, PropertyInfo prop)
     {
-        var combo = new ComboBox { Width = 120, Height = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
+        var combo = new ComboBox { Width = 120, Height = 20, MinHeight = 20, MaxHeight = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
         foreach (var val in Enum.GetValues(prop.PropertyType))
             combo.Items.Add(val);
         combo.SelectedItem = prop.GetValue(control);
@@ -136,7 +136,7 @@ public class PropertiesPanel
         var row = CreateRow();
         row.Children.Add(CreateLabel("Add:"));
         
-        var combo = new ComboBox { Width = 120, Height = 20, Padding = new Thickness(4,2,4,2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
+        var combo = new ComboBox { Width = 120, Height = 20, MinHeight = 20, MaxHeight = 20, Padding = new Thickness(4,2,4,2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
         var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "Grid", "StackPanel", "Border" };
         foreach (var t in types) combo.Items.Add(t);
         combo.SelectedIndex = 0;
