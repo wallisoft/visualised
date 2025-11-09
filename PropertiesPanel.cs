@@ -26,7 +26,14 @@ public class PropertiesPanel
         
         var props = control.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanWrite && p.CanRead && !ShouldSkip(p))
-            .OrderBy(p => p.Name);
+            .OrderBy(p => 
+        {
+            // TODO: Query from property_order table
+            // For now, prioritize common properties
+            var priority = new[] { "Name", "Content", "Text", "Width", "Height", "Margin", "Background" };
+            var index = Array.IndexOf(priority, p.Name);
+            return index == -1 ? 100 + p.Name.GetHashCode() : index;
+        });
         
         foreach (var prop in props)
         {
