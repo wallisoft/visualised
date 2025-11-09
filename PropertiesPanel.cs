@@ -68,6 +68,8 @@ public class PropertiesPanel
             row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(bool))
             row.Children.Add(new CheckBox { IsChecked = (bool?)prop.GetValue(control) });
+        else if (prop.PropertyType.Name.Contains("Brush") || prop.PropertyType.Name == "IBrush")
+            row.Children.Add(new TextBlock { Text = "🎨", FontSize = 14 }); // TODO: Color picker
         else if (prop.PropertyType.IsEnum)
             row.Children.Add(CreateTinyCombo(control, prop));
         else
@@ -83,7 +85,7 @@ public class PropertiesPanel
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            MinHeight = 17,
+            MinHeight = 15,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(4, 2, 4, 2),
@@ -151,7 +153,7 @@ public class PropertiesPanel
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            MinHeight = 17,
+            MinHeight = 15,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(4, 2, 4, 2),
@@ -194,7 +196,26 @@ public class PropertiesPanel
             var values = string.Join("\n", Enum.GetNames(prop.PropertyType));
             multiLine.Text = values;
             
-            // Would need SwapControls and selection logic here
+            multiLine.LostFocus += (s2, e2) =>
+            {
+                var parent = container.Parent as Panel;
+                if (parent != null)
+                {
+                    var idx = parent.Children.IndexOf(multiLine);
+                    parent.Children.RemoveAt(idx);
+                    parent.Children.Insert(idx, container);
+                }
+            };
+            
+            // Swap
+            var parent = container.Parent as Panel;
+            if (parent != null)
+            {
+                var index = parent.Children.IndexOf(container);
+                parent.Children.RemoveAt(index);
+                parent.Children.Insert(index, multiLine);
+                multiLine.Focus();
+            }
         };
         
         container.Children.Add(fakeTextBox);
