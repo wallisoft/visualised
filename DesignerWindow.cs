@@ -240,9 +240,9 @@ public class DesignerWindow
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         
-        var toolbox = BuildToolbox();
-        Grid.SetColumn(toolbox, 0);
-        workspace.Children.Add(toolbox);
+        // var toolbox = BuildToolbox();
+        // Grid.SetColumn(toolbox, 0);
+        // workspace.Children.Add(toolbox);
         
 designCanvas = new Canvas 
         { 
