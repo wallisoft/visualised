@@ -172,82 +172,60 @@ public class PropertiesPanel
     
     private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
-        var container = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 1 };
-        
-        // Fake textbox showing current value
-        var fakeTextBox = new Label
+        // Load TinyCombo from database
+        var vmlControls = VmlLoader.LoadFromDatabase("TinyCombo");
+        if (vmlControls.Count > 0)
         {
-            Content = prop.GetValue(control)?.ToString() ?? "",
-            Width = 120,
-            MinHeight = 15,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(4, 2, 4, 2),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(2),
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            VerticalContentAlignment = VerticalAlignment.Center
-        };
-        
-        // @ button
-        var dropBtn = new Button
-        {
-            Content = "@",
-            Width = 19,
-            Height = 19,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0),
-            Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(2)
-        };
-        
-        dropBtn.Click += (s, e) =>
-        {
-            // Show multi-line textbox with all enum values
-            var multiLine = new TextBox
+            var builder = new ControlBuilder(vmlControls);
+            var controls = builder.BuildControls();
+            if (controls.Count > 0 && controls[0] is Panel container)
             {
-                Width = 138,
-                MinHeight = 100,
-                AcceptsReturn = true,
-                TextWrapping = TextWrapping.Wrap
-            };
-            
-            // Fill with enum values
-            var values = string.Join("\n", Enum.GetNames(prop.PropertyType));
-            multiLine.Text = values;
-            
-            multiLine.LostFocus += (s2, e2) =>
-            {
-                var parent = container.Parent as Panel;
-                if (parent != null)
+                var valueBox = container.Children.OfType<Label>().FirstOrDefault();
+                var dropBtn = container.Children.OfType<Button>().FirstOrDefault();
+                
+                if (valueBox != null && dropBtn != null)
                 {
-                    var idx = parent.Children.IndexOf(multiLine);
-                    parent.Children.RemoveAt(idx);
-                    parent.Children.Insert(idx, container);
+                    valueBox.Content = prop.GetValue(control)?.ToString() ?? "";
+                    
+                    dropBtn.Click += (s, e) =>
+                    {
+                        var parent = container.Parent as Panel;
+                        if (parent == null) return;
+                        
+                        var combo = new ComboBox { Width = 140, MinHeight = 19 };
+                        foreach (var val in Enum.GetValues(prop.PropertyType))
+                            combo.Items.Add(val);
+                        combo.SelectedItem = prop.GetValue(control);
+                        
+                        combo.SelectionChanged += (s2, e2) =>
+                        {
+                            if (combo.SelectedItem != null)
+                            {
+                                valueBox.Content = combo.SelectedItem.ToString();
+                                prop.SetValue(control, combo.SelectedItem);
+                            }
+                        };
+                        
+                        combo.DropDownClosed += (s2, e2) =>
+                        {
+                            var idx = parent.Children.IndexOf(combo);
+                            parent.Children.RemoveAt(idx);
+                            parent.Children.Insert(idx, container);
+                        };
+                        
+                        var index = parent.Children.IndexOf(container);
+                        parent.Children.RemoveAt(index);
+                        parent.Children.Insert(index, combo);
+                        combo.Focus();
+                        combo.IsDropDownOpen = true;
+                    };
                 }
-            };
-            
-            // Swap
-            var parent = container.Parent as Panel;
-            if (parent != null)
-            {
-                var index = parent.Children.IndexOf(container);
-                parent.Children.RemoveAt(index);
-                parent.Children.Insert(index, multiLine);
-                multiLine.Focus();
+                
+                return container;
             }
-        };
+        }
         
-        container.Children.Add(fakeTextBox);
-        container.Children.Add(dropBtn);
-        
-        return container;
+        return new TextBlock { Text = "(enum)" };
     }
     
     private bool ShouldSkip(PropertyInfo prop)
