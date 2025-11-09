@@ -1,0 +1,55 @@
+<StackPanel Name="container" Orientation="Horizontal" Spacing="1">
+    <Label Name="valueBox"
+           Width="120"
+           MinHeight="15"
+           FontSize="11"
+           FontWeight="Bold"
+           Padding="4,2,4,2"
+           Background="White"
+           BorderBrush="#66bb6a"
+           BorderThickness="1"
+           CornerRadius="2"
+           HorizontalContentAlignment="Left"
+           VerticalContentAlignment="Center" />
+    
+    <Button Name="dropBtn"
+            Content="@"
+            Width="19"
+            Height="19"
+            FontSize="11"
+            FontWeight="Bold"
+            Padding="0"
+            Background="White"
+            Foreground="#66bb6a"
+            BorderBrush="#66bb6a"
+            BorderThickness="1"
+            CornerRadius="2">
+        
+        @Script Parent=dropBtn Type=Click
+        var parent = container.Parent as Panel;
+        if (parent == null) return;
+        
+        var combo = new ComboBox 
+        { 
+            Width = 140,
+            MinHeight = 19
+        };
+        
+        // TODO: Fill from enum values
+        
+        combo.DropDownClosed += (s2, e2) => {
+            if (combo.SelectedItem != null)
+                valueBox.Content = combo.SelectedItem.ToString();
+            var idx = parent.Children.IndexOf(combo);
+            parent.Children.RemoveAt(idx);
+            parent.Children.Insert(idx, container);
+        };
+        
+        var index = parent.Children.IndexOf(container);
+        parent.Children.RemoveAt(index);
+        parent.Children.Insert(index, combo);
+        combo.Focus();
+        combo.IsDropDownOpen = true;
+        @EndScript
+    </Button>
+</StackPanel>
