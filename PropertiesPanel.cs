@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -24,6 +25,43 @@ public class PropertiesPanel
     {
         selectedControl = control;
         panel.Children.Clear();
+        
+        // Add control type combo as first property
+        var typeRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(0, 0, 0, 8) };
+        
+        var typeLabel = new TextBlock 
+        { 
+            Text = "Type:",
+            Width = 60,
+            TextAlignment = TextAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 5, 0)
+        };
+        
+        var typeCombo = new ComboBox
+        {
+            Width = 120,
+            Height = 20,
+            FontSize = 11,
+            Padding = new Thickness(4, 0, 4, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        
+        // Populate with all control types
+        var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "RadioButton", "StackPanel", "Grid", "Border" };
+        foreach (var t in types)
+            typeCombo.Items.Add(t);
+        
+        typeCombo.SelectedItem = control.GetType().Name.Replace("Design", "");
+        typeCombo.IsEnabled = false; // Read-only for now
+        
+        typeRow.Children.Add(typeLabel);
+        typeRow.Children.Add(typeCombo);
+        panel.Children.Add(typeRow);
+        
+        // Add control type combo as first property
+        typeRow.Children.Add(typeCombo);
+        panel.Children.Add(typeRow);
         propertyControls.Clear();
 
         if (control == null) return;

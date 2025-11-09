@@ -262,10 +262,12 @@ designCanvas = new Canvas
             IsHitTestVisible = false
         };
         
-        overlay.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
-        overlay.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
-        overlay.Margin = new Avalonia.Thickness(0);
         designCanvas.Children.Add(overlay);
+        // Position will be updated when canvas size is known
+        designCanvas.LayoutUpdated += (s, e) => {
+            Canvas.SetLeft(overlay, (designCanvas.Bounds.Width - 250) / 2);
+            Canvas.SetTop(overlay, designCanvas.Bounds.Height / 2 - 20);
+        };
         
         designCanvas.PointerMoved += (s, e) =>
         {
@@ -407,15 +409,7 @@ designCanvas = new Canvas
         
         propsStack.Children.Add(propsHeader);
         
-        // Control type ComboBox
-        var controlTypeCombo = new ComboBox 
-        { 
-            Name = "controlTypeCombo",
-            Width = 200,
-            IsEnabled = false,
-            Margin = new Avalonia.Thickness(0, 0, 0, 10)
-        };
-        propsStack.Children.Add(controlTypeCombo);
+
         
         propsScroll.Content = propsStack;
         propsBorder.Child = propsScroll;
