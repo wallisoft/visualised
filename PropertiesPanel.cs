@@ -27,7 +27,10 @@ public class PropertiesPanel
         // Get all settable properties via reflection
         var props = control.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanWrite && p.CanRead)
-            .OrderBy(p => p.Name);
+            .OrderBy(p => {
+            // TODO: Query property_order table for display_order
+            return p.Name;
+        });
         
         // Control type selector as first property
         
@@ -70,35 +73,38 @@ public class PropertiesPanel
     private TextBlock CreateLabel(string text) => new() 
     { 
         Text = text,
-        Width = 60, FontSize = 11, FontWeight = FontWeight.Bold,
+        Width = 60, FontSize = 11,
         TextAlignment = TextAlignment.Right,
         Margin = new Thickness(0, 0, 5, 0)
     };
     
-    private TextBox CreateTextBox(Control control, PropertyInfo prop)
+    private Button CreateTextBox(Control control, PropertyInfo prop)
     {
-        var tb = new TextBox 
-        { 
-            Width = 120, 
-            Height = 20, MinHeight = 20, MaxHeight = 20,
-            Padding = new Thickness(4, 2, 4, 2),
+        var btn = new Button
+        {
+            Content = prop.GetValue(control)?.ToString() ?? "",
+            Width = 120,
+            Height = 17,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Padding = new Thickness(2, 0, 2, 0),
+            Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1)
+            BorderThickness = new Thickness(1),
+            HorizontalContentAlignment = HorizontalAlignment.Left
         };
-        tb.Text = prop.GetValue(control)?.ToString() ?? "";
-        tb.LostFocus += (s, e) => prop.SetValue(control, tb.Text);
-        return tb;
+        return btn;
     }
     
-    private TextBox CreateNumberBox(Control control, PropertyInfo prop)
+    private Button CreateNumberBox(Control control, PropertyInfo prop)
     {
-        var tb = new TextBox { Width = 120, Height = 20, MinHeight = 20, MaxHeight = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
-        tb.Text = prop.GetValue(control)?.ToString() ?? "0";
-        tb.LostFocus += (s, e) => {
+        var btn = new Button { Content = prop.GetValue(control)?.ToString() ?? "0", Width = 120, Height = 17, FontSize = 11, FontWeight = FontWeight.Bold, Padding = new Thickness(2, 0, 2, 0), Background = Brushes.White, BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1), HorizontalContentAlignment = HorizontalAlignment.Left };
+        return btn;
+        /*tb.LostFocus += (s, e) => {
             if (double.TryParse(tb.Text, out var val))
                 prop.SetValue(control, Convert.ChangeType(val, prop.PropertyType));
         };
-        return tb;
+*/
     }
     
     private CheckBox CreateCheckBox(Control control, PropertyInfo prop)
