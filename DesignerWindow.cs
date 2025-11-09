@@ -386,7 +386,7 @@ designCanvas = new Canvas
         var propsHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
         propsHeader.Children.Add(new TextBlock 
         { 
-            Text = "Properties",
+            Text = "FormBuilder",
             FontSize = 14,
             FontWeight = FontWeight.Bold,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
