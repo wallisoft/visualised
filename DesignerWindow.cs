@@ -411,7 +411,7 @@ designCanvas = new Canvas
         
         // Control selector
         var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
-        var controlCombo = new ComboBox { Width = 140, Height = 24 };
+        var controlCombo = new ComboBox { Width = 140, Height = 20, Padding = new Avalonia.Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Avalonia.Thickness(1) };
         var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "RadioButton", "StackPanel", "Grid", "Border" };
         foreach (var t in types) controlCombo.Items.Add(t);
         controlCombo.SelectedIndex = 0;

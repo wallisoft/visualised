@@ -117,7 +117,7 @@ public class PropertiesPanel
     
     private ComboBox CreateEnumCombo(Control control, PropertyInfo prop)
     {
-        var combo = new ComboBox { Width = 120, Height = 20 };
+        var combo = new ComboBox { Width = 120, Height = 20, Padding = new Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Thickness(1) };
         foreach (var val in Enum.GetValues(prop.PropertyType))
             combo.Items.Add(val);
         combo.SelectedItem = prop.GetValue(control);
