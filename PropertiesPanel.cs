@@ -83,7 +83,7 @@ public class PropertiesPanel
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            MinHeight = 19,
+            MinHeight = 17,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(4, 2, 4, 2),
@@ -136,7 +136,7 @@ public class PropertiesPanel
         {
             Content = prop.GetValue(control)?.ToString() ?? "",
             Width = 120,
-            MinHeight = 19,
+            MinHeight = 17,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(4, 2, 4, 2),
