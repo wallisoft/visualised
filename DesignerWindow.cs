@@ -238,7 +238,7 @@ public class DesignerWindow
         var workspace = new Grid();
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
         workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
+        workspace.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(224) });
         
         var toolbox = BuildToolbox();
         Grid.SetColumn(toolbox, 0);
