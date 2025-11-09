@@ -351,9 +351,9 @@ public class DesignerWindow
             Name = "propsBorder",
             Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
             BorderBrush = new SolidColorBrush(Color.Parse("#ccc")),
-            BorderThickness = new Avalonia.Thickness(1),
+            BorderThickness = new Avalonia.Thickness(2),
             CornerRadius = new CornerRadius(2),
-            Padding = new Avalonia.Thickness(4)
+            Padding = new Avalonia.Thickness(5)
         };
         
         var propsScroll = new ScrollViewer 
@@ -534,9 +534,9 @@ public class DesignerWindow
             Name = "toolboxBorder",
             Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Avalonia.Thickness(1),
+            BorderThickness = new Avalonia.Thickness(2),
             CornerRadius = new CornerRadius(2),
-            Padding = new Avalonia.Thickness(4)
+            Padding = new Avalonia.Thickness(5)
         };
         
         var toolboxStack = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 5 };
