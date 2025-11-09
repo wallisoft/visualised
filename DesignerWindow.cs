@@ -409,15 +409,28 @@ designCanvas = new Canvas
         
         propsStack.Children.Add(propsHeader);
         
-        // Control selector
+        // Tiny control selector
         var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
-        var controlCombo = new ComboBox { Width = 140, Height = 20, Padding = new Avalonia.Thickness(4, 2, 4, 2), BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")), BorderThickness = new Avalonia.Thickness(1) };
-        var types = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ListBox", "RadioButton", "StackPanel", "Grid", "Border" };
-        foreach (var t in types) controlCombo.Items.Add(t);
-        controlCombo.SelectedIndex = 0;
-        var addBtn = new Button { Content = "Add", Width = 60, Height = 20, FontSize = 11, Padding = new Avalonia.Thickness(4, 2, 4, 2), Background = new SolidColorBrush(Color.Parse("#66bb6a")), Foreground = Brushes.White };
-        addBtn.Click += (s, e) => { if (controlCombo.SelectedItem != null) AddControlToCanvas(controlCombo.SelectedItem.ToString()!); };
-        selectorRow.Children.Add(controlCombo);
+        
+        var controlLabel = new Label
+        {
+            Content = "Button",
+            Width = 140,
+            MinHeight = 17,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Padding = new Avalonia.Thickness(4, 2, 4, 2),
+            Background = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Avalonia.Thickness(1),
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+            VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+        
+        var addBtn = new Button { Content = "Add", Width = 60, Height = 17, FontSize = 11, Padding = new Avalonia.Thickness(4, 2, 4, 2), Background = new SolidColorBrush(Color.Parse("#66bb6a")), Foreground = Brushes.White };
+        addBtn.Click += (s, e) => AddControlToCanvas(controlLabel.Content?.ToString() ?? "Button");
+        
+        selectorRow.Children.Add(controlLabel);
         selectorRow.Children.Add(addBtn);
         propsStack.Children.Add(selectorRow);
 

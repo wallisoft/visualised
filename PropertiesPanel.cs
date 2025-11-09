@@ -30,7 +30,7 @@ public class PropertiesPanel
         {
             // TODO: Query from property_order table
             // For now, prioritize common properties
-            var priority = new[] { "Name", "Content", "Text", "Width", "Height", "Margin", "Background" };
+            var priority = new[] { "Margin", "FontSize", "Background", "Width", "Height", "Name", "Content", "Text" };
             var index = Array.IndexOf(priority, p.Name);
             return index == -1 ? 100 + p.Name.GetHashCode() : index;
         });
