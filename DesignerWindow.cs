@@ -365,7 +365,7 @@ designCanvas = new Canvas
         {
             Name = "propsBorder",
             Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#ccc")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Avalonia.Thickness(2),
             CornerRadius = new CornerRadius(2),
             Padding = new Avalonia.Thickness(5)
@@ -377,7 +377,7 @@ designCanvas = new Canvas
             Padding = new Avalonia.Thickness(5)
         };
         
-        var propsStack = new StackPanel { Spacing = 5 };
+        var propsStack = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 5 };
         
         // Properties header with X button
         var propsHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
