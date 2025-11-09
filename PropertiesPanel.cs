@@ -152,7 +152,6 @@ public class PropertiesPanel
                prop.PropertyType.IsGenericType ||
                prop.PropertyType.IsArray;
     }
-}
 
     private Button CreateTinyButton(string content, int width)
     {
@@ -170,3 +169,4 @@ public class PropertiesPanel
             HorizontalContentAlignment = HorizontalAlignment.Left
         };
     }
+}
