@@ -374,13 +374,17 @@ designCanvas = new Canvas
             Padding = new Avalonia.Thickness(5)
         };
         
+        // Header stays fixed at top
+        var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(15, 15, 15, 5), Spacing = 5 };
+        
+        // Scrollable properties area
         var propsScroll = new ScrollViewer 
         { 
             VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-            Padding = new Avalonia.Thickness(5)
+            Padding = new Avalonia.Thickness(5, 0, 5, 5)
         };
         
-        var propsStack = new StackPanel { Margin = new Avalonia.Thickness(15), Spacing = 5 };
+        var propsStack = new StackPanel { Margin = new Avalonia.Thickness(15, 5, 15, 15), Spacing = 5 };
         
         // Properties header with X button
         var propsHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
@@ -407,7 +411,7 @@ designCanvas = new Canvas
         Grid.SetColumn(propsCloseBtn, 1);
         propsHeader.Children.Add(propsCloseBtn);
         
-        propsStack.Children.Add(propsHeader);
+        propsHeaderStack.Children.Add(propsHeader);
         
         // Tiny control selector
         var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
@@ -432,13 +436,18 @@ designCanvas = new Canvas
         
         selectorRow.Children.Add(controlLabel);
         selectorRow.Children.Add(addBtn);
-        propsStack.Children.Add(selectorRow);
+        propsHeaderStack.Children.Add(selectorRow);
 
         
 
         
         propsScroll.Content = propsStack;
-        propsBorder.Child = propsScroll;
+        
+        // Combine header and scrollable area
+        var propsContainer = new StackPanel();
+        propsContainer.Children.Add(propsHeaderStack);
+        propsContainer.Children.Add(propsScroll);
+        propsBorder.Child = propsContainer;
         
         // Create inner stack for properties
         var innerPropsStack = new StackPanel { Spacing = 5 };
