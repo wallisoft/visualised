@@ -55,8 +55,7 @@ public class TinyCombo : StackPanel
             Padding = new Thickness(0),
             Background = Brushes.Transparent,
             Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderBrush = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
+            
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)

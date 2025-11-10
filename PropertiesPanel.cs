@@ -99,96 +99,29 @@ public class PropertiesPanel
     
     private Control CreateTinyTextBox(Control control, PropertyInfo prop)
     {
-        // Load TinyTextBox template from database
-        var vmlControls = VmlLoader.LoadFromDatabase("TinyTextBox");
-        if (vmlControls.Count > 0)
+        var tiny = new TinyTextBox
         {
-            var builder = new ControlBuilder(vmlControls);
-            var controls = builder.BuildControls();
-            if (controls.Count > 0)
+            Text = prop.GetValue(control)?.ToString() ?? ""
+        };
+        
+        tiny.TextChanged += (s, text) =>
+        {
+            object value = text;
+            if (prop.PropertyType == typeof(double))
             {
-                var tinyTextBox = controls[0];
-                
-                // Set initial value on fakeBox
-                if (tinyTextBox is Panel panel)
-                {
-                    var fakeBox = panel.Children.OfType<Label>().FirstOrDefault();
-                    if (fakeBox != null)
-                    {
-                        fakeBox.Content = prop.GetValue(control)?.ToString() ?? "";
-                    }
-                }
-                
-                return tinyTextBox;
+                if (double.TryParse(text, out var d))
+                    value = d;
             }
-        }
-        
-        // Fallback to simple textbox if loading fails
-
-        // Label that looks like textbox
-        var fakeTextBox = new Label
-        {
-            Content = prop.GetValue(control)?.ToString() ?? "",
-            Width = 120,
-            MinHeight = 15,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(4, 2, 4, 2),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(2),
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            VerticalContentAlignment = VerticalAlignment.Center
+            else if (prop.PropertyType == typeof(int))
+            {
+                if (int.TryParse(text, out var i))
+                    value = i;
+            }
+            prop.SetValue(control, value);
         };
         
-        fakeTextBox.PointerPressed += (s, e) =>
-        {
-            var parent = fakeTextBox.Parent as Panel;
-            if (parent == null) return;
-            
-            var realTextBox = new TextBox
-            {
-                Text = fakeTextBox.Content?.ToString() ?? "",
-                Width = 120,
-                MinHeight = 17
-            };
-            
-            realTextBox.LostFocus += (s2, e2) =>
-            {
-                fakeTextBox.Content = realTextBox.Text;
-                
-                // Convert to correct type
-                object value = realTextBox.Text;
-                if (prop.PropertyType == typeof(double))
-                {
-                    if (double.TryParse(realTextBox.Text, out var d))
-                        value = d;
-                }
-                else if (prop.PropertyType == typeof(int))
-                {
-                    if (int.TryParse(realTextBox.Text, out var i))
-                        value = i;
-                }
-                
-                prop.SetValue(control, value);
-                
-                // Swap back
-                var idx = parent.Children.IndexOf(realTextBox);
-                parent.Children.RemoveAt(idx);
-                parent.Children.Insert(idx, fakeTextBox);
-            };
-            
-            // Swap fake for real
-            var index = parent.Children.IndexOf(fakeTextBox);
-            parent.Children.RemoveAt(index);
-            parent.Children.Insert(index, realTextBox);
-            realTextBox.Focus();
-        };
-        
-        return fakeTextBox;
+        return tiny;
     }
-    
     private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
         Console.WriteLine($"[COMBO] Loading TinyCombo for {prop.Name} ({prop.PropertyType.Name})");
