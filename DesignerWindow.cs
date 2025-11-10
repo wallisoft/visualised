@@ -499,50 +499,7 @@ designCanvas = new Canvas
         selectorRow.Children.Add(addBtn);
         propsHeaderStack.Children.Add(selectorRow);
         
-        // Project and Form selectors
-        var metaRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
-        
-        // Project combo
-        var projectVml = VmlLoader.LoadFromDatabase("TinyCombo");
-        if (projectVml.Count > 0)
-        {
-            var flatProj = VmlLoader.FlattenControls(projectVml);
-            var builderProj = new ControlBuilder(flatProj);
-            var controlsProj = builderProj.BuildControls();
-            if (controlsProj.Count > 0 && controlsProj[0] is Panel projContainer)
-            {
-                var projLabel = projContainer.Children.OfType<Label>().FirstOrDefault();
-                if (projLabel != null)
-                {
-                    projLabel.Content = "self";
-                    projLabel.Width = 60;
-                }
-                metaRow.Children.Add(new TextBlock { Text = "Project:", FontSize = 11, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new Avalonia.Thickness(0, 0, 5, 0) });
-                metaRow.Children.Add(projContainer);
-            }
-        }
-        
-        // Form combo
-        var formVml = VmlLoader.LoadFromDatabase("TinyCombo");
-        if (formVml.Count > 0)
-        {
-            var flatForm = VmlLoader.FlattenControls(formVml);
-            var builderForm = new ControlBuilder(flatForm);
-            var controlsForm = builderForm.BuildControls();
-            if (controlsForm.Count > 0 && controlsForm[0] is Panel formContainer)
-            {
-                var formLabel = formContainer.Children.OfType<Label>().FirstOrDefault();
-                if (formLabel != null)
-                {
-                    formLabel.Content = "self";
-                    formLabel.Width = 60;
-                }
-                metaRow.Children.Add(new TextBlock { Text = "Form:", FontSize = 11, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new Avalonia.Thickness(15, 0, 5, 0) });
-                metaRow.Children.Add(formContainer);
-            }
-        }
-        
-        propsHeaderStack.Children.Add(metaRow);
+
 
         
 
