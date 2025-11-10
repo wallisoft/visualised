@@ -414,23 +414,68 @@ designCanvas = new Canvas
         
         propsHeaderStack.Children.Add(propsHeader);
         
-        // Tiny control selector
+        // Tiny control selector with TinyCombo
         var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
         
-        var controlLabel = new Label
+        // Load TinyCombo for control selection
+        var controlTypes = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "StackPanel", "Grid", "Border", "TinyTextBox", "TinyCombo", "MainWindow" };
+        var selectedControlType = "Button";
+        
+        var vmlControls = VmlLoader.LoadFromDatabase("TinyCombo");
+        Control? controlSelector = null;
+        
+        if (vmlControls.Count > 0)
         {
-            Content = "Button",
-            Width = 140,
-            MinHeight = 17,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            Padding = new Avalonia.Thickness(4, 2, 4, 2),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Avalonia.Thickness(1),
-            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-            VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center
-        };
+            var flatControls = VmlLoader.FlattenControls(vmlControls);
+            var builder = new ControlBuilder(flatControls);
+            var controls = builder.BuildControls();
+            if (controls.Count > 0 && controls[0] is Panel container)
+            {
+                var valueBox = container.Children.OfType<Label>().FirstOrDefault();
+                var dropBtn = container.Children.OfType<Button>().FirstOrDefault();
+                
+                if (valueBox != null && dropBtn != null)
+                {
+                    valueBox.Content = selectedControlType;
+                    
+                    // Wire @ button to show control types
+                    dropBtn.Click += (s, e) =>
+                    {
+                        var parent = container.Parent as Panel;
+                        if (parent == null) return;
+                        
+                        var combo = new ComboBox { Width = 140, MinHeight = 19 };
+                        foreach (var type in controlTypes)
+                            combo.Items.Add(type);
+                        combo.SelectedItem = selectedControlType;
+                        
+                        combo.SelectionChanged += (s2, e2) =>
+                        {
+                            if (combo.SelectedItem != null)
+                            {
+                                selectedControlType = combo.SelectedItem.ToString()!;
+                                valueBox.Content = selectedControlType;
+                            }
+                        };
+                        
+                        combo.DropDownClosed += (s2, e2) =>
+                        {
+                            var idx = parent.Children.IndexOf(combo);
+                            parent.Children.RemoveAt(idx);
+                            parent.Children.Insert(idx, container);
+                        };
+                        
+                        var index = parent.Children.IndexOf(container);
+                        parent.Children.RemoveAt(index);
+                        parent.Children.Insert(index, combo);
+                        combo.Focus();
+                        combo.IsDropDownOpen = true;
+                    };
+                }
+                
+                controlSelector = container;
+            }
+        }
         
         var addBtn = new Button 
         { 
@@ -446,11 +491,11 @@ designCanvas = new Canvas
         };
         addBtn.Click += (s, e) => 
         {
-            var controlType = controlLabel.Content?.ToString() ?? "Button";
-            AddControlToCanvas(controlType);
+            AddControlToCanvas(selectedControlType);
         };
         
-        selectorRow.Children.Add(controlLabel);
+        if (controlSelector != null)
+            selectorRow.Children.Add(controlSelector);
         selectorRow.Children.Add(addBtn);
         propsHeaderStack.Children.Add(selectorRow);
 
