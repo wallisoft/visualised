@@ -30,10 +30,26 @@ public class PropertiesPanel
         {
             // TODO: Query from property_order table
             // For now, prioritize common properties
-            // Order by actual VML usage from database query
-            var priority = new[] { "Name", "Margin", "FontSize", "Background", "Width", "Height", "Content", "Text", 
-                                  "Padding", "BorderBrush", "BorderThickness", "CornerRadius", 
-                                  "HorizontalAlignment", "VerticalAlignment", "HorizontalContentAlignment", "VerticalContentAlignment" };
+            // Order by usage: Usual Suspects, Size/Pos, Font, Colors, Alignment, Border, Rest
+            var priority = new[] { 
+                // Usual suspects
+                "Name", "Content", "Text", 
+                // Size & Position
+                "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight",
+                "Margin", "Padding",
+                // Font properties
+                "FontSize", "FontWeight", "FontStyle", "FontFamily", "FontStretch",
+                // Colors
+                "Background", "Foreground", "BorderBrush", 
+                // Alignment
+                "HorizontalAlignment", "VerticalAlignment", 
+                "HorizontalContentAlignment", "VerticalContentAlignment",
+                // Border
+                "BorderThickness", "CornerRadius",
+                // Common UI
+                "IsVisible", "IsEnabled", "Opacity",
+                "Cursor"
+            };
             var index = Array.IndexOf(priority, p.Name);
             return index == -1 ? 100 + p.Name.GetHashCode() : index;
         });
