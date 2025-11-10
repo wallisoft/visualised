@@ -326,3 +326,5 @@
 [06:51:57.217] [ADD] Button → Button_1
 [07:15:01.731] [CONTROL] Named: Button_1
 [07:15:02.337] [ADD] Button → Button_1
+[08:17:08.014] [CONTROL] Named: ComboBox_1
+[08:17:08.384] [ADD] ComboBox → ComboBox_1
