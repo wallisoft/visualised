@@ -172,8 +172,10 @@ public class PropertiesPanel
     
     private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
+        Console.WriteLine($"[COMBO] Loading TinyCombo for {prop.Name} ({prop.PropertyType.Name})");
         // Load TinyCombo from database
         var vmlControls = VmlLoader.LoadFromDatabase("TinyCombo");
+        Console.WriteLine($"[COMBO] Loaded {vmlControls.Count} controls from database");
         if (vmlControls.Count > 0)
         {
             var builder = new ControlBuilder(vmlControls);
