@@ -432,8 +432,23 @@ designCanvas = new Canvas
             VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center
         };
         
-        var addBtn = new Button { Content = "Add", Width = 60, Height = 17, FontSize = 11, Padding = new Avalonia.Thickness(4, 2, 4, 2), Background = new SolidColorBrush(Color.Parse("#66bb6a")), Foreground = Brushes.White };
-        addBtn.Click += (s, e) => AddControlToCanvas(controlLabel.Content?.ToString() ?? "Button");
+        var addBtn = new Button 
+        { 
+            Content = "Add", 
+            Width = 60, 
+            Height = 17, 
+            FontSize = 11, 
+            Padding = new Avalonia.Thickness(1), 
+            Background = new SolidColorBrush(Color.Parse("#66bb6a")), 
+            Foreground = Brushes.White,
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+        addBtn.Click += (s, e) => 
+        {
+            var controlType = controlLabel.Content?.ToString() ?? "Button";
+            AddControlToCanvas(controlType);
+        };
         
         selectorRow.Children.Add(controlLabel);
         selectorRow.Children.Add(addBtn);
