@@ -124,69 +124,22 @@ public class PropertiesPanel
     }
     private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
-        Console.WriteLine($"[COMBO] Loading TinyCombo for {prop.Name} ({prop.PropertyType.Name})");
-        // Load TinyCombo from database
-        var vmlControls = VmlLoader.LoadFromDatabase("TinyCombo");
-        Console.WriteLine($"[COMBO] Loaded {vmlControls.Count} controls from database");
-        if (vmlControls.Count > 0)
+        var tiny = new TinyCombo
         {
-            // Flatten tree into list for ControlBuilder
-            var flatControls = VmlLoader.FlattenControls(vmlControls);
-            Console.WriteLine($"[COMBO] Flattened to {flatControls.Count} controls");
-            var builder = new ControlBuilder(flatControls);
-            var controls = builder.BuildControls();
-            if (controls.Count > 0 && controls[0] is Panel container)
-            {
-                Console.WriteLine($"[COMBO] Container has {container.Children.Count} children");
-                var valueBox = container.Children.OfType<Label>().FirstOrDefault();
-                var dropBtn = container.Children.OfType<Button>().FirstOrDefault();
-                Console.WriteLine($"[COMBO] valueBox={valueBox?.Name}, dropBtn={dropBtn?.Name}");
-                
-                if (valueBox != null && dropBtn != null)
-                {
-                    valueBox.Content = prop.GetValue(control)?.ToString() ?? "";
-                    
-                    dropBtn.Click += (s, e) =>
-                    {
-                        var parent = container.Parent as Panel;
-                        if (parent == null) return;
-                        
-                        var combo = new ComboBox { Width = 140, MinHeight = 19 };
-                        foreach (var val in Enum.GetValues(prop.PropertyType))
-                            combo.Items.Add(val);
-                        combo.SelectedItem = prop.GetValue(control);
-                        
-                        combo.SelectionChanged += (s2, e2) =>
-                        {
-                            if (combo.SelectedItem != null)
-                            {
-                                valueBox.Content = combo.SelectedItem.ToString();
-                                prop.SetValue(control, combo.SelectedItem);
-                            }
-                        };
-                        
-                        combo.DropDownClosed += (s2, e2) =>
-                        {
-                            var idx = parent.Children.IndexOf(combo);
-                            parent.Children.RemoveAt(idx);
-                            parent.Children.Insert(idx, container);
-                        };
-                        
-                        var index = parent.Children.IndexOf(container);
-                        parent.Children.RemoveAt(index);
-                        parent.Children.Insert(index, combo);
-                        combo.Focus();
-                        combo.IsDropDownOpen = true;
-                    };
-                }
-                
-                return container;
-            }
-        }
+            Text = prop.GetValue(control)?.ToString() ?? ""
+        };
         
-        return new TextBlock { Text = "(enum)" };
+        // Add enum values
+        foreach (var val in Enum.GetValues(prop.PropertyType))
+            tiny.Items.Add(val);
+        
+        tiny.SelectionChanged += (s, selectedItem) =>
+        {
+            prop.SetValue(control, selectedItem);
+        };
+        
+        return tiny;
     }
-    
     private bool ShouldSkip(PropertyInfo prop)
     {
         // Only skip truly dangerous/system properties

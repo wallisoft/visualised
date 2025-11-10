@@ -54,7 +54,7 @@ public class TinyCombo : StackPanel
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(0),
             Background = Brushes.Transparent,
-            Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
+            Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
             
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
