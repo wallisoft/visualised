@@ -377,13 +377,13 @@ designCanvas = new Canvas
         // Header stays fixed at top
         var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(15, 15, 15, 5), Spacing = 5 };
         
-        // Scrollable properties area
+        // Scrollable properties area  
         var propsScroll = new ScrollViewer 
         { 
             VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-            Padding = new Avalonia.Thickness(5, 0, 5, 5),
-            Height = 800  // Give it explicit height for now
+            Padding = new Avalonia.Thickness(5, 0, 5, 5)
         };
+        Grid.SetRow(propsScroll, 1);  // Will add to Grid below
         
         var propsStack = new StackPanel { Margin = new Avalonia.Thickness(15, 5, 15, 15), Spacing = 5 };
         
@@ -444,8 +444,11 @@ designCanvas = new Canvas
         
         propsScroll.Content = propsStack;
         
-        // Combine header and scrollable area
-        var propsContainer = new StackPanel();
+        // Combine header (fixed) and scrollable area (grows)
+        var propsContainer = new Grid();
+        propsContainer.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        propsContainer.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        Grid.SetRow(propsHeaderStack, 0);
         propsContainer.Children.Add(propsHeaderStack);
         propsContainer.Children.Add(propsScroll);
         propsBorder.Child = propsContainer;
