@@ -134,6 +134,30 @@ public class VmlLoader
         {
             control.Properties[propReader.GetString(0)] = propReader.GetString(1);
         }
+        propReader.Close();
+        
+        // Load children
+        using var childCmd = conn.CreateCommand();
+        childCmd.CommandText = "SELECT id, control_type, name FROM ui_tree WHERE parent_id = @id ORDER BY display_order";
+        childCmd.Parameters.AddWithValue("@id", id);
+        
+        using var childReader = childCmd.ExecuteReader();
+        var childData = new List<(int id, string type, string name)>();
+        while (childReader.Read())
+        {
+            childData.Add((childReader.GetInt32(0), childReader.GetString(1), childReader.GetString(2)));
+        }
+        childReader.Close();
+        
+        foreach (var (childId, childType, childName) in childData)
+        {
+            var child = LoadControlRecursive(conn, childId, childType, childName);
+            if (child != null)
+            {
+                child.Properties["Parent"] = name;
+                control.Children.Add(child);
+            }
+        }
         
         return control;
     }
