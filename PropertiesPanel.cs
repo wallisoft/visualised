@@ -178,7 +178,10 @@ public class PropertiesPanel
         Console.WriteLine($"[COMBO] Loaded {vmlControls.Count} controls from database");
         if (vmlControls.Count > 0)
         {
-            var builder = new ControlBuilder(vmlControls);
+            // Flatten tree into list for ControlBuilder
+            var flatControls = VmlLoader.FlattenControls(vmlControls);
+            Console.WriteLine($"[COMBO] Flattened to {flatControls.Count} controls");
+            var builder = new ControlBuilder(flatControls);
             var controls = builder.BuildControls();
             if (controls.Count > 0 && controls[0] is Panel container)
             {

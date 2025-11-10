@@ -137,4 +137,18 @@ public class VmlLoader
         
         return control;
     }
+
+    public static List<VmlControl> FlattenControls(List<VmlControl> controls)
+    {
+        var result = new List<VmlControl>();
+        foreach (var control in controls)
+        {
+            result.Add(control);
+            if (control.Children.Count > 0)
+            {
+                result.AddRange(FlattenControls(control.Children));
+            }
+        }
+        return result;
+    }
 }
