@@ -237,9 +237,12 @@ public class PropertiesPanel
     
     private bool ShouldSkip(PropertyInfo prop)
     {
-        var skip = new[] { "Parent", "DataContext", "Resources", "Styles", "Classes", "CommandBindings" };
+        var skip = new[] { "Parent", "DataContext", "Resources", "Styles", "Classes", "CommandBindings", 
+                          "ContextMenu", "ContextFlyout", "Clip", "OpacityMask", "RenderTransform" };
         return skip.Contains(prop.Name) || 
                prop.PropertyType.IsGenericType ||
-               prop.PropertyType.IsArray;
+               prop.PropertyType.IsArray ||
+               prop.PropertyType.FullName?.Contains("Collection") == true ||
+               prop.PropertyType.FullName?.Contains("Template") == true;
     }
 }
