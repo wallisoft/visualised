@@ -182,8 +182,10 @@ public class PropertiesPanel
             var controls = builder.BuildControls();
             if (controls.Count > 0 && controls[0] is Panel container)
             {
+                Console.WriteLine($"[COMBO] Container has {container.Children.Count} children");
                 var valueBox = container.Children.OfType<Label>().FirstOrDefault();
                 var dropBtn = container.Children.OfType<Button>().FirstOrDefault();
+                Console.WriteLine($"[COMBO] valueBox={valueBox?.Name}, dropBtn={dropBtn?.Name}");
                 
                 if (valueBox != null && dropBtn != null)
                 {
