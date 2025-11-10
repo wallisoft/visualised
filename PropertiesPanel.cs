@@ -30,7 +30,10 @@ public class PropertiesPanel
         {
             // TODO: Query from property_order table
             // For now, prioritize common properties
-            var priority = new[] { "Margin", "FontSize", "Background", "Width", "Height", "Name", "Content", "Text" };
+            // Order by actual VML usage from database query
+            var priority = new[] { "Name", "Margin", "FontSize", "Background", "Width", "Height", "Content", "Text", 
+                                  "Padding", "BorderBrush", "BorderThickness", "CornerRadius", 
+                                  "HorizontalAlignment", "VerticalAlignment", "HorizontalContentAlignment", "VerticalContentAlignment" };
             var index = Array.IndexOf(priority, p.Name);
             return index == -1 ? 100 + p.Name.GetHashCode() : index;
         });
@@ -237,12 +240,8 @@ public class PropertiesPanel
     
     private bool ShouldSkip(PropertyInfo prop)
     {
-        var skip = new[] { "Parent", "DataContext", "Resources", "Styles", "Classes", "CommandBindings", 
-                          "ContextMenu", "ContextFlyout", "Clip", "OpacityMask", "RenderTransform" };
-        return skip.Contains(prop.Name) || 
-               prop.PropertyType.IsGenericType ||
-               prop.PropertyType.IsArray ||
-               prop.PropertyType.FullName?.Contains("Collection") == true ||
-               prop.PropertyType.FullName?.Contains("Template") == true;
+        // Only skip truly dangerous/system properties
+        var skip = new[] { "Parent", "DataContext" };
+        return skip.Contains(prop.Name);
     }
 }
