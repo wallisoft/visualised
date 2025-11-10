@@ -381,7 +381,8 @@ designCanvas = new Canvas
         var propsScroll = new ScrollViewer 
         { 
             VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-            Padding = new Avalonia.Thickness(5, 0, 5, 5)
+            Padding = new Avalonia.Thickness(5, 0, 5, 5),
+            Height = 800  // Give it explicit height for now
         };
         
         var propsStack = new StackPanel { Margin = new Avalonia.Thickness(15, 5, 15, 15), Spacing = 5 };
