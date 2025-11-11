@@ -465,8 +465,8 @@ selectorRow.Children.Add(controlSelector);
             AddControlToCanvas(selectedControlType);
         };
         
-        if (controlSelector != null)
-            selectorRow.Children.Add(controlSelector);
+        //if (controlSelector != null)
+        //    selectorRow.Children.Add(controlSelector);
         selectorRow.Children.Add(addBtn);
         propsHeaderStack.Children.Add(selectorRow);
         
