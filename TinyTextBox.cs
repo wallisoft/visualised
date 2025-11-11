@@ -93,6 +93,12 @@ public class TinyTextBox : StackPanel
         {
             realTextBox.LostFocus += (s, e) => SwapBack();
         }, Avalonia.Threading.DispatcherPriority.Background);
+        
+        // Add LostFocus AFTER focus is established
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            realTextBox.LostFocus += (s, e) => SwapBack();
+        }, Avalonia.Threading.DispatcherPriority.Background);
     }
     
     private void SwapBack()
