@@ -81,8 +81,8 @@ private async void ShowColorPicker()
     var colorView = new ColorView
     {
         Color = currentColor,
-        Width = 350,
-        Height = 400
+        Width = 400,
+        Height = 450
     };
     
     var okBtn = new Button { Content = "OK", Width = 80, Margin = new Thickness(5) };
