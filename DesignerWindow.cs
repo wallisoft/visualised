@@ -452,7 +452,7 @@ selectorRow.Children.Add(controlSelector);
 	    Width = 60, 
 	    Height = 17, 
 	    FontSize = 11, 
-	    Padding = new Avalonia.Thickness(1), 
+	    Padding = new Thickness(0, -2, 0, 0),  // Lift text up 2px
 	    Background = new SolidColorBrush(Color.Parse("#66bb6a")), 
 	    Foreground = Brushes.White,
 	    BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
