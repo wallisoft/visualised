@@ -85,6 +85,12 @@ public class TinyTextBox : StackPanel
         parentPanel.Children.RemoveAt(index);
         parentPanel.Children.Insert(index, realTextBox);
         Console.WriteLine($"[TINYTEXTBOX] TextBox inserted: {realTextBox.IsVisible}, Width={realTextBox.Width}");
+        Console.WriteLine($"[TINYTEXTBOX] TextBox bounds: {realTextBox.Bounds}");
+        Console.WriteLine($"[TINYTEXTBOX] Parent type: {parentPanel.GetType().Name}");
+        Console.WriteLine($"[TINYTEXTBOX] TinyTextBox still in parent: {parentPanel.Children.Contains(this)}");
+        
+        // Force layout update
+        realTextBox.InvalidateArrange();
         realTextBox.Focus();
         realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
         
