@@ -191,8 +191,8 @@ private async void ShowFontPicker()
     
     sizeBox.TextChanged += (s, e) =>
     {
-        if (double.TryParse(sizeBox.Text, out var size))
-            previewText.FontSize = size;
+	if (double.TryParse(sizeBox.Text, out var size) && size > 0 && size <= 500)
+        previewText.FontSize = size;
     };
     
     weightCombo.SelectionChanged += (s, e) =>
