@@ -74,39 +74,43 @@ public class TinyCombo : StackPanel
         Children.Add(dropBtn);
     }
     
-    private void ShowComboBox()
+private void ShowComboBox()
+{
+    parentPanel = this.Parent as Panel;
+    if (parentPanel == null || items.Count == 0) return;
+    
+    var combo = new ComboBox 
+    { 
+        Width = 138,  // 120 (valueBox) + 18 (dropBtn)
+        MinHeight = 15
+    };
+    foreach (var item in items)
+        combo.Items.Add(item);
+    combo.SelectedItem = valueBox.Content?.ToString();
+    
+    combo.SelectionChanged += (s, e) =>
     {
-        parentPanel = this.Parent as Panel;
-        if (parentPanel == null || items.Count == 0) return;
-        
-        var combo = new ComboBox { Width = 140, MinHeight = 19 };
-        foreach (var item in items)
-            combo.Items.Add(item);
-        combo.SelectedItem = valueBox.Content?.ToString();
-        
-        combo.SelectionChanged += (s, e) =>
+        if (combo.SelectedItem != null)
         {
-            if (combo.SelectedItem != null)
-            {
-                valueBox.Content = combo.SelectedItem.ToString();
-                SelectionChanged?.Invoke(this, combo.SelectedItem);
-            }
-        };
-        
-        combo.DropDownClosed += (s, e) =>
+            valueBox.Content = combo.SelectedItem.ToString();
+            SelectionChanged?.Invoke(this, combo.SelectedItem);
+        }
+    };
+    
+    combo.DropDownClosed += (s, e) =>
+    {
+        var idx = parentPanel.Children.IndexOf(combo);
+        if (idx >= 0)
         {
-            var idx = parentPanel.Children.IndexOf(combo);
-            if (idx >= 0)
-            {
-                parentPanel.Children.RemoveAt(idx);
-                parentPanel.Children.Insert(idx, this);
-            }
-        };
-        
-        var index = parentPanel.Children.IndexOf(this);
-        parentPanel.Children.RemoveAt(index);
-        parentPanel.Children.Insert(index, combo);
-        combo.Focus();
-        combo.IsDropDownOpen = true;
+            parentPanel.Children.RemoveAt(idx);
+            parentPanel.Children.Insert(idx, this);
+        }
+    };
+    
+    var index = parentPanel.Children.IndexOf(this);
+    parentPanel.Children.RemoveAt(index);
+    parentPanel.Children.Insert(index, combo);
+    combo.Focus();
+    combo.IsDropDownOpen = true;
     }
 }
