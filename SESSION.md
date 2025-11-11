@@ -10,7 +10,9 @@ curl -s -H "X-API-Key: dev-1762055196" -X POST "http://tmp.avalised.io:8889/shel
 1. **You're on my server** (not container) - use dev API
 2. **No deletes** - give bash for review
 3. **No architecture changes** without discussion  
-4. **Token frugal** - gzip >20KB, minimal info retrieval
+4. **SQLite for everything** - all source in/out via visualised.db
+5. **30 rolling backups** of DB changes (standard practice)
+6. **Token frugal** - gzip >20KB, minimal info retrieval
 
 ## Database Schema
 sqlite3 visualised.db:
