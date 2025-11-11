@@ -74,24 +74,26 @@ public class TinyCombo : StackPanel
         Children.Add(dropBtn);
     }
     
-private void ShowComboBox()
+    private void ShowComboBox()
 {
     parentPanel = this.Parent as Panel;
     if (parentPanel == null || items.Count == 0) return;
-    
-    var combo = new ComboBox 
-    { 
+
+    var combo = new ComboBox
+    {
         Width = 138,
         Height = 18,
         MinHeight = 18,
         MaxHeight = 18,
         FontSize = 11,
-        Padding = new Thickness(4, 0, 4, 0)
+        Padding = new Thickness(4, 0, 4, 0),
+        BorderBrush = new SolidColorBrush(Color.Parse("#2196F3")),
+        BorderThickness = new Thickness(1)
     };
     foreach (var item in items)
         combo.Items.Add(item);
     combo.SelectedItem = valueBox.Content?.ToString();
-    
+
     combo.SelectionChanged += (s, e) =>
     {
         if (combo.SelectedItem != null)
@@ -100,7 +102,7 @@ private void ShowComboBox()
             SelectionChanged?.Invoke(this, combo.SelectedItem);
         }
     };
-    
+
     combo.DropDownClosed += (s, e) =>
     {
         var idx = parentPanel.Children.IndexOf(combo);
@@ -110,11 +112,12 @@ private void ShowComboBox()
             parentPanel.Children.Insert(idx, this);
         }
     };
-    
+
     var index = parentPanel.Children.IndexOf(this);
     parentPanel.Children.RemoveAt(index);
     parentPanel.Children.Insert(index, combo);
     combo.Focus();
     combo.IsDropDownOpen = true;
     }
+
 }
