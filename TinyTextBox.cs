@@ -59,8 +59,8 @@ public class TinyTextBox : StackPanel
         realTextBox = new TextBox
         {
             Text = fakeBox.Content?.ToString() ?? "",
-            Width = 120,
-            MinHeight = 15,
+            Width = 300,  // Bigger for comfortable editing
+            MinHeight = 20,
             FontSize = 11,
             Padding = new Thickness(4, 2, 4, 2)
         };

@@ -125,14 +125,15 @@ public class PropertiesPanel
     }
     private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
-        var tiny = new TinyCombo
-        {
-            Text = prop.GetValue(control)?.ToString() ?? ""
-        };
+        var tiny = new TinyCombo();
         
         // Add enum values
         foreach (var val in Enum.GetValues(prop.PropertyType))
             tiny.Items.Add(val);
+        
+        // Set current value
+        var currentVal = prop.GetValue(control);
+        tiny.Text = currentVal?.ToString() ?? "";
         
         tiny.SelectionChanged += (s, selectedItem) =>
         {
