@@ -1306,12 +1306,6 @@ designCanvas = new Canvas
         "StackPanel" => new DesignPanel("StackPanel"),
         "Grid" => new DesignPanel("Grid"),
         "Border" => new DesignBorder(),
-        "TinyTextBox" => new TinyTextBox(),
-        "TinyCombo" => new TinyCombo(),
-        "TinyColorPicker" => new TinyColorPicker(),
-        "DatePicker" => new DatePicker(),
-        "TimePicker" => new TimePicker(),
-        "CalendarDatePicker" => new CalendarDatePicker(),
         _ => null
     };
 }
