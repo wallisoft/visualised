@@ -52,11 +52,11 @@ public class TinyCombo : StackPanel
             Height = 18,
             FontSize = 14,
             FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0, -2, 0, 0),  // Negative top padding pulls emoji up
+            Padding = new Thickness(0, -2, 0, 0),
             Background = Brushes.White,
             Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(0, 1, 1, 1),  // No left border
             CornerRadius = new CornerRadius(0, 2, 2, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
