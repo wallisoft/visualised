@@ -84,30 +84,31 @@ private async void ShowColorPicker()
     };
     
     var okBtn = new Button 
-    { 
-        Content = "OK", 
-        Width = 80,
-        Background = Brushes.White,
-        Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-        BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-        BorderThickness = new Thickness(2),
-        HorizontalContentAlignment = HorizontalAlignment.Center,
-        VerticalContentAlignment = VerticalAlignment.Center
-    };
-    
-    var cancelBtn = new Button 
-    { 
-        Content = "Cancel", 
-        Width = 80,
-        Background = Brushes.White,
-        Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-        BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-        BorderThickness = new Thickness(2),
-        HorizontalContentAlignment = HorizontalAlignment.Center,
-        VerticalContentAlignment = VerticalAlignment.Center
-    };
-    
-    var buttonPanel = new StackPanel
+	{ 
+		Content = "OK", 
+			Width = 80,
+			FontWeight = FontWeight.Bold,
+			Background = Brushes.White,
+			Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+			BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+			BorderThickness = new Thickness(2),
+			HorizontalContentAlignment = HorizontalAlignment.Center,
+			VerticalContentAlignment = VerticalAlignment.Center
+		};
+
+		var cancelBtn = new Button 
+		{ 
+			Content = "Cancel", 
+			Width = 80,
+			FontWeight = FontWeight.Bold,
+			Background = Brushes.White,
+			Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+			BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+			BorderThickness = new Thickness(2),
+			HorizontalContentAlignment = HorizontalAlignment.Center,
+			VerticalContentAlignment = VerticalAlignment.Center
+		};
+			var buttonPanel = new StackPanel
     {
         Orientation = Orientation.Horizontal,
         HorizontalAlignment = HorizontalAlignment.Right,
