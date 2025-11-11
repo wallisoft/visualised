@@ -418,7 +418,7 @@ designCanvas = new Canvas
         var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
         
         // Load TinyCombo for control selection
-        var controlTypes = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "ColorPicker", "DatePicker", "TimePicker", "StackPanel", "Grid", "Border", "TinyTextBox", "TinyCombo", "MainWindow" };
+        var controlTypes = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "StackPanel", "Grid", "Border" };
         var selectedControlType = "MainWindow";
         
         var vmlControls = VmlLoader.LoadFromDatabase("TinyCombo");
