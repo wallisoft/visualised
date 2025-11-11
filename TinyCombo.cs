@@ -49,7 +49,7 @@ public class TinyCombo : StackPanel
         {
             Content = "♻",
             Width = 18,
-            Height = 19,
+            Height = 20,
             FontSize = 14,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(0, -2, 0, 0),
