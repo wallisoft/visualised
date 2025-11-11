@@ -72,9 +72,9 @@ public class TinyFontPicker : StackPanel
             Height = 20,
             FontSize = 14,
             FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0, -1, 0, 0),
+            Padding = new Thickness(0, -2, 0, 0),
             Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
+            Foreground = new SolidColorBrush(Color.Parse("#2196F3")),  // Blue
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(0, 1, 1, 1),
             CornerRadius = new CornerRadius(0, 2, 2, 0),
@@ -98,82 +98,118 @@ public class TinyFontPicker : StackPanel
     
     private void UpdateLabel()
     {
-        var weightStr = currentWeight == FontWeight.Bold ? " Bold" : "";
-        var styleStr = currentStyle == FontStyle.Italic ? " Italic" : "";
+        var weightStr = currentWeight != FontWeight.Normal ? $" {currentWeight}" : "";
+        var styleStr = currentStyle != FontStyle.Normal ? $" {currentStyle}" : "";
         fontLabel.Content = $"{currentFamily.Name} {currentSize}{weightStr}{styleStr}";
     }
     
     private async void ShowFontPicker()
     {
-        // Common fonts
+        // Common fonts - TODO: Load from database table 'font_list' in future
         var fonts = new[] 
         { 
             "Arial", "Calibri", "Cambria", "Comic Sans MS", "Consolas", "Courier New", 
             "Georgia", "Helvetica", "Lucida Console", "Segoe UI", "Times New Roman", 
-            "Trebuchet MS", "Verdana"
+            "Trebuchet MS", "Verdana", "Inter"
         };
         
         var familyCombo = new ComboBox { Width = 200, SelectedItem = currentFamily.Name };
         foreach (var font in fonts)
             familyCombo.Items.Add(font);
         
-        var sizeBox = new NumericUpDown { Width = 80, Value = (decimal)currentSize, Minimum = 6, Maximum = 72, Increment = 1 };
+        var sizeBox = new NumericUpDown { Width = 100, Value = (decimal)currentSize, Minimum = 6, Maximum = 72, Increment = 1 };
         
+        // All FontWeight values
         var weightCombo = new ComboBox { Width = 120, SelectedItem = currentWeight.ToString() };
+        weightCombo.Items.Add("Thin");
+        weightCombo.Items.Add("ExtraLight");
+        weightCombo.Items.Add("Light");
         weightCombo.Items.Add("Normal");
+        weightCombo.Items.Add("Medium");
+        weightCombo.Items.Add("SemiBold");
         weightCombo.Items.Add("Bold");
+        weightCombo.Items.Add("ExtraBold");
+        weightCombo.Items.Add("Black");
+        weightCombo.Items.Add("ExtraBlack");
         
+        // All FontStyle values
         var styleCombo = new ComboBox { Width = 120, SelectedItem = currentStyle.ToString() };
         styleCombo.Items.Add("Normal");
         styleCombo.Items.Add("Italic");
+        styleCombo.Items.Add("Oblique");
         
         var previewText = new TextBlock 
         { 
-	    Text = "The quick brown fox jumps over the lazy dog",
-	    FontFamily = currentFamily,
-	    FontSize = currentSize,
-	    FontWeight = currentWeight,
-	    FontStyle = currentStyle,
-	    TextWrapping = TextWrapping.Wrap,
-	    Padding = new Thickness(10)
+            Text = "The quick brown fox jumps over the lazy dog\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789",
+            FontFamily = currentFamily,
+            FontSize = currentSize,
+            FontWeight = currentWeight,
+            FontStyle = currentStyle,
+            TextWrapping = TextWrapping.Wrap,
+            Padding = new Thickness(10)
         };
-
-	var preview = new Border
-	{
-	    Child = previewText,
-	    Margin = new Thickness(0, 10, 0, 0),
-	    Background = Brushes.White,
-	    BorderBrush = Brushes.LightGray,
-	    BorderThickness = new Thickness(1)
-	};
+        
+        var preview = new Border
+        {
+            Child = previewText,
+            Margin = new Thickness(0, 10, 0, 0),
+            Background = Brushes.White,
+            BorderBrush = Brushes.LightGray,
+            BorderThickness = new Thickness(1)
+        };
         
         // Update preview on changes
-	familyCombo.SelectionChanged += (s, e) =>
-	{
-	    if (familyCombo.SelectedItem != null)
-		previewText.FontFamily = new FontFamily(familyCombo.SelectedItem.ToString()!);
-	};
-
-	sizeBox.ValueChanged += (s, e) => previewText.FontSize = (double)(sizeBox.Value ?? 12);
-
-	weightCombo.SelectionChanged += (s, e) =>
-	{
-	    previewText.FontWeight = weightCombo.SelectedItem?.ToString() == "Bold" ? FontWeight.Bold : FontWeight.Normal;
-	};
-
-	styleCombo.SelectionChanged += (s, e) =>
-	{
-	    previewText.FontStyle = styleCombo.SelectedItem?.ToString() == "Italic" ? FontStyle.Italic : FontStyle.Normal;
-};
+        familyCombo.SelectionChanged += (s, e) =>
+        {
+            if (familyCombo.SelectedItem != null)
+                previewText.FontFamily = new FontFamily(familyCombo.SelectedItem.ToString()!);
+        };
+        
+        sizeBox.ValueChanged += (s, e) => previewText.FontSize = (double)(sizeBox.Value ?? 12);
+        
+        weightCombo.SelectionChanged += (s, e) =>
+        {
+            if (weightCombo.SelectedItem != null)
+            {
+                previewText.FontWeight = weightCombo.SelectedItem.ToString() switch
+                {
+                    "Thin" => FontWeight.Thin,
+                    "ExtraLight" => FontWeight.ExtraLight,
+                    "Light" => FontWeight.Light,
+                    "Normal" => FontWeight.Normal,
+                    "Medium" => FontWeight.Medium,
+                    "SemiBold" => FontWeight.SemiBold,
+                    "Bold" => FontWeight.Bold,
+                    "ExtraBold" => FontWeight.ExtraBold,
+                    "Black" => FontWeight.Black,
+                    "ExtraBlack" => FontWeight.ExtraBlack,
+                    _ => FontWeight.Normal
+                };
+            }
+        };
+        
+        styleCombo.SelectionChanged += (s, e) =>
+        {
+            if (styleCombo.SelectedItem != null)
+            {
+                previewText.FontStyle = styleCombo.SelectedItem.ToString() switch
+                {
+                    "Italic" => FontStyle.Italic,
+                    "Oblique" => FontStyle.Oblique,
+                    _ => FontStyle.Normal
+                };
+            }
+        };
         
         var grid = new Grid
         {
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,*"),
             ColumnDefinitions = new ColumnDefinitions("Auto,*"),
-            Margin = new Thickness(10)
+            Margin = new Thickness(10),
+            RowSpacing = 8
         };
         
-        grid.Children.Add(new TextBlock { Text = "Font Family:", Margin = new Thickness(0, 0, 10, 5) });
+        grid.Children.Add(new TextBlock { Text = "Font Family:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
         Grid.SetRow(grid.Children[^1], 0);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -181,7 +217,7 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 0);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(new TextBlock { Text = "Size:", Margin = new Thickness(0, 5, 10, 5) });
+        grid.Children.Add(new TextBlock { Text = "Size:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
         Grid.SetRow(grid.Children[^1], 1);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -189,7 +225,7 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 1);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(new TextBlock { Text = "Weight:", Margin = new Thickness(0, 5, 10, 5) });
+        grid.Children.Add(new TextBlock { Text = "Weight:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
         Grid.SetRow(grid.Children[^1], 2);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -197,7 +233,7 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 2);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(new TextBlock { Text = "Style:", Margin = new Thickness(0, 5, 10, 5) });
+        grid.Children.Add(new TextBlock { Text = "Style:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
         Grid.SetRow(grid.Children[^1], 3);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -266,8 +302,27 @@ public class TinyFontPicker : StackPanel
         {
             currentFamily = new FontFamily(familyCombo.SelectedItem?.ToString() ?? "Arial");
             currentSize = (double)(sizeBox.Value ?? 12);
-            currentWeight = weightCombo.SelectedItem?.ToString() == "Bold" ? FontWeight.Bold : FontWeight.Normal;
-            currentStyle = styleCombo.SelectedItem?.ToString() == "Italic" ? FontStyle.Italic : FontStyle.Normal;
+            
+            currentWeight = weightCombo.SelectedItem?.ToString() switch
+            {
+                "Thin" => FontWeight.Thin,
+                "ExtraLight" => FontWeight.ExtraLight,
+                "Light" => FontWeight.Light,
+                "Medium" => FontWeight.Medium,
+                "SemiBold" => FontWeight.SemiBold,
+                "Bold" => FontWeight.Bold,
+                "ExtraBold" => FontWeight.ExtraBold,
+                "Black" => FontWeight.Black,
+                "ExtraBlack" => FontWeight.ExtraBlack,
+                _ => FontWeight.Normal
+            };
+            
+            currentStyle = styleCombo.SelectedItem?.ToString() switch
+            {
+                "Italic" => FontStyle.Italic,
+                "Oblique" => FontStyle.Oblique,
+                _ => FontStyle.Normal
+            };
             
             UpdateLabel();
             FontChanged?.Invoke(this, (currentFamily, currentSize, currentWeight, currentStyle));
