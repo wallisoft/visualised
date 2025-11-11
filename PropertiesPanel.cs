@@ -6,6 +6,11 @@ using Avalonia.Media;
 using System;
 using System.Reflection;
 using System.Linq;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using Microsoft.Data.Sqlite;
+
 
 namespace VB;
 
@@ -20,46 +25,122 @@ public class PropertiesPanel
     }
     
     public void ShowPropertiesFor(Control control)
+{
+    selectedControl = control;
+    panel.Children.Clear();
+
+    var controlType = control.GetType().Name;
+
+    // Get property display order from database
+    var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
+    using var conn = new SqliteConnection($"Data Source={dbPath}");
+    conn.Open();
+    using var cmd = conn.CreateCommand();
+
+    // Get both specific control type rules and wildcard rules
+    cmd.CommandText = @"
+        SELECT property_name, display_order, is_hidden
+        FROM property_display
+        WHERE control_type IN ('*', @controlType)
+        ORDER BY
+            CASE WHEN control_type = @controlType THEN 0 ELSE 1 END,
+            display_order";
+    cmd.Parameters.AddWithValue("@controlType", controlType);
+
+    var displayRules = new Dictionary<string, (int order, bool hidden)>();
+    using var reader = cmd.ExecuteReader();
+    while (reader.Read())
     {
-        selectedControl = control;
-        panel.Children.Clear();
-        
-        var props = control.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanWrite && p.CanRead && !ShouldSkip(p))
-            .OrderBy(p => 
-        {
-            // TODO: Query from property_order table
-            // For now, prioritize common properties
-            // Order by usage: Usual Suspects, Size/Pos, Font, Colors, Alignment, Border, Rest
-            var priority = new[] { 
-                // Usual suspects
-                "Name", "Content", "Text", 
-                // Size & Position
-                "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight",
-                "Margin", "Padding",
-                // Font properties
-                "FontSize", "FontWeight", "FontStyle", "FontFamily", "FontStretch",
-                // Colors
-                "Background", "Foreground", "BorderBrush", 
-                // Alignment
-                "HorizontalAlignment", "VerticalAlignment", 
-                "HorizontalContentAlignment", "VerticalContentAlignment",
-                // Border
-                "BorderThickness", "CornerRadius",
-                // Common UI
-                "IsVisible", "IsEnabled", "Opacity",
-                "Cursor"
-            };
-            var index = Array.IndexOf(priority, p.Name);
-            return index == -1 ? 100 + p.Name.GetHashCode() : index;
-        });
-        
-        foreach (var prop in props)
-        {
-            AddPropertyRow(control, prop);
-        }
+        var propName = reader.GetString(0);
+        var order = reader.GetInt32(1);
+        var hidden = reader.GetInt32(2) == 1;
+        displayRules[propName] = (order, hidden);
     }
+
+    // Get property groups
+    cmd.CommandText = "SELECT group_name, display_name, component_properties, picker_type FROM property_groups ORDER BY display_order";
+    var groups = new List<(string name, string display, string[] components, string picker)>();
+    using var groupReader = cmd.ExecuteReader();
+    while (groupReader.Read())
+    {
+        groups.Add((
+            groupReader.GetString(0),
+            groupReader.GetString(1),
+            groupReader.GetString(2).Split(','),
+            groupReader.GetString(3)
+        ));
+    }
+
+    // ... rest of method stays the same
+	    
+	    // Add property groups first
+	    foreach (var group in groups.Where(g => displayRules.ContainsKey(g.name) && !displayRules[g.name].hidden))
+	    {
+		if (group.picker == "TinyFontPicker")
+		    AddFontRow(control, group.display);
+	    }
+	    
+	    // Get all properties
+	    var props = control.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+		.Where(p => p.CanWrite && p.CanRead && !ShouldSkip(p))
+		.Where(p => !displayRules.ContainsKey(p.Name) || !displayRules[p.Name].hidden)
+		.OrderBy(p => displayRules.ContainsKey(p.Name) ? displayRules[p.Name].order : 1000)
+		.ThenBy(p => p.Name);
+	    
+	    foreach (var prop in props)
+	    {
+		AddPropertyRow(control, prop);
+	    }
+	}
+
+private void AddFontRow(Control control, string displayName)
+{
+    var row = new StackPanel 
+    { 
+        Orientation = Orientation.Horizontal, 
+        Spacing = 5,
+        Margin = new Thickness(0, 0, 0, 2)
+    };
     
+    var label = new TextBlock 
+    { 
+        Text = displayName,
+        Width = 60,
+        FontSize = 11,
+        TextAlignment = TextAlignment.Right,
+        VerticalAlignment = VerticalAlignment.Center
+    };
+    row.Children.Add(label);
+    
+    var fontPicker = new TinyFontPicker();
+    
+    // Get current font properties
+    var familyProp = control.GetType().GetProperty("FontFamily");
+    var sizeProp = control.GetType().GetProperty("FontSize");
+    var weightProp = control.GetType().GetProperty("FontWeight");
+    var styleProp = control.GetType().GetProperty("FontStyle");
+    
+    if (familyProp != null && familyProp.GetValue(control) != null)
+        fontPicker.Family = (FontFamily)familyProp.GetValue(control)!;
+    if (sizeProp != null && sizeProp.GetValue(control) != null)
+        fontPicker.Size = (double)sizeProp.GetValue(control)!;
+    if (weightProp != null && weightProp.GetValue(control) != null)
+        fontPicker.Weight = (FontWeight)weightProp.GetValue(control)!;
+    if (styleProp != null && styleProp.GetValue(control) != null)
+        fontPicker.Style = (FontStyle)styleProp.GetValue(control)!;
+    
+    fontPicker.FontChanged += (s, font) =>
+    {
+        familyProp?.SetValue(control, font.family);
+        sizeProp?.SetValue(control, font.size);
+        weightProp?.SetValue(control, font.weight);
+        styleProp?.SetValue(control, font.style);
+    };
+    
+    row.Children.Add(fontPicker);
+    panel.Children.Add(row);
+}
+
     private void AddPropertyRow(Control control, PropertyInfo prop)
     {
         var row = new StackPanel 
