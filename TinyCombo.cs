@@ -81,8 +81,12 @@ private void ShowComboBox()
     
     var combo = new ComboBox 
     { 
-        Width = 138,  // 120 (valueBox) + 18 (dropBtn)
-        MinHeight = 15
+        Width = 138,
+        Height = 15,
+        MinHeight = 15,
+        MaxHeight = 15,
+        FontSize = 11,
+        Padding = new Thickness(4, 0, 4, 0)
     };
     foreach (var item in items)
         combo.Items.Add(item);
