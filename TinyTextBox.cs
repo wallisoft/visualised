@@ -78,8 +78,13 @@ public class TinyTextBox : StackPanel
         var index = parentPanel.Children.IndexOf(this);
         parentPanel.Children.RemoveAt(index);
         parentPanel.Children.Insert(index, realTextBox);
-        realTextBox.Focus();
-        realTextBox.SelectAll();
+        
+        // Focus and position cursor at end
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => 
+        {
+            realTextBox.Focus();
+            realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
     
     private void SwapBack()
