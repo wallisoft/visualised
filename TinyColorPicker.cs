@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -9,7 +10,7 @@ namespace VB;
 
 public class TinyColorPicker : StackPanel
 {
-    private Border colorSwatch;
+    private Label hexLabel;
     private Button pickBtn;
     private Panel? parentPanel;
     private Color currentColor = Colors.White;
@@ -20,7 +21,7 @@ public class TinyColorPicker : StackPanel
         set
         {
             currentColor = value;
-            colorSwatch.Background = new SolidColorBrush(value);
+            hexLabel.Content = currentColor.ToString();
         }
     }
     
@@ -31,14 +32,19 @@ public class TinyColorPicker : StackPanel
         Orientation = Orientation.Horizontal;
         Spacing = 0;
         
-        colorSwatch = new Border
+        hexLabel = new Label
         {
             Width = 120,
             MinHeight = 15,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Padding = new Thickness(4, 2, 4, 2),
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(1, 1, 0, 1),
             CornerRadius = new CornerRadius(2, 0, 0, 2),
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
         };
         
@@ -61,13 +67,13 @@ public class TinyColorPicker : StackPanel
         };
         
         pickBtn.Click += (s, e) => ShowColorPicker();
-        colorSwatch.PointerPressed += (s, e) =>
+        hexLabel.PointerPressed += (s, e) =>
         {
             ShowColorPicker();
             e.Handled = true;
         };
         
-        Children.Add(colorSwatch);
+        Children.Add(hexLabel);
         Children.Add(pickBtn);
     }
     
@@ -76,60 +82,41 @@ public class TinyColorPicker : StackPanel
         parentPanel = this.Parent as Panel;
         if (parentPanel == null) return;
         
-        // Simple hex input for now - can expand to full picker later
-        var hexBox = new TextBox
+        var picker = new ColorPicker
         {
-            Text = currentColor.ToString(),
-            Width = 138,
-            Height = 18,
-            FontSize = 11,
-            Padding = new Thickness(4, 0, 4, 0),
-            BorderBrush = new SolidColorBrush(Color.Parse("#2196F3")),
-            BorderThickness = new Thickness(1)
+            Color = currentColor,
+            Width = 200,
+            Height = 150
         };
         
-        hexBox.KeyDown += (s, e) =>
+        picker.ColorChanged += (s, e) =>
         {
-            if (e.Key == Key.Enter)
+            currentColor = e.NewColor;
+            hexLabel.Content = currentColor.ToString();
+            ColorChanged?.Invoke(this, currentColor);
+        };
+        
+        picker.LostFocus += (s, e) => SwapBack(picker);
+        picker.KeyDown += (s, e) =>
+        {
+            if (e.Key == Key.Enter || e.Key == Key.Escape)
             {
-                TryParseColor(hexBox.Text);
-                SwapBack(hexBox);
+                SwapBack(picker);
                 e.Handled = true;
             }
         };
         
-        hexBox.LostFocus += (s, e) =>
-        {
-            TryParseColor(hexBox.Text);
-            SwapBack(hexBox);
-        };
-        
         var index = parentPanel.Children.IndexOf(this);
         parentPanel.Children.RemoveAt(index);
-        parentPanel.Children.Insert(index, hexBox);
-        hexBox.Focus();
-        hexBox.SelectAll();
+        parentPanel.Children.Insert(index, picker);
+        picker.Focus();
     }
     
-    private void TryParseColor(string text)
-    {
-        try
-        {
-            currentColor = Color.Parse(text);
-            colorSwatch.Background = new SolidColorBrush(currentColor);
-            ColorChanged?.Invoke(this, currentColor);
-        }
-        catch
-        {
-            // Invalid color, keep current
-        }
-    }
-    
-    private void SwapBack(TextBox hexBox)
+    private void SwapBack(Control control)
     {
         if (parentPanel == null) return;
         
-        var idx = parentPanel.Children.IndexOf(hexBox);
+        var idx = parentPanel.Children.IndexOf(control);
         if (idx >= 0)
         {
             parentPanel.Children.RemoveAt(idx);

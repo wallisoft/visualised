@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -88,8 +87,8 @@ public class PropertiesPanel
             row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(bool))
             row.Children.Add(new CheckBox { IsChecked = (bool?)prop.GetValue(control) });
-        else if (prop.PropertyType.Name.Contains("Brush") || prop.PropertyType.Name == "IBrush")
-            row.Children.Add(new TextBlock { Text = "🎨", FontSize = 14 }); // TODO: Color picker
+	else if (prop.PropertyType.Name.Contains("Brush") || prop.PropertyType.Name == "IBrush")
+            row.Children.Add(CreateTinyColorPicker(control, prop));
         else if (prop.PropertyType.IsEnum)
             row.Children.Add(CreateTinyCombo(control, prop));
         else
@@ -145,6 +144,18 @@ public class PropertiesPanel
         
         return tiny;
     }
+
+    private Control CreateTinyColorPicker(Control control, PropertyInfo prop)
+    {
+	    var picker = new TinyColorPicker();
+	    var brush = prop.GetValue(control) as ISolidColorBrush;
+	    if (brush != null) picker.Color = brush.Color;
+	    
+	    picker.ColorChanged += (s, color) => prop.SetValue(control, new SolidColorBrush(color));
+	    return picker;
+    }
+
+
     private bool ShouldSkip(PropertyInfo prop)
     {
         // Only skip truly dangerous/system properties
