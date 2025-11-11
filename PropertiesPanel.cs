@@ -24,54 +24,58 @@ public class PropertiesPanel
         panel = targetPanel;
     }
     
-    public void ShowPropertiesFor(Control control)
-{
-    selectedControl = control;
-    panel.Children.Clear();
-
-    var controlType = control.GetType().Name;
-
-    // Get property display order from database
-    var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
-    using var conn = new SqliteConnection($"Data Source={dbPath}");
-    conn.Open();
-    using var cmd = conn.CreateCommand();
-
-    // Get both specific control type rules and wildcard rules
-    cmd.CommandText = @"
-        SELECT property_name, display_order, is_hidden
-        FROM property_display
-        WHERE control_type IN ('*', @controlType)
-        ORDER BY
-            CASE WHEN control_type = @controlType THEN 0 ELSE 1 END,
-            display_order";
-    cmd.Parameters.AddWithValue("@controlType", controlType);
-
-    var displayRules = new Dictionary<string, (int order, bool hidden)>();
-    using var reader = cmd.ExecuteReader();
-    while (reader.Read())
-    {
-        var propName = reader.GetString(0);
-        var order = reader.GetInt32(1);
-        var hidden = reader.GetInt32(2) == 1;
-        displayRules[propName] = (order, hidden);
-    }
-
-    // Get property groups
-    cmd.CommandText = "SELECT group_name, display_name, component_properties, picker_type FROM property_groups ORDER BY display_order";
-    var groups = new List<(string name, string display, string[] components, string picker)>();
-    using var groupReader = cmd.ExecuteReader();
-    while (groupReader.Read())
-    {
-        groups.Add((
-            groupReader.GetString(0),
-            groupReader.GetString(1),
-            groupReader.GetString(2).Split(','),
-            groupReader.GetString(3)
-        ));
-    }
-
-    // ... rest of method stays the same
+	public void ShowPropertiesFor(Control control)
+	{
+	    selectedControl = control;
+	    panel.Children.Clear();
+	    
+	    var controlType = control.GetType().Name;
+	    
+	    // Get property display order from database
+	    var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
+	    using var conn = new SqliteConnection($"Data Source={dbPath}");
+	    conn.Open();
+	    
+	    var displayRules = new Dictionary<string, (int order, bool hidden)>();
+	    
+	    // First query - property display rules
+	    using (var cmd = conn.CreateCommand())
+	    {
+		cmd.CommandText = @"
+		    SELECT property_name, display_order, is_hidden 
+		    FROM property_display 
+		    WHERE control_type IN ('*', @controlType) 
+		    ORDER BY 
+			CASE WHEN control_type = @controlType THEN 0 ELSE 1 END,
+			display_order";
+		cmd.Parameters.AddWithValue("@controlType", controlType);
+		
+		using var reader = cmd.ExecuteReader();
+		while (reader.Read())
+		{
+		    var propName = reader.GetString(0);
+		    var order = reader.GetInt32(1);
+		    var hidden = reader.GetInt32(2) == 1;
+		    displayRules[propName] = (order, hidden);
+		}
+	    }
+	    
+	    // Second query - property groups
+	    var groups = new List<(string name, string display, string[] components, string picker)>();
+	    using (var cmd = conn.CreateCommand())
+	    {
+		cmd.CommandText = "SELECT group_name, display_name, component_properties, picker_type FROM property_groups ORDER BY display_order";
+		using var groupReader = cmd.ExecuteReader();
+		while (groupReader.Read())
+		{
+		    groups.Add((
+			groupReader.GetString(0),
+			groupReader.GetString(1),
+			groupReader.GetString(2).Split(','),
+			groupReader.GetString(3)
+		    ));
+		}
+	    }
 	    
 	    // Add property groups first
 	    foreach (var group in groups.Where(g => displayRules.ContainsKey(g.name) && !displayRules[g.name].hidden))
