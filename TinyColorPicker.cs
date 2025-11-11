@@ -81,8 +81,8 @@ private async void ShowColorPicker()
     var colorView = new ColorView
     {
         Color = currentColor,
-        Width = 400,
-        Height = 450
+        Width = 300,
+        Height = 350
     };
     
     var okBtn = new Button { Content = "OK", Width = 80, Margin = new Thickness(5) };
@@ -97,6 +97,7 @@ private async void ShowColorPicker()
     
     var content = new StackPanel
     {
+        Margin = new Thickness(20, 0, 20, 20),  // L, T, R, B padding
         Children = { colorView, buttonPanel }
     };
     
@@ -104,7 +105,7 @@ private async void ShowColorPicker()
     {
         Title = "Pick Color",
         Content = content,
-        Width = 320,
+        Width = 360,  // Increased for padding
         Height = 420,
         CanResize = false,
         WindowStartupLocation = WindowStartupLocation.CenterOwner
