@@ -53,13 +53,18 @@ public class TinyTextBox : StackPanel
     
     private void ShowRealTextBox()
     {
+        Console.WriteLine("[TINYTEXTBOX] ShowRealTextBox called");
         parentPanel = this.Parent as Panel;
-        if (parentPanel == null) return;
+        if (parentPanel == null) 
+        {
+            Console.WriteLine("[TINYTEXTBOX] No parent panel!");
+            return;
+        }
         
         realTextBox = new TextBox
         {
             Text = fakeBox.Content?.ToString() ?? "",
-            Width = 300,  // Bigger for comfortable editing
+            Width = 300,
             MinHeight = 20,
             FontSize = 11,
             Padding = new Thickness(4, 2, 4, 2)
@@ -76,15 +81,11 @@ public class TinyTextBox : StackPanel
         };
         
         var index = parentPanel.Children.IndexOf(this);
+        Console.WriteLine($"[TINYTEXTBOX] Swapping at index {index}");
         parentPanel.Children.RemoveAt(index);
         parentPanel.Children.Insert(index, realTextBox);
-        
-        // Focus and position cursor at end
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => 
-        {
-            realTextBox.Focus();
-            realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
-        }, Avalonia.Threading.DispatcherPriority.Loaded);
+        realTextBox.Focus();
+        realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
     }
     
     private void SwapBack()

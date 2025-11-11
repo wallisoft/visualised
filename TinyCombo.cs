@@ -27,7 +27,7 @@ public class TinyCombo : StackPanel
     public TinyCombo()
     {
         Orientation = Orientation.Horizontal;
-        Spacing = 1;
+        Spacing = 0;
         
         valueBox = new Label
         {
@@ -38,8 +38,8 @@ public class TinyCombo : StackPanel
             Padding = new Thickness(4, 2, 4, 2),
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(2),
+            BorderThickness = new Thickness(1, 1, 0, 1),  // No right border
+            CornerRadius = new CornerRadius(2, 0, 0, 2),  // Round left only
             HorizontalContentAlignment = HorizontalAlignment.Left,
             VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
