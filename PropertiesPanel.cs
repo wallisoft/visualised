@@ -107,6 +107,9 @@ public class PropertiesPanel
         
         tiny.TextChanged += (s, text) =>
         {
+            // Skip Name - can't change after styled
+            if (prop.Name == "Name") return;
+            
             object value = text;
             if (prop.PropertyType == typeof(double))
             {
