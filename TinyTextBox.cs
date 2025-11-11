@@ -64,9 +64,8 @@ public class TinyTextBox : StackPanel
         realTextBox = new TextBox
         {
             Text = fakeBox.Content?.ToString() ?? "",
-            Width = 300,
-            MaxWidth = 300,
-            MinHeight = 20,
+            Width = 120,
+            MinHeight = 15,
             FontSize = 11,
             Padding = new Thickness(4, 2, 4, 2)
         };
@@ -80,26 +79,13 @@ public class TinyTextBox : StackPanel
             }
         };
         
+        realTextBox.LostFocus += (s, e) => SwapBack();
+        
         var index = parentPanel.Children.IndexOf(this);
-        Console.WriteLine($"[TINYTEXTBOX] Parent: {parentPanel.GetType().Name}, Index: {index}");
-        Console.WriteLine($"[TINYTEXTBOX] Parent children count: {parentPanel.Children.Count}");
         parentPanel.Children.RemoveAt(index);
         parentPanel.Children.Insert(index, realTextBox);
-        Console.WriteLine($"[TINYTEXTBOX] TextBox inserted: {realTextBox.IsVisible}, Width={realTextBox.Width}");
-        Console.WriteLine($"[TINYTEXTBOX] TextBox bounds: {realTextBox.Bounds}");
-        Console.WriteLine($"[TINYTEXTBOX] Parent type: {parentPanel.GetType().Name}");
-        Console.WriteLine($"[TINYTEXTBOX] TinyTextBox still in parent: {parentPanel.Children.Contains(this)}");
-        
-        // Force layout update
-        realTextBox.InvalidateArrange();
         realTextBox.Focus();
         realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
-        
-        // Add LostFocus AFTER focus is established
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            realTextBox.LostFocus += (s, e) => SwapBack();
-        }, Avalonia.Threading.DispatcherPriority.Background);
     }
     
     private void SwapBack()
@@ -109,9 +95,6 @@ public class TinyTextBox : StackPanel
         
         fakeBox.Content = realTextBox.Text;
         TextChanged?.Invoke(this, realTextBox.Text);
-        
-        realTextBox.IsEnabled = false;
-        realTextBox.IsVisible = false;
         
         var idx = parentPanel.Children.IndexOf(realTextBox);
         if (idx >= 0)
