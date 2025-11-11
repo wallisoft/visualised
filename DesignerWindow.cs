@@ -428,9 +428,7 @@ designCanvas = new Canvas
 var controlTypes = new[] 
 { 
     "Button", "TextBox", "TextBlock", "CheckBox", "ComboBox", "ListBox", "RadioButton",
-    "StackPanel", "Grid", "Border", 
-    "TinyTextBox", "TinyCombo", "TinyColorPicker", 
-    "DatePicker", "TimePicker", "CalendarDatePicker" 
+    "StackPanel", "Grid", "Border" 
 };
 
 var controlSelector = new TinyCombo();
@@ -450,15 +448,17 @@ selectorRow.Children.Add(controlSelector);
 
         var addBtn = new Button 
         { 
-            Content = "Add", 
-            Width = 60, 
-            Height = 17, 
-            FontSize = 11, 
-            Padding = new Avalonia.Thickness(1), 
-            Background = new SolidColorBrush(Color.Parse("#66bb6a")), 
-            Foreground = Brushes.White,
-            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-            VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center
+	    Content = "Add", 
+	    Width = 60, 
+	    Height = 17, 
+	    FontSize = 11, 
+	    Padding = new Avalonia.Thickness(1), 
+	    Background = new SolidColorBrush(Color.Parse("#66bb6a")), 
+	    Foreground = Brushes.White,
+	    BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+	    BorderThickness = new Avalonia.Thickness(2),
+	    HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+	    VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center
         };
         addBtn.Click += (s, e) => 
         {
