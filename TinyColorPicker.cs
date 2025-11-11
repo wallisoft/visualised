@@ -76,51 +76,26 @@ public class TinyColorPicker : StackPanel
         Children.Add(pickBtn);
     }
     
-private async void ShowColorPicker()
+private void ShowColorPicker()
 {
-    var colorView = new ColorView
+    var picker = new ColorPicker
     {
-        Color = currentColor,
-        Width = 300,
-        Height = 350
+        Color = currentColor
     };
     
-    var okBtn = new Button { Content = "OK", Width = 80, Margin = new Thickness(5) };
-    var cancelBtn = new Button { Content = "Cancel", Width = 80, Margin = new Thickness(5) };
-    
-    var buttonPanel = new StackPanel
+    picker.ColorChanged += (s, e) =>
     {
-        Orientation = Orientation.Horizontal,
-        HorizontalAlignment = HorizontalAlignment.Right,
-        Children = { okBtn, cancelBtn }
-    };
-    
-    var content = new StackPanel
-    {
-        Margin = new Thickness(20, 0, 20, 20),  // L, T, R, B padding
-        Children = { colorView, buttonPanel }
-    };
-    
-    var window = new Window
-    {
-        Title = "Pick Color",
-        Content = content,
-        Width = 360,  // Increased for padding
-        Height = 420,
-        CanResize = false,
-        WindowStartupLocation = WindowStartupLocation.CenterOwner
-    };
-    
-    okBtn.Click += (s, e) =>
-    {
-        currentColor = colorView.Color;
+        currentColor = e.NewColor;
         hexLabel.Content = currentColor.ToString();
         ColorChanged?.Invoke(this, currentColor);
-        window.Close();
     };
     
-    cancelBtn.Click += (s, e) => window.Close();
+    var flyout = new Flyout
+    {
+        Content = picker,
+        Placement = PlacementMode.Right
+    };
     
-    await window.ShowDialog((Window)this.VisualRoot!);
+    flyout.ShowAt(pickBtn);
 }
 }
