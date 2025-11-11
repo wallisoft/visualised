@@ -48,8 +48,8 @@ public class TinyCombo : StackPanel
         dropBtn = new Button
         {
 	    Content = "♻",
-	    Width = 18,
-	    Height = 18,
+	    Width = 20,
+	    Height = 20,
 	    FontSize = 14,
 	    FontWeight = FontWeight.Bold,
 	    Padding = new Thickness(0, -1, 0, 0),
