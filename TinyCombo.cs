@@ -82,9 +82,9 @@ private void ShowComboBox()
     var combo = new ComboBox 
     { 
         Width = 138,
-        Height = 15,
-        MinHeight = 15,
-        MaxHeight = 15,
+        Height = 18,
+        MinHeight = 18,
+        MaxHeight = 18,
         FontSize = 11,
         Padding = new Thickness(4, 0, 4, 0)
     };
