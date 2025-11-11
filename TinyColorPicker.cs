@@ -9,18 +9,18 @@ namespace VB;
 
 public class TinyColorPicker : StackPanel
 {
-    private Label colorBox;
+    private Border colorSwatch;
     private Button pickBtn;
     private Panel? parentPanel;
-    private Color currentColor;
+    private Color currentColor = Colors.White;
     
-    public Color SelectedColor
+    public Color Color
     {
         get => currentColor;
         set
         {
             currentColor = value;
-            colorBox.Background = new SolidColorBrush(value);
+            colorSwatch.Background = new SolidColorBrush(value);
         }
     }
     
@@ -29,17 +29,16 @@ public class TinyColorPicker : StackPanel
     public TinyColorPicker()
     {
         Orientation = Orientation.Horizontal;
-        Spacing = 1;
+        Spacing = 0;
         
-        colorBox = new Label
+        colorSwatch = new Border
         {
             Width = 120,
             MinHeight = 15,
-            Padding = new Thickness(4, 2, 4, 2),
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(2),
+            BorderThickness = new Thickness(1, 1, 0, 1),
+            CornerRadius = new CornerRadius(2, 0, 0, 2),
             Cursor = new Cursor(StandardCursorType.Hand)
         };
         
@@ -50,85 +49,91 @@ public class TinyColorPicker : StackPanel
             Height = 18,
             FontSize = 14,
             FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0),
-            Background = Brushes.Transparent,
-            Foreground = new SolidColorBrush(Color.Parse("#ff6600")),  // ORANGE!
-            BorderBrush = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
+            Padding = new Thickness(0, -1, 0, 0),
+            Background = Brushes.White,
+            Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Thickness(0, 1, 1, 1),
+            CornerRadius = new CornerRadius(0, 2, 2, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
         };
         
         pickBtn.Click += (s, e) => ShowColorPicker();
-        colorBox.PointerPressed += (s, e) =>
+        colorSwatch.PointerPressed += (s, e) =>
         {
             ShowColorPicker();
             e.Handled = true;
         };
         
-        Children.Add(colorBox);
+        Children.Add(colorSwatch);
         Children.Add(pickBtn);
     }
     
-    private async void ShowColorPicker()
+    private void ShowColorPicker()
     {
-        // Simple color picker with common colors
         parentPanel = this.Parent as Panel;
         if (parentPanel == null) return;
         
-        var colorPanel = new StackPanel { Background = Brushes.White, Margin = new Thickness(2) };
-        
-        var commonColors = new[]
+        // Simple hex input for now - can expand to full picker later
+        var hexBox = new TextBox
         {
-            ("White", "#FFFFFF"), ("Black", "#000000"),
-            ("Red", "#FF0000"), ("Green", "#00FF00"), ("Blue", "#0000FF"),
-            ("Yellow", "#FFFF00"), ("Orange", "#FF6600"), ("Purple", "#800080"),
-            ("Gray", "#808080"), ("Pink", "#FFC0CB"),
-            ("Teal", "#66bb6a"), ("Brown", "#8B4513")
+            Text = currentColor.ToString(),
+            Width = 138,
+            Height = 18,
+            FontSize = 11,
+            Padding = new Thickness(4, 0, 4, 0),
+            BorderBrush = new SolidColorBrush(Color.Parse("#2196F3")),
+            BorderThickness = new Thickness(1)
         };
         
-        var grid = new WrapPanel { Width = 260 };
-        foreach (var (name, hex) in commonColors)
+        hexBox.KeyDown += (s, e) =>
         {
-            var btn = new Button
+            if (e.Key == Key.Enter)
             {
-                Content = name,
-                Background = new SolidColorBrush(Color.Parse(hex)),
-                Width = 60,
-                Height = 25,
-                Margin = new Thickness(2)
-            };
-            btn.Click += (s, e) =>
-            {
-                var color = Color.Parse(hex);
-                SelectedColor = color;
-                ColorChanged?.Invoke(this, color);
-                CloseColorPicker(colorPanel);
-            };
-            grid.Children.Add(btn);
-        }
+                TryParseColor(hexBox.Text);
+                SwapBack(hexBox);
+                e.Handled = true;
+            }
+        };
         
-        colorPanel.Children.Add(grid);
-        
-        var border = new Border
+        hexBox.LostFocus += (s, e) =>
         {
-            Child = colorPanel,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(2),
-            Background = Brushes.White
+            TryParseColor(hexBox.Text);
+            SwapBack(hexBox);
         };
         
         var index = parentPanel.Children.IndexOf(this);
-        parentPanel.Children.Insert(index + 1, border);
+        parentPanel.Children.RemoveAt(index);
+        parentPanel.Children.Insert(index, hexBox);
+        hexBox.Focus();
+        hexBox.SelectAll();
     }
     
-    private void CloseColorPicker(Control colorPanel)
+    private void TryParseColor(string text)
+    {
+        try
+        {
+            currentColor = Color.Parse(text);
+            colorSwatch.Background = new SolidColorBrush(currentColor);
+            ColorChanged?.Invoke(this, currentColor);
+        }
+        catch
+        {
+            // Invalid color, keep current
+        }
+    }
+    
+    private void SwapBack(TextBox hexBox)
     {
         if (parentPanel == null) return;
-        var border = colorPanel.Parent as Border;
-        if (border != null)
-            parentPanel.Children.Remove(border);
+        
+        var idx = parentPanel.Children.IndexOf(hexBox);
+        if (idx >= 0)
+        {
+            parentPanel.Children.RemoveAt(idx);
+            parentPanel.Children.Insert(idx, this);
+        }
     }
 }
