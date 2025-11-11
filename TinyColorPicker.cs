@@ -76,56 +76,29 @@ public class TinyColorPicker : StackPanel
         Children.Add(pickBtn);
     }
     
-    private async void ShowColorPicker()
+private void ShowColorPicker()
 {
-    var picker = new ColorPicker
-    {
-        Color = currentColor,
-        Width = 250,
-        Height = 300
-    };
-    
-    var window = new Window
-    {
-        Title = "Pick Color",
-        Width = 270,
-        Height = 340,
-        Content = new StackPanel
-        {
-            Children =
-            {
-                picker,
-                new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Margin = new Thickness(5),
-                    Spacing = 5,
-                    Children =
-                    {
-                        new Button { Content = "OK", Width = 60 },
-                        new Button { Content = "Cancel", Width = 60 }
-                    }
-                }
-            }
-        },
-        CanResize = false
-    };
-    
-    var okBtn = ((window.Content as StackPanel)!.Children[1] as StackPanel)!.Children[0] as Button;
-    var cancelBtn = ((window.Content as StackPanel)!.Children[1] as StackPanel)!.Children[1] as Button;
-    
-    okBtn!.Click += (s, e) =>
-    {
-        currentColor = picker.Color;
-        hexLabel.Content = currentColor.ToString();
-        ColorChanged?.Invoke(this, currentColor);
-        window.Close();
-    };
-    
-    cancelBtn!.Click += (s, e) => window.Close();
-    
-    await window.ShowDialog((Window)this.VisualRoot!);
-}
+	var colorView = new ColorView
+	{
+		Color = currentColor,
+		Width = 300,
+		Height = 350
+	};
+	
+	colorView.ColorChanged += (s, e) =>
+	{
+		currentColor = e.NewColor;
+		hexLabel.Content = currentColor.ToString();
+		ColorChanged?.Invoke(this, currentColor);
+	};
+	
+	var flyout = new Flyout
+	{
+		Content = colorView,
+		Placement = PlacementMode.Right
+	};
+	
+	flyout.ShowAt(pickBtn);
+    }
 
 }
