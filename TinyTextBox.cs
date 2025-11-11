@@ -48,15 +48,6 @@ public class TinyTextBox : StackPanel
             e.Handled = true;
         };
         
-        fakeBox.KeyDown += (s, e) =>
-        {
-            if (e.Key == Key.Enter)
-            {
-                ShowRealTextBox();
-                e.Handled = true;
-            }
-        };
-        
         Children.Add(fakeBox);
     }
     
@@ -74,6 +65,7 @@ public class TinyTextBox : StackPanel
         {
             Text = fakeBox.Content?.ToString() ?? "",
             Width = 300,
+            MaxWidth = 500,
             MinHeight = 20,
             FontSize = 11,
             Padding = new Thickness(4, 2, 4, 2)
