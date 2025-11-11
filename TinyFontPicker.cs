@@ -74,7 +74,7 @@ public class TinyFontPicker : StackPanel
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(0, -2, 0, 0),
             Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#2196F3")),  // Blue
+            Foreground = new SolidColorBrush(Color.Parse("#2196F3")),
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
             BorderThickness = new Thickness(0, 1, 1, 1),
             CornerRadius = new CornerRadius(0, 2, 2, 0),
@@ -105,7 +105,9 @@ public class TinyFontPicker : StackPanel
     
     private async void ShowFontPicker()
     {
-        // Common fonts - TODO: Load from database table 'font_list' in future
+        var greenBorder = new SolidColorBrush(Color.Parse("#66bb6a"));
+        
+        // Common fonts
         var fonts = new[] 
         { 
             "Arial", "Calibri", "Cambria", "Comic Sans MS", "Consolas", "Courier New", 
@@ -113,14 +115,34 @@ public class TinyFontPicker : StackPanel
             "Trebuchet MS", "Verdana", "Inter"
         };
         
-        var familyCombo = new ComboBox { Width = 200, SelectedItem = currentFamily.Name };
+        var familyCombo = new ComboBox 
+        { 
+            Width = 200, 
+            SelectedItem = currentFamily.Name,
+            BorderBrush = greenBorder,
+            BorderThickness = new Thickness(1)
+        };
         foreach (var font in fonts)
             familyCombo.Items.Add(font);
         
-        var sizeBox = new NumericUpDown { Width = 100, Value = (decimal)currentSize, Minimum = 6, Maximum = 72, Increment = 1 };
+        var sizeBox = new NumericUpDown 
+        { 
+            Width = 110, 
+            Value = (decimal)currentSize, 
+            Minimum = 6, 
+            Maximum = 72, 
+            Increment = 1,
+            BorderBrush = greenBorder,
+            BorderThickness = new Thickness(1)
+        };
         
-        // All FontWeight values
-        var weightCombo = new ComboBox { Width = 120, SelectedItem = currentWeight.ToString() };
+        var weightCombo = new ComboBox 
+        { 
+            Width = 120, 
+            SelectedItem = currentWeight.ToString(),
+            BorderBrush = greenBorder,
+            BorderThickness = new Thickness(1)
+        };
         weightCombo.Items.Add("Thin");
         weightCombo.Items.Add("ExtraLight");
         weightCombo.Items.Add("Light");
@@ -132,11 +154,29 @@ public class TinyFontPicker : StackPanel
         weightCombo.Items.Add("Black");
         weightCombo.Items.Add("ExtraBlack");
         
-        // All FontStyle values
-        var styleCombo = new ComboBox { Width = 120, SelectedItem = currentStyle.ToString() };
+        var styleCombo = new ComboBox 
+        { 
+            Width = 120, 
+            SelectedItem = currentStyle.ToString(),
+            BorderBrush = greenBorder,
+            BorderThickness = new Thickness(1)
+        };
         styleCombo.Items.Add("Normal");
         styleCombo.Items.Add("Italic");
         styleCombo.Items.Add("Oblique");
+        
+        var underlineCheck = new CheckBox 
+        { 
+            Content = "Underline",
+            BorderBrush = greenBorder,
+            BorderThickness = new Thickness(1)
+        };
+        var strikeCheck = new CheckBox 
+        { 
+            Content = "Strikethrough",
+            BorderBrush = greenBorder,
+            BorderThickness = new Thickness(1)
+        };
         
         var previewText = new TextBlock 
         { 
@@ -201,15 +241,55 @@ public class TinyFontPicker : StackPanel
             }
         };
         
+       	underlineCheck.IsCheckedChanged += (s, e) =>
+	{
+	    UpdateDecorations();
+	};
+
+	strikeCheck.IsCheckedChanged += (s, e) =>
+	{
+	    UpdateDecorations();
+	};
+
+	void UpdateDecorations()
+	{
+	    if (underlineCheck.IsChecked == true && strikeCheck.IsChecked == true)
+	    {
+		previewText.TextDecorations = new TextDecorationCollection
+		{
+		    TextDecorations.Underline[0],
+		    TextDecorations.Strikethrough[0]
+		};
+	    }
+	    else if (underlineCheck.IsChecked == true)
+	    {
+		previewText.TextDecorations = TextDecorations.Underline;
+	    }
+	    else if (strikeCheck.IsChecked == true)
+	    {
+		previewText.TextDecorations = TextDecorations.Strikethrough;
+	    }
+	    else
+	    {
+		previewText.TextDecorations = null;
+	    }
+	} 
+
         var grid = new Grid
         {
-            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,*"),
+            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,*"),
             ColumnDefinitions = new ColumnDefinitions("Auto,*"),
             Margin = new Thickness(10),
             RowSpacing = 8
         };
         
-        grid.Children.Add(new TextBlock { Text = "Font Family:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+        grid.Children.Add(new TextBlock 
+        { 
+            Text = "Font Family:", 
+            VerticalAlignment = VerticalAlignment.Center,
+            TextAlignment = TextAlignment.Right,
+            Margin = new Thickness(0, 0, 10, 0)
+        });
         Grid.SetRow(grid.Children[^1], 0);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -217,7 +297,13 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 0);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(new TextBlock { Text = "Size:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+        grid.Children.Add(new TextBlock 
+        { 
+            Text = "Size:", 
+            VerticalAlignment = VerticalAlignment.Center,
+            TextAlignment = TextAlignment.Right,
+            Margin = new Thickness(0, 0, 10, 0)
+        });
         Grid.SetRow(grid.Children[^1], 1);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -225,7 +311,13 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 1);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(new TextBlock { Text = "Weight:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+        grid.Children.Add(new TextBlock 
+        { 
+            Text = "Weight:", 
+            VerticalAlignment = VerticalAlignment.Center,
+            TextAlignment = TextAlignment.Right,
+            Margin = new Thickness(0, 0, 10, 0)
+        });
         Grid.SetRow(grid.Children[^1], 2);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -233,7 +325,13 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 2);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(new TextBlock { Text = "Style:", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+        grid.Children.Add(new TextBlock 
+        { 
+            Text = "Style:", 
+            VerticalAlignment = VerticalAlignment.Center,
+            TextAlignment = TextAlignment.Right,
+            Margin = new Thickness(0, 0, 10, 0)
+        });
         Grid.SetRow(grid.Children[^1], 3);
         Grid.SetColumn(grid.Children[^1], 0);
         
@@ -241,8 +339,25 @@ public class TinyFontPicker : StackPanel
         Grid.SetRow(grid.Children[^1], 3);
         Grid.SetColumn(grid.Children[^1], 1);
         
-        grid.Children.Add(preview);
+        grid.Children.Add(new TextBlock 
+        { 
+            Text = "Decorations:", 
+            VerticalAlignment = VerticalAlignment.Top,
+            TextAlignment = TextAlignment.Right,
+            Margin = new Thickness(0, 2, 10, 0)
+        });
         Grid.SetRow(grid.Children[^1], 4);
+        Grid.SetColumn(grid.Children[^1], 0);
+        
+        var decorStack = new StackPanel { Spacing = 5 };
+        decorStack.Children.Add(underlineCheck);
+        decorStack.Children.Add(strikeCheck);
+        grid.Children.Add(decorStack);
+        Grid.SetRow(grid.Children[^1], 4);
+        Grid.SetColumn(grid.Children[^1], 1);
+        
+        grid.Children.Add(preview);
+        Grid.SetRow(grid.Children[^1], 5);
         Grid.SetColumn(grid.Children[^1], 1);
         
         var okBtn = new Button 
@@ -280,13 +395,13 @@ public class TinyFontPicker : StackPanel
             Children = { okBtn, cancelBtn }
         };
         
+        var mainStack = new StackPanel { Children = { grid, buttonPanel } };
+        
         var container = new Border
         {
             Padding = new Thickness(20),
-            Child = new StackPanel
-            {
-                Children = { grid, buttonPanel }
-            }
+            Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
+            Child = mainStack
         };
         
         var window = new Window
