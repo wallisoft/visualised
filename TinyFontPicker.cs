@@ -133,7 +133,8 @@ private async void ShowFontPicker()
         Background = Brushes.White,
         BorderBrush = greenBorder,
         BorderThickness = new Thickness(1),
-        HorizontalContentAlignment = HorizontalAlignment.Center
+        HorizontalContentAlignment = HorizontalAlignment.Center,
+        HorizontalAlignment = HorizontalAlignment.Left
     };
     
     var weightCombo = new ComboBox 
@@ -159,17 +160,6 @@ private async void ShowFontPicker()
     foreach (var s in styles)
         styleCombo.Items.Add(s);
     styleCombo.SelectedItem = currentStyle.ToString();
-    
-    var underlineCheck = new CheckBox 
-    { 
-        Content = "Underline",
-        Background = Brushes.White
-    };
-    var strikeCheck = new CheckBox 
-    { 
-        Content = "Strikethrough",
-        Background = Brushes.White
-    };
     
     var previewText = new TextBlock 
     { 
@@ -239,36 +229,9 @@ private async void ShowFontPicker()
         }
     };
     
-    underlineCheck.IsCheckedChanged += (s, e) => UpdateDecorations();
-    strikeCheck.IsCheckedChanged += (s, e) => UpdateDecorations();
-    
-    void UpdateDecorations()
-    {
-        if (underlineCheck.IsChecked == true && strikeCheck.IsChecked == true)
-        {
-            previewText.TextDecorations = new TextDecorationCollection
-            {
-                TextDecorations.Underline[0],
-                TextDecorations.Strikethrough[0]
-            };
-        }
-        else if (underlineCheck.IsChecked == true)
-        {
-            previewText.TextDecorations = TextDecorations.Underline;
-        }
-        else if (strikeCheck.IsChecked == true)
-        {
-            previewText.TextDecorations = TextDecorations.Strikethrough;
-        }
-        else
-        {
-            previewText.TextDecorations = null;
-        }
-    }
-    
     var grid = new Grid
     {
-        RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,*"),
+        RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,*"),
         ColumnDefinitions = new ColumnDefinitions("Auto,*"),
         Margin = new Thickness(10),
         RowSpacing = 8
@@ -330,25 +293,8 @@ private async void ShowFontPicker()
     Grid.SetRow(grid.Children[^1], 3);
     Grid.SetColumn(grid.Children[^1], 1);
     
-    grid.Children.Add(new TextBlock 
-    { 
-        Text = "Decorations:", 
-        VerticalAlignment = VerticalAlignment.Top,
-        TextAlignment = TextAlignment.Right,
-        Margin = new Thickness(0, 2, 10, 0)
-    });
-    Grid.SetRow(grid.Children[^1], 4);
-    Grid.SetColumn(grid.Children[^1], 0);
-    
-    var decorStack = new StackPanel { Spacing = 5 };
-    decorStack.Children.Add(underlineCheck);
-    decorStack.Children.Add(strikeCheck);
-    grid.Children.Add(decorStack);
-    Grid.SetRow(grid.Children[^1], 4);
-    Grid.SetColumn(grid.Children[^1], 1);
-    
     grid.Children.Add(preview);
-    Grid.SetRow(grid.Children[^1], 5);
+    Grid.SetRow(grid.Children[^1], 4);
     Grid.SetColumn(grid.Children[^1], 1);
     
     var okBtn = new Button 
@@ -400,7 +346,7 @@ private async void ShowFontPicker()
         Title = "Pick Font",
         Content = container,
         Width = 400,
-        Height = 450,
+        Height = 420,
         CanResize = false,
         WindowStartupLocation = WindowStartupLocation.CenterOwner
     };
