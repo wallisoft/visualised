@@ -48,15 +48,6 @@ public class TinyTextBox : StackPanel
             e.Handled = true;
         };
         
-        fakeBox.KeyDown += (s, e) =>
-        {
-            if (e.Key == Key.Enter)
-            {
-                ShowRealTextBox();
-                e.Handled = true;
-            }
-        };
-        
         Children.Add(fakeBox);
     }
     
@@ -102,6 +93,12 @@ public class TinyTextBox : StackPanel
         realTextBox.InvalidateArrange();
         realTextBox.Focus();
         realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
+        
+        // Add LostFocus AFTER focus is established
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            realTextBox.LostFocus += (s, e) => SwapBack();
+        }, Avalonia.Threading.DispatcherPriority.Background);
         
         // Add LostFocus AFTER focus is established
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
