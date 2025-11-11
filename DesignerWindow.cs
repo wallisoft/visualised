@@ -1293,22 +1293,28 @@ designCanvas = new Canvas
     }
     
     private static Control? CreateDesignControl(string controlType)
+{
+    return controlType switch
     {
-        return controlType switch
-        {
-            "Button" => new DesignButton(),
-            "TextBox" => new DesignTextBox(),
-            "TextBlock" => new DesignTextBlock(),
-            "CheckBox" => new DesignCheckBox(),
-            "ComboBox" => new DesignComboBox(),
-            "ListBox" => new DesignListBox(),
-            "RadioButton" => new DesignRadioButton(),
-            "StackPanel" => new DesignPanel("StackPanel"),
-            "Grid" => new DesignPanel("Grid"),
-            "Border" => new DesignBorder(),
-            _ => null
-        };
-    }
+        "Button" => new DesignButton(),
+        "TextBox" => new DesignTextBox(),
+        "TextBlock" => new DesignTextBlock(),
+        "CheckBox" => new DesignCheckBox(),
+        "ComboBox" => new DesignComboBox(),
+        "ListBox" => new DesignListBox(),
+        "RadioButton" => new DesignRadioButton(),
+        "StackPanel" => new DesignPanel("StackPanel"),
+        "Grid" => new DesignPanel("Grid"),
+        "Border" => new DesignBorder(),
+        "TinyTextBox" => new TinyTextBox(),
+        "TinyCombo" => new TinyCombo(),
+        "TinyColorPicker" => new TinyColorPicker(),
+        "DatePicker" => new DatePicker(),
+        "TimePicker" => new TimePicker(),
+        "CalendarDatePicker" => new CalendarDatePicker(),
+        _ => null
+    };
+}
 }
 
 
