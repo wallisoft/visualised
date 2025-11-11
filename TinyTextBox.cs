@@ -70,7 +70,6 @@ public class TinyTextBox : StackPanel
             Padding = new Thickness(4, 2, 4, 2)
         };
         
-        realTextBox.LostFocus += (s, e) => SwapBack();
         realTextBox.KeyDown += (s, e) =>
         {
             if (e.Key == Key.Enter)
@@ -88,6 +87,12 @@ public class TinyTextBox : StackPanel
         Console.WriteLine($"[TINYTEXTBOX] TextBox inserted: {realTextBox.IsVisible}, Width={realTextBox.Width}");
         realTextBox.Focus();
         realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
+        
+        // Add LostFocus AFTER focus is established
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            realTextBox.LostFocus += (s, e) => SwapBack();
+        }, Avalonia.Threading.DispatcherPriority.Background);
     }
     
     private void SwapBack()
