@@ -12,7 +12,6 @@ public class TinyColorPicker : StackPanel
 {
     private Label hexLabel;
     private Button pickBtn;
-    private Panel? parentPanel;
     private Color currentColor = Colors.White;
     
     public Color Color
@@ -52,7 +51,7 @@ public class TinyColorPicker : StackPanel
         {
             Content = "♻",
             Width = 18,
-            Height = 18,
+            Height = 20,
             FontSize = 14,
             FontWeight = FontWeight.Bold,
             Padding = new Thickness(0, -1, 0, 0),
@@ -77,28 +76,28 @@ public class TinyColorPicker : StackPanel
         Children.Add(pickBtn);
     }
     
-   private void ShowColorPicker()
-	{
-	    var picker = new ColorPicker
-	    {
-		Color = currentColor,
-		Width = 200,
-		Height = 200
-	    };
-	    
-	    picker.ColorChanged += (s, e) =>
-	    {
-		currentColor = e.NewColor;
-		hexLabel.Content = currentColor.ToString();
-		ColorChanged?.Invoke(this, currentColor);
-	    };
-	    
-	    var flyout = new Flyout
-	    {
-		Content = picker,
-		Placement = PlacementMode.Right
-	    };
-	    
-    flyout.ShowAt(pickBtn);
-    } 
+    private void ShowColorPicker()
+    {
+        var picker = new ColorPicker
+        {
+            Color = currentColor,
+            Width = 200,
+            Height = 200
+        };
+        
+        picker.ColorChanged += (s, e) =>
+        {
+            currentColor = e.NewColor;
+            hexLabel.Content = currentColor.ToString();
+            ColorChanged?.Invoke(this, currentColor);
+        };
+        
+        var flyout = new Flyout
+        {
+            Content = picker,
+            Placement = PlacementMode.Right
+        };
+        
+        flyout.ShowAt(pickBtn);
+    }
 }
