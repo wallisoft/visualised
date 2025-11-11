@@ -81,15 +81,18 @@ public class TinyTextBox : StackPanel
         };
         
         var index = parentPanel.Children.IndexOf(this);
-        Console.WriteLine($"[TINYTEXTBOX] Swapping at index {index}");
+        Console.WriteLine($"[TINYTEXTBOX] Parent: {parentPanel.GetType().Name}, Index: {index}");
+        Console.WriteLine($"[TINYTEXTBOX] Parent children count: {parentPanel.Children.Count}");
         parentPanel.Children.RemoveAt(index);
         parentPanel.Children.Insert(index, realTextBox);
+        Console.WriteLine($"[TINYTEXTBOX] TextBox inserted: {realTextBox.IsVisible}, Width={realTextBox.Width}");
         realTextBox.Focus();
         realTextBox.CaretIndex = realTextBox.Text?.Length ?? 0;
     }
     
     private void SwapBack()
     {
+        Console.WriteLine("[TINYTEXTBOX] SwapBack called");
         if (realTextBox == null || parentPanel == null) return;
         
         fakeBox.Content = realTextBox.Text;
