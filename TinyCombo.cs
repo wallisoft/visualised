@@ -44,16 +44,15 @@ public class TinyCombo : StackPanel
             VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
         };
-        
+
         dropBtn = new Button
         {
-        Content = "♻",
+            Content = "♻",
             Width = 18,
             Height = 18,
             FontSize = 14,
             FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0),
-            VerticalAlignment = VerticalAlignment.Center,  // ADD THIS
+            Padding = new Thickness(0, -1, 0, 0),  // Negative top padding pulls emoji up
             Background = Brushes.White,
             Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
