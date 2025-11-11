@@ -77,50 +77,28 @@ public class TinyColorPicker : StackPanel
         Children.Add(pickBtn);
     }
     
-    private void ShowColorPicker()
-    {
-        parentPanel = this.Parent as Panel;
-        if (parentPanel == null) return;
-        
-        var picker = new ColorPicker
-        {
-            Color = currentColor,
-            Width = 200,
-            Height = 150
-        };
-        
-        picker.ColorChanged += (s, e) =>
-        {
-            currentColor = e.NewColor;
-            hexLabel.Content = currentColor.ToString();
-            ColorChanged?.Invoke(this, currentColor);
-        };
-        
-        picker.LostFocus += (s, e) => SwapBack(picker);
-        picker.KeyDown += (s, e) =>
-        {
-            if (e.Key == Key.Enter || e.Key == Key.Escape)
-            {
-                SwapBack(picker);
-                e.Handled = true;
-            }
-        };
-        
-        var index = parentPanel.Children.IndexOf(this);
-        parentPanel.Children.RemoveAt(index);
-        parentPanel.Children.Insert(index, picker);
-        picker.Focus();
-    }
-    
-    private void SwapBack(Control control)
-    {
-        if (parentPanel == null) return;
-        
-        var idx = parentPanel.Children.IndexOf(control);
-        if (idx >= 0)
-        {
-            parentPanel.Children.RemoveAt(idx);
-            parentPanel.Children.Insert(idx, this);
-        }
-    }
+   private void ShowColorPicker()
+	{
+	    var picker = new ColorPicker
+	    {
+		Color = currentColor,
+		Width = 200,
+		Height = 200
+	    };
+	    
+	    picker.ColorChanged += (s, e) =>
+	    {
+		currentColor = e.NewColor;
+		hexLabel.Content = currentColor.ToString();
+		ColorChanged?.Invoke(this, currentColor);
+	    };
+	    
+	    var flyout = new Flyout
+	    {
+		Content = picker,
+		Placement = PlacementMode.Right
+	    };
+	    
+    flyout.ShowAt(pickBtn);
+    } 
 }
