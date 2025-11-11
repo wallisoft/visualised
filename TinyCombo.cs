@@ -38,8 +38,8 @@ public class TinyCombo : StackPanel
             Padding = new Thickness(4, 2, 4, 2),
             Background = Brushes.White,
             BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1, 1, 0, 1),  // No right border
-            CornerRadius = new CornerRadius(2, 0, 0, 2),  // Round left only
+            BorderThickness = new Thickness(1, 1, 0, 1),
+            CornerRadius = new CornerRadius(2, 0, 0, 2),
             HorizontalContentAlignment = HorizontalAlignment.Left,
             VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
@@ -55,7 +55,9 @@ public class TinyCombo : StackPanel
             Padding = new Thickness(0),
             Background = Brushes.White,
             Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
-            
+            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(0, 2, 2, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
