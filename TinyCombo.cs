@@ -47,20 +47,20 @@ public class TinyCombo : StackPanel
 
         dropBtn = new Button
         {
-            Content = "♻",
-            Width = 18,
-            Height = 20,
-            FontSize = 14,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0, -1, 0, 0),
-            Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#ff6600")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(0, 1, 1, 1),  // No left border
-            CornerRadius = new CornerRadius(0, 2, 2, 0),
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Cursor = new Cursor(StandardCursorType.Hand)
+	    Content = "♻",
+	    Width = 18,
+	    Height = 18,
+	    FontSize = 14,
+	    FontWeight = FontWeight.Bold,
+	    Padding = new Thickness(0, -1, 0, 0),
+	    Background = Brushes.White,
+	    Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),  // GREEN
+	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+	    BorderThickness = new Thickness(0, 1, 1, 1),
+	    CornerRadius = new CornerRadius(0, 2, 2, 0),
+	    HorizontalContentAlignment = HorizontalAlignment.Center,
+	    VerticalContentAlignment = VerticalAlignment.Center,
+	    Cursor = new Cursor(StandardCursorType.Hand)
         };
         
         dropBtn.Click += (s, e) => ShowComboBox();

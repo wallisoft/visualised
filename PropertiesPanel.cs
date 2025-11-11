@@ -68,6 +68,12 @@ public class PropertiesPanel
             Spacing = 5,
             Margin = new Thickness(0, 0, 0, 2)
         };
+
+	// Debug - check what we're getting for color properties
+	if (prop.Name == "Background" || prop.Name == "Foreground" || prop.Name == "BorderBrush")
+	{
+	    Console.WriteLine($"[DEBUG] {prop.Name}: Type={prop.PropertyType.Name}, FullName={prop.PropertyType.FullName}");
+	}
         
         // Left label - 11px normal
         var label = new TextBlock 
