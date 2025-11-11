@@ -103,326 +103,118 @@ public class TinyFontPicker : StackPanel
         fontLabel.Content = $"{currentFamily.Name} {currentSize}{weightStr}{styleStr}";
     }
     
-    private async void ShowFontPicker()
+private async void ShowFontPicker()
+{
+    var greenBorder = new SolidColorBrush(Color.Parse("#66bb6a"));
+    
+    // Common fonts
+    var fonts = new[] 
+    { 
+        "Arial", "Calibri", "Cambria", "Comic Sans MS", "Consolas", "Courier New", 
+        "Georgia", "Helvetica", "Lucida Console", "Segoe UI", "Times New Roman", 
+        "Trebuchet MS", "Verdana", "Inter"
+    };
+    
+    var familyCombo = new ComboBox 
+    { 
+        Width = 200,
+        Background = Brushes.White,
+        BorderBrush = greenBorder,
+        BorderThickness = new Thickness(1)
+    };
+    foreach (var font in fonts)
+        familyCombo.Items.Add(font);
+    familyCombo.SelectedItem = currentFamily.Name;
+    
+    var sizeBox = new TextBox
+    { 
+        Width = 40,
+        Text = currentSize.ToString(),
+        Background = Brushes.White,
+        BorderBrush = greenBorder,
+        BorderThickness = new Thickness(1),
+        HorizontalContentAlignment = HorizontalAlignment.Center
+    };
+    
+    var weightCombo = new ComboBox 
+    { 
+        Width = 120,
+        Background = Brushes.White,
+        BorderBrush = greenBorder,
+        BorderThickness = new Thickness(1)
+    };
+    var weights = new[] { "Thin", "ExtraLight", "Light", "Normal", "Medium", "SemiBold", "Bold", "ExtraBold", "Black", "ExtraBlack" };
+    foreach (var w in weights)
+        weightCombo.Items.Add(w);
+    weightCombo.SelectedItem = currentWeight.ToString();
+    
+    var styleCombo = new ComboBox 
+    { 
+        Width = 120,
+        Background = Brushes.White,
+        BorderBrush = greenBorder,
+        BorderThickness = new Thickness(1)
+    };
+    var styles = new[] { "Normal", "Italic", "Oblique" };
+    foreach (var s in styles)
+        styleCombo.Items.Add(s);
+    styleCombo.SelectedItem = currentStyle.ToString();
+    
+    var underlineCheck = new CheckBox 
+    { 
+        Content = "Underline",
+        Background = Brushes.White
+    };
+    var strikeCheck = new CheckBox 
+    { 
+        Content = "Strikethrough",
+        Background = Brushes.White
+    };
+    
+    var previewText = new TextBlock 
+    { 
+        Text = "The quick brown fox jumps over the lazy dog\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789",
+        FontFamily = currentFamily,
+        FontSize = currentSize,
+        FontWeight = currentWeight,
+        FontStyle = currentStyle,
+        TextWrapping = TextWrapping.Wrap,
+        Padding = new Thickness(10)
+    };
+    
+    var preview = new Border
     {
-        var greenBorder = new SolidColorBrush(Color.Parse("#66bb6a"));
-        
-        // Common fonts
-        var fonts = new[] 
-        { 
-            "Arial", "Calibri", "Cambria", "Comic Sans MS", "Consolas", "Courier New", 
-            "Georgia", "Helvetica", "Lucida Console", "Segoe UI", "Times New Roman", 
-            "Trebuchet MS", "Verdana", "Inter"
-        };
-        
-        var familyCombo = new ComboBox 
-        { 
-            Width = 200, 
-            SelectedItem = currentFamily.Name,
-            BorderBrush = greenBorder,
-            BorderThickness = new Thickness(1)
-        };
-        foreach (var font in fonts)
-            familyCombo.Items.Add(font);
-        
-        var sizeBox = new NumericUpDown 
-        { 
-            Width = 110, 
-            Value = (decimal)currentSize, 
-            Minimum = 6, 
-            Maximum = 72, 
-            Increment = 1,
-            BorderBrush = greenBorder,
-            BorderThickness = new Thickness(1)
-        };
-        
-        var weightCombo = new ComboBox 
-        { 
-            Width = 120, 
-            SelectedItem = currentWeight.ToString(),
-            BorderBrush = greenBorder,
-            BorderThickness = new Thickness(1)
-        };
-        weightCombo.Items.Add("Thin");
-        weightCombo.Items.Add("ExtraLight");
-        weightCombo.Items.Add("Light");
-        weightCombo.Items.Add("Normal");
-        weightCombo.Items.Add("Medium");
-        weightCombo.Items.Add("SemiBold");
-        weightCombo.Items.Add("Bold");
-        weightCombo.Items.Add("ExtraBold");
-        weightCombo.Items.Add("Black");
-        weightCombo.Items.Add("ExtraBlack");
-        
-        var styleCombo = new ComboBox 
-        { 
-            Width = 120, 
-            SelectedItem = currentStyle.ToString(),
-            BorderBrush = greenBorder,
-            BorderThickness = new Thickness(1)
-        };
-        styleCombo.Items.Add("Normal");
-        styleCombo.Items.Add("Italic");
-        styleCombo.Items.Add("Oblique");
-        
-        var underlineCheck = new CheckBox 
-        { 
-            Content = "Underline",
-            BorderBrush = greenBorder,
-            BorderThickness = new Thickness(1)
-        };
-        var strikeCheck = new CheckBox 
-        { 
-            Content = "Strikethrough",
-            BorderBrush = greenBorder,
-            BorderThickness = new Thickness(1)
-        };
-        
-        var previewText = new TextBlock 
-        { 
-            Text = "The quick brown fox jumps over the lazy dog\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789",
-            FontFamily = currentFamily,
-            FontSize = currentSize,
-            FontWeight = currentWeight,
-            FontStyle = currentStyle,
-            TextWrapping = TextWrapping.Wrap,
-            Padding = new Thickness(10)
-        };
-        
-        var preview = new Border
+        Child = previewText,
+        Margin = new Thickness(0, 10, 0, 0),
+        Background = Brushes.White,
+        BorderBrush = Brushes.LightGray,
+        BorderThickness = new Thickness(1),
+        Height = 150
+    };
+    
+    // Update preview on changes
+    familyCombo.SelectionChanged += (s, e) =>
+    {
+        if (familyCombo.SelectedItem != null)
+            previewText.FontFamily = new FontFamily(familyCombo.SelectedItem.ToString()!);
+    };
+    
+    sizeBox.TextChanged += (s, e) =>
+    {
+        if (double.TryParse(sizeBox.Text, out var size))
+            previewText.FontSize = size;
+    };
+    
+    weightCombo.SelectionChanged += (s, e) =>
+    {
+        if (weightCombo.SelectedItem != null)
         {
-            Child = previewText,
-            Margin = new Thickness(0, 10, 0, 0),
-            Background = Brushes.White,
-            BorderBrush = Brushes.LightGray,
-            BorderThickness = new Thickness(1)
-        };
-        
-        // Update preview on changes
-        familyCombo.SelectionChanged += (s, e) =>
-        {
-            if (familyCombo.SelectedItem != null)
-                previewText.FontFamily = new FontFamily(familyCombo.SelectedItem.ToString()!);
-        };
-        
-        sizeBox.ValueChanged += (s, e) => previewText.FontSize = (double)(sizeBox.Value ?? 12);
-        
-        weightCombo.SelectionChanged += (s, e) =>
-        {
-            if (weightCombo.SelectedItem != null)
-            {
-                previewText.FontWeight = weightCombo.SelectedItem.ToString() switch
-                {
-                    "Thin" => FontWeight.Thin,
-                    "ExtraLight" => FontWeight.ExtraLight,
-                    "Light" => FontWeight.Light,
-                    "Normal" => FontWeight.Normal,
-                    "Medium" => FontWeight.Medium,
-                    "SemiBold" => FontWeight.SemiBold,
-                    "Bold" => FontWeight.Bold,
-                    "ExtraBold" => FontWeight.ExtraBold,
-                    "Black" => FontWeight.Black,
-                    "ExtraBlack" => FontWeight.ExtraBlack,
-                    _ => FontWeight.Normal
-                };
-            }
-        };
-        
-        styleCombo.SelectionChanged += (s, e) =>
-        {
-            if (styleCombo.SelectedItem != null)
-            {
-                previewText.FontStyle = styleCombo.SelectedItem.ToString() switch
-                {
-                    "Italic" => FontStyle.Italic,
-                    "Oblique" => FontStyle.Oblique,
-                    _ => FontStyle.Normal
-                };
-            }
-        };
-        
-       	underlineCheck.IsCheckedChanged += (s, e) =>
-	{
-	    UpdateDecorations();
-	};
-
-	strikeCheck.IsCheckedChanged += (s, e) =>
-	{
-	    UpdateDecorations();
-	};
-
-	void UpdateDecorations()
-	{
-	    if (underlineCheck.IsChecked == true && strikeCheck.IsChecked == true)
-	    {
-		previewText.TextDecorations = new TextDecorationCollection
-		{
-		    TextDecorations.Underline[0],
-		    TextDecorations.Strikethrough[0]
-		};
-	    }
-	    else if (underlineCheck.IsChecked == true)
-	    {
-		previewText.TextDecorations = TextDecorations.Underline;
-	    }
-	    else if (strikeCheck.IsChecked == true)
-	    {
-		previewText.TextDecorations = TextDecorations.Strikethrough;
-	    }
-	    else
-	    {
-		previewText.TextDecorations = null;
-	    }
-	} 
-
-        var grid = new Grid
-        {
-            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,*"),
-            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
-            Margin = new Thickness(10),
-            RowSpacing = 8
-        };
-        
-        grid.Children.Add(new TextBlock 
-        { 
-            Text = "Font Family:", 
-            VerticalAlignment = VerticalAlignment.Center,
-            TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(0, 0, 10, 0)
-        });
-        Grid.SetRow(grid.Children[^1], 0);
-        Grid.SetColumn(grid.Children[^1], 0);
-        
-        grid.Children.Add(familyCombo);
-        Grid.SetRow(grid.Children[^1], 0);
-        Grid.SetColumn(grid.Children[^1], 1);
-        
-        grid.Children.Add(new TextBlock 
-        { 
-            Text = "Size:", 
-            VerticalAlignment = VerticalAlignment.Center,
-            TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(0, 0, 10, 0)
-        });
-        Grid.SetRow(grid.Children[^1], 1);
-        Grid.SetColumn(grid.Children[^1], 0);
-        
-        grid.Children.Add(sizeBox);
-        Grid.SetRow(grid.Children[^1], 1);
-        Grid.SetColumn(grid.Children[^1], 1);
-        
-        grid.Children.Add(new TextBlock 
-        { 
-            Text = "Weight:", 
-            VerticalAlignment = VerticalAlignment.Center,
-            TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(0, 0, 10, 0)
-        });
-        Grid.SetRow(grid.Children[^1], 2);
-        Grid.SetColumn(grid.Children[^1], 0);
-        
-        grid.Children.Add(weightCombo);
-        Grid.SetRow(grid.Children[^1], 2);
-        Grid.SetColumn(grid.Children[^1], 1);
-        
-        grid.Children.Add(new TextBlock 
-        { 
-            Text = "Style:", 
-            VerticalAlignment = VerticalAlignment.Center,
-            TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(0, 0, 10, 0)
-        });
-        Grid.SetRow(grid.Children[^1], 3);
-        Grid.SetColumn(grid.Children[^1], 0);
-        
-        grid.Children.Add(styleCombo);
-        Grid.SetRow(grid.Children[^1], 3);
-        Grid.SetColumn(grid.Children[^1], 1);
-        
-        grid.Children.Add(new TextBlock 
-        { 
-            Text = "Decorations:", 
-            VerticalAlignment = VerticalAlignment.Top,
-            TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(0, 2, 10, 0)
-        });
-        Grid.SetRow(grid.Children[^1], 4);
-        Grid.SetColumn(grid.Children[^1], 0);
-        
-        var decorStack = new StackPanel { Spacing = 5 };
-        decorStack.Children.Add(underlineCheck);
-        decorStack.Children.Add(strikeCheck);
-        grid.Children.Add(decorStack);
-        Grid.SetRow(grid.Children[^1], 4);
-        Grid.SetColumn(grid.Children[^1], 1);
-        
-        grid.Children.Add(preview);
-        Grid.SetRow(grid.Children[^1], 5);
-        Grid.SetColumn(grid.Children[^1], 1);
-        
-        var okBtn = new Button 
-        { 
-            Content = "OK", 
-            Width = 80,
-            FontWeight = FontWeight.Bold,
-            Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-            BorderThickness = new Thickness(2),
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center
-        };
-        
-        var cancelBtn = new Button 
-        { 
-            Content = "Cancel", 
-            Width = 80,
-            FontWeight = FontWeight.Bold,
-            Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-            BorderThickness = new Thickness(2),
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center
-        };
-        
-        var buttonPanel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Spacing = 10,
-            Margin = new Thickness(0, 10, 0, 0),
-            Children = { okBtn, cancelBtn }
-        };
-        
-        var mainStack = new StackPanel { Children = { grid, buttonPanel } };
-        
-        var container = new Border
-        {
-            Padding = new Thickness(20),
-            Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
-            Child = mainStack
-        };
-        
-        var window = new Window
-        {
-            Title = "Pick Font",
-            Content = container,
-            SizeToContent = SizeToContent.WidthAndHeight,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        
-        okBtn.Click += (s, e) =>
-        {
-            currentFamily = new FontFamily(familyCombo.SelectedItem?.ToString() ?? "Arial");
-            currentSize = (double)(sizeBox.Value ?? 12);
-            
-            currentWeight = weightCombo.SelectedItem?.ToString() switch
+            previewText.FontWeight = weightCombo.SelectedItem.ToString() switch
             {
                 "Thin" => FontWeight.Thin,
                 "ExtraLight" => FontWeight.ExtraLight,
                 "Light" => FontWeight.Light,
+                "Normal" => FontWeight.Normal,
                 "Medium" => FontWeight.Medium,
                 "SemiBold" => FontWeight.SemiBold,
                 "Bold" => FontWeight.Bold,
@@ -431,21 +223,223 @@ public class TinyFontPicker : StackPanel
                 "ExtraBlack" => FontWeight.ExtraBlack,
                 _ => FontWeight.Normal
             };
-            
-            currentStyle = styleCombo.SelectedItem?.ToString() switch
+        }
+    };
+    
+    styleCombo.SelectionChanged += (s, e) =>
+    {
+        if (styleCombo.SelectedItem != null)
+        {
+            previewText.FontStyle = styleCombo.SelectedItem.ToString() switch
             {
                 "Italic" => FontStyle.Italic,
                 "Oblique" => FontStyle.Oblique,
                 _ => FontStyle.Normal
             };
-            
-            UpdateLabel();
-            FontChanged?.Invoke(this, (currentFamily, currentSize, currentWeight, currentStyle));
-            window.Close();
+        }
+    };
+    
+    underlineCheck.IsCheckedChanged += (s, e) => UpdateDecorations();
+    strikeCheck.IsCheckedChanged += (s, e) => UpdateDecorations();
+    
+    void UpdateDecorations()
+    {
+        if (underlineCheck.IsChecked == true && strikeCheck.IsChecked == true)
+        {
+            previewText.TextDecorations = new TextDecorationCollection
+            {
+                TextDecorations.Underline[0],
+                TextDecorations.Strikethrough[0]
+            };
+        }
+        else if (underlineCheck.IsChecked == true)
+        {
+            previewText.TextDecorations = TextDecorations.Underline;
+        }
+        else if (strikeCheck.IsChecked == true)
+        {
+            previewText.TextDecorations = TextDecorations.Strikethrough;
+        }
+        else
+        {
+            previewText.TextDecorations = null;
+        }
+    }
+    
+    var grid = new Grid
+    {
+        RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,*"),
+        ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+        Margin = new Thickness(10),
+        RowSpacing = 8
+    };
+    
+    grid.Children.Add(new TextBlock 
+    { 
+        Text = "Font Family:", 
+        VerticalAlignment = VerticalAlignment.Center,
+        TextAlignment = TextAlignment.Right,
+        Margin = new Thickness(0, 0, 10, 0)
+    });
+    Grid.SetRow(grid.Children[^1], 0);
+    Grid.SetColumn(grid.Children[^1], 0);
+    
+    grid.Children.Add(familyCombo);
+    Grid.SetRow(grid.Children[^1], 0);
+    Grid.SetColumn(grid.Children[^1], 1);
+    
+    grid.Children.Add(new TextBlock 
+    { 
+        Text = "Size:", 
+        VerticalAlignment = VerticalAlignment.Center,
+        TextAlignment = TextAlignment.Right,
+        Margin = new Thickness(0, 0, 10, 0)
+    });
+    Grid.SetRow(grid.Children[^1], 1);
+    Grid.SetColumn(grid.Children[^1], 0);
+    
+    grid.Children.Add(sizeBox);
+    Grid.SetRow(grid.Children[^1], 1);
+    Grid.SetColumn(grid.Children[^1], 1);
+    
+    grid.Children.Add(new TextBlock 
+    { 
+        Text = "Weight:", 
+        VerticalAlignment = VerticalAlignment.Center,
+        TextAlignment = TextAlignment.Right,
+        Margin = new Thickness(0, 0, 10, 0)
+    });
+    Grid.SetRow(grid.Children[^1], 2);
+    Grid.SetColumn(grid.Children[^1], 0);
+    
+    grid.Children.Add(weightCombo);
+    Grid.SetRow(grid.Children[^1], 2);
+    Grid.SetColumn(grid.Children[^1], 1);
+    
+    grid.Children.Add(new TextBlock 
+    { 
+        Text = "Style:", 
+        VerticalAlignment = VerticalAlignment.Center,
+        TextAlignment = TextAlignment.Right,
+        Margin = new Thickness(0, 0, 10, 0)
+    });
+    Grid.SetRow(grid.Children[^1], 3);
+    Grid.SetColumn(grid.Children[^1], 0);
+    
+    grid.Children.Add(styleCombo);
+    Grid.SetRow(grid.Children[^1], 3);
+    Grid.SetColumn(grid.Children[^1], 1);
+    
+    grid.Children.Add(new TextBlock 
+    { 
+        Text = "Decorations:", 
+        VerticalAlignment = VerticalAlignment.Top,
+        TextAlignment = TextAlignment.Right,
+        Margin = new Thickness(0, 2, 10, 0)
+    });
+    Grid.SetRow(grid.Children[^1], 4);
+    Grid.SetColumn(grid.Children[^1], 0);
+    
+    var decorStack = new StackPanel { Spacing = 5 };
+    decorStack.Children.Add(underlineCheck);
+    decorStack.Children.Add(strikeCheck);
+    grid.Children.Add(decorStack);
+    Grid.SetRow(grid.Children[^1], 4);
+    Grid.SetColumn(grid.Children[^1], 1);
+    
+    grid.Children.Add(preview);
+    Grid.SetRow(grid.Children[^1], 5);
+    Grid.SetColumn(grid.Children[^1], 1);
+    
+    var okBtn = new Button 
+    { 
+        Content = "OK", 
+        Width = 80,
+        FontWeight = FontWeight.Bold,
+        Background = Brushes.White,
+        Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+        BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+        BorderThickness = new Thickness(2),
+        HorizontalContentAlignment = HorizontalAlignment.Center,
+        VerticalContentAlignment = VerticalAlignment.Center
+    };
+    
+    var cancelBtn = new Button 
+    { 
+        Content = "Cancel", 
+        Width = 80,
+        FontWeight = FontWeight.Bold,
+        Background = Brushes.White,
+        Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+        BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+        BorderThickness = new Thickness(2),
+        HorizontalContentAlignment = HorizontalAlignment.Center,
+        VerticalContentAlignment = VerticalAlignment.Center
+    };
+    
+    var buttonPanel = new StackPanel
+    {
+        Orientation = Orientation.Horizontal,
+        HorizontalAlignment = HorizontalAlignment.Right,
+        Spacing = 10,
+        Margin = new Thickness(0, 10, 0, 0),
+        Children = { okBtn, cancelBtn }
+    };
+    
+    var mainStack = new StackPanel { Children = { grid, buttonPanel } };
+    
+    var container = new Border
+    {
+        Padding = new Thickness(20),
+        Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
+        Child = mainStack
+    };
+    
+    var window = new Window
+    {
+        Title = "Pick Font",
+        Content = container,
+        Width = 400,
+        Height = 450,
+        CanResize = false,
+        WindowStartupLocation = WindowStartupLocation.CenterOwner
+    };
+    
+    okBtn.Click += (s, e) =>
+    {
+        currentFamily = new FontFamily(familyCombo.SelectedItem?.ToString() ?? "Arial");
+        
+        if (double.TryParse(sizeBox.Text, out var size))
+            currentSize = size;
+        
+        currentWeight = weightCombo.SelectedItem?.ToString() switch
+        {
+            "Thin" => FontWeight.Thin,
+            "ExtraLight" => FontWeight.ExtraLight,
+            "Light" => FontWeight.Light,
+            "Medium" => FontWeight.Medium,
+            "SemiBold" => FontWeight.SemiBold,
+            "Bold" => FontWeight.Bold,
+            "ExtraBold" => FontWeight.ExtraBold,
+            "Black" => FontWeight.Black,
+            "ExtraBlack" => FontWeight.ExtraBlack,
+            _ => FontWeight.Normal
         };
         
-        cancelBtn.Click += (s, e) => window.Close();
+        currentStyle = styleCombo.SelectedItem?.ToString() switch
+        {
+            "Italic" => FontStyle.Italic,
+            "Oblique" => FontStyle.Oblique,
+            _ => FontStyle.Normal
+        };
         
-        await window.ShowDialog((Window)this.VisualRoot!);
-    }
+        UpdateLabel();
+        FontChanged?.Invoke(this, (currentFamily, currentSize, currentWeight, currentStyle));
+        window.Close();
+    };
+    
+    cancelBtn.Click += (s, e) => window.Close();
+    
+    await window.ShowDialog((Window)this.VisualRoot!);
+}
 }
