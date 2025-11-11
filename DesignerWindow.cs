@@ -413,70 +413,41 @@ designCanvas = new Canvas
         propsHeader.Children.Add(propsCloseBtn);
         
         propsHeaderStack.Children.Add(propsHeader);
-        
+
         // Tiny control selector with TinyCombo
-        var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+        //var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
         
         // Load TinyCombo for control selection
-        var controlTypes = new[] { "Button", "TextBox", "Label", "CheckBox", "ComboBox", "StackPanel", "Grid", "Border" };
-        var selectedControlType = "MainWindow";
-        
-        var vmlControls = VmlLoader.LoadFromDatabase("TinyCombo");
-        Control? controlSelector = null;
-        
-        if (vmlControls.Count > 0)
-        {
-            var flatControls = VmlLoader.FlattenControls(vmlControls);
-            var builder = new ControlBuilder(flatControls);
-            var controls = builder.BuildControls();
-            if (controls.Count > 0 && controls[0] is Panel container)
-            {
-                var valueBox = container.Children.OfType<Label>().FirstOrDefault();
-                var dropBtn = container.Children.OfType<Button>().FirstOrDefault();
-                
-                if (valueBox != null && dropBtn != null)
-                {
-                    valueBox.Content = selectedControlType;
-                    
-                    // Wire @ button to show control types
-                    dropBtn.Click += (s, e) =>
-                    {
-                        var parent = container.Parent as Panel;
-                        if (parent == null) return;
-                        
-                        var combo = new ComboBox { Width = 140, MinHeight = 19 };
-                        foreach (var type in controlTypes)
-                            combo.Items.Add(type);
-                        combo.SelectedItem = selectedControlType;
-                        
-                        combo.SelectionChanged += (s2, e2) =>
-                        {
-                            if (combo.SelectedItem != null)
-                            {
-                                selectedControlType = combo.SelectedItem.ToString()!;
-                                valueBox.Content = selectedControlType;
-                            }
-                        };
-                        
-                        combo.DropDownClosed += (s2, e2) =>
-                        {
-                            var idx = parent.Children.IndexOf(combo);
-                            parent.Children.RemoveAt(idx);
-                            parent.Children.Insert(idx, container);
-                        };
-                        
-                        var index = parent.Children.IndexOf(container);
-                        parent.Children.RemoveAt(index);
-                        parent.Children.Insert(index, combo);
-                        combo.Focus();
-                        combo.IsDropDownOpen = true;
-                    };
-                }
-                
-                controlSelector = container;
-            }
-        }
-        
+        var selectorRow = new StackPanel 
+{ 
+    Orientation = Avalonia.Layout.Orientation.Horizontal, 
+    Spacing = 5, 
+    Margin = new Avalonia.Thickness(0, 0, 0, 10) 
+};
+
+var controlTypes = new[] 
+{ 
+    "Button", "TextBox", "TextBlock", "CheckBox", "ComboBox", "ListBox", "RadioButton",
+    "StackPanel", "Grid", "Border", 
+    "TinyTextBox", "TinyCombo", "TinyColorPicker", 
+    "DatePicker", "TimePicker", "CalendarDatePicker" 
+};
+
+var controlSelector = new TinyCombo();
+foreach (var type in controlTypes)
+    controlSelector.Items.Add(type);
+controlSelector.Text = "Button";
+
+string selectedControlType = "Button";
+
+controlSelector.SelectionChanged += (s, selected) =>
+{
+    selectedControlType = selected.ToString() ?? "Button";
+};
+
+selectorRow.Children.Add(controlSelector);
+
+
         var addBtn = new Button 
         { 
             Content = "Add", 
