@@ -338,3 +338,5 @@
 [16:17:04.903] [ADD] TinyCombo → TinyCombo_1
 [16:18:11.343] [CONTROL] Named: TinyTextBox_1
 [16:18:11.699] [ADD] TinyTextBox → TinyTextBox_1
+[16:21:54.819] [CONTROL] Named: Button_1
+[16:21:55.202] [ADD] Button → Button_1
