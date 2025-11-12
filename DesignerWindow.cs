@@ -375,14 +375,14 @@ designCanvas = new Canvas
         };
         
 	// Header stays fixed at top
-	var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(15, 15, 15, 5), Spacing = 5 };
+	var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(5, 5, 5, 5), Spacing = 5 };  // Reduced margins
 
 	// FormBuilder header with close button
 	var formBuilderHeader = new Border
 	{
 	    Background = Brushes.Transparent,
-	    Padding = new Avalonia.Thickness(10, 5, 10, 5),
-	    Margin = new Avalonia.Thickness(0, 0, 0, 10)
+	    Padding = new Avalonia.Thickness(5, 3, 5, 3),  // Reduced padding
+	    Margin = new Avalonia.Thickness(0)  // No margin
 	};
 
 	var headerGrid = new Grid
@@ -392,8 +392,9 @@ designCanvas = new Canvas
 
 	var formBuilderTitle = new TextBlock
 	{
-	    Text = "FormBuilder & Properties",
-	    FontSize = 14,
+	    Name = "formBuilderTitle",  // Give it a name so we can update it
+	    Text = "FormBuilder",
+	    FontSize = 11,  // Smaller
 	    FontWeight = FontWeight.Bold,
 	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
 	    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
@@ -402,9 +403,9 @@ designCanvas = new Canvas
 	var closeBtn = new Button
 	{
 	    Content = "✕",
-	    Width = 24,
-	    Height = 24,
-	    FontSize = 12,
+	    Width = 20,  // Smaller
+	    Height = 20,
+	    FontSize = 11,
 	    FontWeight = FontWeight.Bold,
 	    Padding = new Avalonia.Thickness(0),
 	    Background = Brushes.Transparent,
@@ -425,7 +426,6 @@ designCanvas = new Canvas
 	formBuilderHeader.Child = headerGrid;
 
 	propsHeaderStack.Children.Add(formBuilderHeader);
-
 	// Then your control selector code continues...
 
         // Scrollable properties area  
