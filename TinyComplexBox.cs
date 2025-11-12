@@ -117,7 +117,6 @@ public class TinyComplexBox : StackPanel
         parentPanel.Children.RemoveAt(index);
         parentPanel.Children.Insert(index, editBox);
         editBox.Focus();
-        editBox.SelectAll();
     }
     
     private void TryApplyValue()
