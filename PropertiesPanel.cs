@@ -109,7 +109,7 @@ private void AddFontRow(Control control, string displayName)
     var label = new TextBlock 
     { 
         Text = displayName,
-        Width = 60,
+        Width = 80,
         FontSize = 11,
         TextAlignment = TextAlignment.Right,
         VerticalAlignment = VerticalAlignment.Center
