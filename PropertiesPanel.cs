@@ -194,6 +194,10 @@ private void AddFontRow(Control control, string displayName)
             prop.PropertyType == typeof(PixelPoint) ||
             prop.PropertyType == typeof(RelativePoint))
             row.Children.Add(CreateTinyComplexBox(control, prop));
+	else if (prop.PropertyType.Name.Contains("Menu") || prop.PropertyType.Name.Contains("Flyout"))
+            row.Children.Add(CreateTinyButton(control, prop));
+else if (prop.PropertyType == typeof(Effect) || prop.PropertyType.Name == "IEffect")
+            row.Children.Add(CreateTinyEffectCombo(control, prop));
         else
             row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
         
@@ -302,6 +306,22 @@ private Control CreateTinyEffectCombo(Control control, PropertyInfo prop)
     };
 
     return combo;
+}
+
+private Control CreateTinyButton(Control control, PropertyInfo prop)
+{
+    var btn = new TinyButton();
+    var menu = prop.GetValue(control);
+    btn.Text = menu != null ? "Custom Menu" : "(none)";
+
+    btn.Clicked += (s, e) =>
+    {
+        // TODO: Open MenuEditorWindow and pass control/prop
+        // var editor = new MenuEditorWindow();
+        // editor.ShowDialog(...);
+    };
+
+    return btn;
 }
 
 private string EffectToString(Effect? effect)
