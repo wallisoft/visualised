@@ -222,6 +222,8 @@ private Control CreateTinyTextBox(Control control, PropertyInfo prop)
     var tiny = new TinyTextBox();
     var value = prop.GetValue(control);
 
+    Console.WriteLine($"[DEBUG] CreateTinyTextBox for {prop.Name}, value={value}, type={value?.GetType().Name ?? "null"}");
+
     // Round doubles to int for display
     if (value is double d)
         tiny.Text = Math.Round(d).ToString();
