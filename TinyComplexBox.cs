@@ -74,9 +74,13 @@ public class TinyComplexBox : StackPanel
         
         string display = currentValue switch
         {
-            Thickness t => $"{t.Left},{t.Top},{t.Right},{t.Bottom}",
+	        Thickness t => $"{t.Left},{t.Top},{t.Right},{t.Bottom}",
             CornerRadius cr => $"{cr.TopLeft},{cr.TopRight},{cr.BottomRight},{cr.BottomLeft}",
             Point p => $"{p.X},{p.Y}",
+            Size s => $"{s.Width},{s.Height}",
+            Rect r => $"{r.X},{r.Y},{r.Width},{r.Height}",
+            PixelPoint pp => $"{pp.X},{pp.Y}",
+            RelativePoint rp => $"{rp.Point.X},{rp.Point.Y}",
             _ => currentValue.ToString() ?? "(unknown)"
         };
         
@@ -171,6 +175,36 @@ public class TinyComplexBox : StackPanel
                 double.TryParse(parts[1], out var y))
                 return new Point(x, y);
         }
+		else if (propertyType == typeof(Size))
+{
+    if (parts.Length == 2 &&
+        double.TryParse(parts[0], out var w) &&
+        double.TryParse(parts[1], out var h))
+        return new Size(w, h);
+}
+else if (propertyType == typeof(Rect))
+{
+    if (parts.Length == 4 &&
+        double.TryParse(parts[0], out var x) &&
+        double.TryParse(parts[1], out var y) &&
+        double.TryParse(parts[2], out var w) &&
+        double.TryParse(parts[3], out var h))
+        return new Rect(x, y, w, h);
+}
+else if (propertyType == typeof(PixelPoint))
+{
+    if (parts.Length == 2 &&
+        int.TryParse(parts[0], out var x) &&
+        int.TryParse(parts[1], out var y))
+        return new PixelPoint(x, y);
+}
+else if (propertyType == typeof(RelativePoint))
+{
+    if (parts.Length == 2 &&
+        double.TryParse(parts[0], out var x) &&
+        double.TryParse(parts[1], out var y))
+        return new RelativePoint(x, y, RelativeUnit.Relative);
+}
         
         return null;  // Invalid format
     }

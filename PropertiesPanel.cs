@@ -186,6 +186,14 @@ private void AddFontRow(Control control, string displayName)
             prop.PropertyType == typeof(CornerRadius) ||
             prop.PropertyType == typeof(Point))
             row.Children.Add(CreateTinyComplexBox(control, prop));
+	else if (prop.PropertyType == typeof(Thickness) ||
+            prop.PropertyType == typeof(CornerRadius) ||
+            prop.PropertyType == typeof(Point) ||
+            prop.PropertyType == typeof(Size) ||
+            prop.PropertyType == typeof(Rect) ||
+            prop.PropertyType == typeof(PixelPoint) ||
+            prop.PropertyType == typeof(RelativePoint))
+            row.Children.Add(CreateTinyComplexBox(control, prop));
         else
             row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
         
@@ -273,5 +281,19 @@ private void AddFontRow(Control control, string displayName)
         // Only skip truly dangerous/system properties
         var skip = new[] { "Parent", "DataContext" };
         return skip.Contains(prop.Name);
+    }
+
+    private string AbbreviatePropertyName(string name)
+    {
+        return name
+            .Replace("Transform", "Trnsfm")
+            .Replace("Template", "Tmplt")
+            .Replace("Content", "Cntnt")
+            .Replace("Context", "Cntxt")
+            .Replace("Transparency", "Transp")
+            .Replace("Adorner", "Adrnr")
+            .Replace("Origin", "Orgn")
+            .Replace("Position", "Pos")
+            .Replace("Requested", "Rqstd");
     }
 }
