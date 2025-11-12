@@ -26,21 +26,31 @@ public class TinyTextBox : StackPanel
         Orientation = Orientation.Horizontal;
         Spacing = 0;
         
-        fakeBox = new Label
-        {
-            Width = 120,
-            MinHeight = 15,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(4, 2, 4, 2),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(2),
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Cursor = new Cursor(StandardCursorType.Ibeam)
-        };
+	fakeBox = new Label
+	{
+	    Width = 70,  // Was 100
+	    MinHeight = 15,
+	    FontSize = 11,
+	    FontWeight = FontWeight.Bold,
+	    Padding = new Thickness(4, 2, 4, 2),
+	    Background = Brushes.White,
+	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+	    BorderThickness = new Thickness(1),
+	    CornerRadius = new CornerRadius(2),
+	    HorizontalContentAlignment = HorizontalAlignment.Left,
+	    VerticalContentAlignment = VerticalAlignment.Center,
+	    Cursor = new Cursor(StandardCursorType.Ibeam)
+	};
+
+	// And update realTextBox width:
+	realTextBox = new TextBox
+	{
+	    Text = fakeBox.Content?.ToString() ?? "",
+	    Width = 70,  // Was 100
+	    MinHeight = 15,
+	    FontSize = 11,
+	    Padding = new Thickness(4, 2, 4, 2)
+};
         
         fakeBox.PointerPressed += (s, e) =>
         {

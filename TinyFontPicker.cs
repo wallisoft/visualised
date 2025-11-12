@@ -51,7 +51,7 @@ public class TinyFontPicker : StackPanel
         
         fontLabel = new Label
         {
-            Width = 100,
+            Width = 70,
             MinHeight = 15,
             FontSize = 11,
             FontWeight = FontWeight.Bold,

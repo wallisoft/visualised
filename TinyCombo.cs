@@ -29,21 +29,29 @@ public class TinyCombo : StackPanel
         Orientation = Orientation.Horizontal;
         Spacing = 0;
         
-        valueBox = new Label
-        {
-            Width = 100,
-            MinHeight = 15,
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(4, 2, 4, 2),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(1, 1, 0, 1),
-            CornerRadius = new CornerRadius(2, 0, 0, 2),
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Cursor = new Cursor(StandardCursorType.Hand)
-        };
+	valueBox = new Label
+		{
+		Width = 70,  // Was 100
+		MinHeight = 15,
+		FontSize = 11,
+		FontWeight = FontWeight.Bold,
+		Padding = new Thickness(4, 2, 4, 2),
+		Background = Brushes.White,
+		BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+		BorderThickness = new Thickness(1, 1, 0, 1),
+		CornerRadius = new CornerRadius(2, 0, 0, 2),
+		HorizontalContentAlignment = HorizontalAlignment.Left,
+		VerticalContentAlignment = VerticalAlignment.Center,
+		Cursor = new Cursor(StandardCursorType.Hand)
+	};
+
+	// And in ShowComboBox:
+	var combo = new ComboBox 
+	{ 
+		Width = 88,  // Was 118 (70 + 18)
+		Height = 18,
+		// ... rest
+	};	
 
         dropBtn = new Button
         {

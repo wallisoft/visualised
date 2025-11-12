@@ -172,8 +172,8 @@ private void AddFontRow(Control control, string displayName)
         row.Children.Add(label);
         
         // Create appropriate editor based on type
-        if (prop.PropertyType == typeof(string))
-            row.Children.Add(CreateTinyTextBox(control, prop));
+	if (prop.PropertyType == typeof(string) || prop.Name == "Content")
+    row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
             row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(bool))
@@ -205,34 +205,40 @@ else if (prop.PropertyType == typeof(Effect) || prop.PropertyType.Name == "IEffe
         panel.Children.Add(row);
     }
     
-    private Control CreateTinyTextBox(Control control, PropertyInfo prop)
+private Control CreateTinyTextBox(Control control, PropertyInfo prop)
+{
+    var tiny = new TinyTextBox();
+    var value = prop.GetValue(control);
+
+    // Round doubles to int for display
+    if (value is double d)
+        tiny.Text = Math.Round(d).ToString();
+    else if (value is int i)
+        tiny.Text = i.ToString();
+    else
+        tiny.Text = value?.ToString() ?? "";
+
+    tiny.TextChanged += (s, newText) =>
     {
-        var tiny = new TinyTextBox
+        if (prop.PropertyType == typeof(double))
         {
-            Text = prop.GetValue(control)?.ToString() ?? ""
-        };
-        
-        tiny.TextChanged += (s, text) =>
+            if (double.TryParse(newText, out var dval))
+                prop.SetValue(control, dval);
+        }
+        else if (prop.PropertyType == typeof(int))
         {
-            // Skip Name - can't change after styled
-            if (prop.Name == "Name") return;
-            
-            object value = text;
-            if (prop.PropertyType == typeof(double))
-            {
-                if (double.TryParse(text, out var d))
-                    value = d;
-            }
-            else if (prop.PropertyType == typeof(int))
-            {
-                if (int.TryParse(text, out var i))
-                    value = i;
-            }
-            prop.SetValue(control, value);
-        };
-        
-        return tiny;
-    }
+            if (int.TryParse(newText, out var ival))
+                prop.SetValue(control, ival);
+        }
+        else
+        {
+            prop.SetValue(control, newText);
+        }
+    };
+
+    return tiny;
+}
+
     private Control CreateTinyCombo(Control control, PropertyInfo prop)
     {
         var tiny = new TinyCombo();
