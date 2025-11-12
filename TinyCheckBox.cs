@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using System;
@@ -8,7 +9,6 @@ namespace VB;
 
 public class TinyCheckBox : Border
 {
-    private TextBlock indicator;
     private bool isChecked;
     
     public bool? IsChecked
@@ -17,9 +17,13 @@ public class TinyCheckBox : Border
         set
         {
             isChecked = value ?? false;
-            indicator.Text = isChecked ? "✕" : "";
+            Background = isChecked 
+                ? new SolidColorBrush(Color.Parse("#ff6600"))  // Orange
+                : Brushes.White;
         }
     }
+    
+    public event EventHandler? IsCheckedChanged;
     
     public TinyCheckBox()
     {
@@ -30,19 +34,13 @@ public class TinyCheckBox : Border
         BorderThickness = new Thickness(1);
         CornerRadius = new CornerRadius(2);
         HorizontalAlignment = HorizontalAlignment.Left;
-        IsHitTestVisible = false;  // No clicking
+        Cursor = new Cursor(StandardCursorType.Hand);
         
-        indicator = new TextBlock
+        PointerPressed += (s, e) =>
         {
-            Text = "",
-            FontSize = 14,
-            FontWeight = FontWeight.Bold,
-            Foreground = new SolidColorBrush(Color.Parse("#2196F3")),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, -2, 0, 0)  // Nudge up slightly
+            IsChecked = !isChecked;
+            IsCheckedChanged?.Invoke(this, EventArgs.Empty);
+            e.Handled = true;
         };
-        
-        Child = indicator;
     }
 }
