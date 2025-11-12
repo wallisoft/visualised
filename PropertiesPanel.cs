@@ -174,10 +174,13 @@ private void AddFontRow(Control control, string displayName)
         
         // Create appropriate editor based on type
 	if (prop.Name == "Content" || prop.Name == "Text")
-{
-    Console.WriteLine($"[DEBUG] Creating TinyTextBox for {prop.Name}");
-    row.Children.Add(CreateTinyTextBox(control, prop));
-}
+	{
+	    Console.WriteLine($"[DEBUG] Creating TinyTextBox for {prop.Name}");
+	    var textBox = CreateTinyTextBox(control, prop);
+	    Console.WriteLine($"[DEBUG] TinyTextBox created, adding to row");
+	    row.Children.Add(textBox);
+	    Console.WriteLine($"[DEBUG] Added to row, row has {row.Children.Count} children");
+	}
 	else if (prop.PropertyType == typeof(string))
     row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
@@ -208,7 +211,10 @@ else if (prop.PropertyType == typeof(Effect) || prop.PropertyType.Name == "IEffe
             row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
         
 
-        panel.Children.Add(row);
+	Console.WriteLine($"[DEBUG] Adding row for {prop.Name} to panel");
+	panel.Children.Add(row);
+	Console.WriteLine($"[DEBUG] Panel now has {panel.Children.Count} children");
+
     }
     
 private Control CreateTinyTextBox(Control control, PropertyInfo prop)
