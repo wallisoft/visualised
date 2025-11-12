@@ -174,7 +174,10 @@ private void AddFontRow(Control control, string displayName)
         
         // Create appropriate editor based on type
 	if (prop.Name == "Content" || prop.Name == "Text")
+{
+    Console.WriteLine($"[DEBUG] Creating TinyTextBox for {prop.Name}");
     row.Children.Add(CreateTinyTextBox(control, prop));
+}
 	else if (prop.PropertyType == typeof(string))
     row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
