@@ -519,7 +519,7 @@ designCanvas = new Canvas
 	};
         
         // Show MainWindow properties on open
-        propertiesPanel.ShowPropertiesFor(window);
+        //propertiesPanel.ShowPropertiesFor(window);
         
         Grid.SetColumn(propsBorder, 0);
         workspace.Children.Add(propsBorder);
