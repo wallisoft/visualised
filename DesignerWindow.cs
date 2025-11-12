@@ -510,7 +510,7 @@ designCanvas = new Canvas
         var innerPropsStack = new StackPanel { Spacing = 5 };
         propsStack.Children.Add(innerPropsStack);
 
-	var propertiesPanel = new PropertiesPanel(propsStack);
+	propertiesPanel = new PropertiesPanel(propsStack);
 
 	propertiesPanel.PanelCloseRequested += (s, e) =>
 	{
