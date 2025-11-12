@@ -35,7 +35,7 @@ public class TinyCheckBox : Border
         indicator = new TextBlock
         {
             Text = "",
-            FontSize = 11,
+            FontSize = 14,
             FontWeight = FontWeight.Bold,
             Foreground = new SolidColorBrush(Color.Parse("#2196F3")),
             HorizontalAlignment = HorizontalAlignment.Center,
