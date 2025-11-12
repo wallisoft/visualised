@@ -31,7 +31,7 @@ public class TinyCombo : StackPanel
         
         valueBox = new Label
         {
-            Width = 120,
+            Width = 100,
             MinHeight = 15,
             FontSize = 11,
             FontWeight = FontWeight.Bold,
@@ -81,7 +81,7 @@ public class TinyCombo : StackPanel
 
     var combo = new ComboBox
     {
-        Width = 138,
+        Width = 118,
         Height = 18,
         MinHeight = 18,
         MaxHeight = 18,

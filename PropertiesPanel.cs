@@ -164,7 +164,7 @@ private void AddFontRow(Control control, string displayName)
         var label = new TextBlock 
         { 
             Text = prop.Name + ":",
-            Width = 60,
+            Width = 80,
             FontSize = 11,
             TextAlignment = TextAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center
@@ -177,7 +177,7 @@ private void AddFontRow(Control control, string displayName)
         else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
             row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(bool))
-            row.Children.Add(new CheckBox { IsChecked = (bool?)prop.GetValue(control) });
+            row.Children.Add(new CheckBox { IsChecked = (bool?)prop.GetValue(control),Height = 20 });
 	else if (prop.PropertyType.Name.Contains("Brush") || prop.PropertyType.Name == "IBrush")
             row.Children.Add(CreateTinyColorPicker(control, prop));
         else if (prop.PropertyType.IsEnum)
@@ -185,6 +185,7 @@ private void AddFontRow(Control control, string displayName)
         else
             row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
         
+
         panel.Children.Add(row);
     }
     
