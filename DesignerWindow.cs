@@ -425,7 +425,6 @@ designCanvas = new Canvas
 	formBuilderHeader.Child = headerGrid;
 
 	propsHeaderStack.Children.Add(formBuilderHeader);
-		propsHeaderStack.Children.Add(formBuilderHeader);
 
 	// Then your control selector code continues...
 
