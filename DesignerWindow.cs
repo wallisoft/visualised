@@ -374,9 +374,58 @@ designCanvas = new Canvas
             Padding = new Avalonia.Thickness(5)
         };
         
-        // Header stays fixed at top
-        var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(15, 15, 15, 5), Spacing = 5 };
-        
+	// Header stays fixed at top
+	var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(15, 15, 15, 5), Spacing = 5 };
+
+	// FormBuilder header with close button
+	var formBuilderHeader = new Border
+	{
+	    Background = new SolidColorBrush(Color.Parse("#66bb6a")),
+	    Padding = new Avalonia.Thickness(10, 5, 10, 5),
+	    Margin = new Avalonia.Thickness(0, 0, 0, 10)
+	};
+
+	var headerGrid = new Grid
+	{
+	    ColumnDefinitions = new ColumnDefinitions("*,Auto")
+	};
+
+	var formBuilderTitle = new TextBlock
+	{
+	    Text = "FormBuilder",
+	    FontSize = 14,
+	    FontWeight = FontWeight.Bold,
+	    Foreground = Brushes.White,
+	    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+	};
+
+	var closeBtn = new Button
+	{
+	    Content = "✕",
+	    Width = 20,
+	    Height = 20,
+	    FontSize = 12,
+	    FontWeight = FontWeight.Bold,
+	    Padding = new Avalonia.Thickness(0),
+	    Background = Brushes.Transparent,
+	    Foreground = Brushes.White,
+	    BorderThickness = new Avalonia.Thickness(0),
+	    Cursor = new Cursor(StandardCursorType.Hand)
+	};
+
+	closeBtn.Click += (s, e) => propsBorder.IsVisible = false;
+
+	Grid.SetColumn(formBuilderTitle, 0);
+	Grid.SetColumn(closeBtn, 1);
+
+	headerGrid.Children.Add(formBuilderTitle);
+	headerGrid.Children.Add(closeBtn);
+	formBuilderHeader.Child = headerGrid;
+
+	propsHeaderStack.Children.Add(formBuilderHeader);
+
+	// Then your control selector code continues...
+
         // Scrollable properties area  
         var propsScroll = new ScrollViewer 
         { 
@@ -391,33 +440,33 @@ designCanvas = new Canvas
         // Tiny control selector with TinyCombo
         //var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
         
-        // Load TinyCombo for control selection
-        var selectorRow = new StackPanel 
-{ 
-    Orientation = Avalonia.Layout.Orientation.Horizontal, 
-    Spacing = 5, 
-    Margin = new Avalonia.Thickness(0, 0, 0, 10) 
-};
+	// Load TinyCombo for control selection
+	var selectorRow = new StackPanel 
+	{ 
+	    Orientation = Avalonia.Layout.Orientation.Horizontal, 
+	    Spacing = 5, 
+	    Margin = new Avalonia.Thickness(0, 0, 0, 10) 
+	};
 
-var controlTypes = new[] 
-{ 
-    "Button", "TextBox", "TextBlock", "CheckBox", "ComboBox", "ListBox", "RadioButton",
-    "StackPanel", "Grid", "Border" 
-};
+	var controlTypes = new[] 
+	{ 
+	    "Button", "TextBox", "TextBlock", "CheckBox", "ComboBox", "ListBox", "RadioButton",
+	    "StackPanel", "Grid", "Border" 
+	};
 
-var controlSelector = new TinyCombo();
-foreach (var type in controlTypes)
-    controlSelector.Items.Add(type);
-controlSelector.Text = "Button";
+	var controlSelector = new TinyCombo();
+	foreach (var type in controlTypes)
+	    controlSelector.Items.Add(type);
+	controlSelector.Text = "Button";
 
-string selectedControlType = "Button";
+	string selectedControlType = "Button";
 
-controlSelector.SelectionChanged += (s, selected) =>
-{
-    selectedControlType = selected.ToString() ?? "Button";
-};
+	controlSelector.SelectionChanged += (s, selected) =>
+	{
+	    selectedControlType = selected.ToString() ?? "Button";
+	};
 
-selectorRow.Children.Add(controlSelector);
+	selectorRow.Children.Add(controlSelector);
 
 
         var addBtn = new Button 
