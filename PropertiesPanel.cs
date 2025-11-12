@@ -18,18 +18,39 @@ public class PropertiesPanel
 {
     private StackPanel panel;
     private Control? selectedControl;
+
+    public event EventHandler? PanelCloseRequested; 
     
     public PropertiesPanel(StackPanel targetPanel)
     {
         panel = targetPanel;
     }
+   public void ShowPropertiesFor(Control control)
+{
+    selectedControl = control;
+    panel.Children.Clear();
     
-	public void ShowPropertiesFor(Control control)
-	{
-	    selectedControl = control;
-	    panel.Children.Clear();
-	    
-	    var controlType = control.GetType().Name;
+    // Re-add title bar
+    var titleBar = new Border
+    {
+        Background = new SolidColorBrush(Color.Parse("#66bb6a")),
+        Padding = new Thickness(10, 5, 10, 5),
+        Margin = new Thickness(0, 0, 0, 10)
+    };
+    
+    var title = new TextBlock
+    {
+        Text = $"Properties: {control.GetType().Name}",
+        FontSize = 13,
+        FontWeight = FontWeight.Bold,
+        Foreground = Brushes.White
+    };
+    
+    titleBar.Child = title;
+    panel.Children.Add(titleBar);
+    
+    var controlType = control.GetType().Name;
+    // ... rest of existing ShowPropertiesFor code 
 	    
 	    // Get property display order from database
 	    var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");

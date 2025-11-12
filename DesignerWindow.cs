@@ -387,32 +387,6 @@ designCanvas = new Canvas
         
         var propsStack = new StackPanel { Margin = new Avalonia.Thickness(15, 5, 15, 15), Spacing = 5 };
         
-        // Properties header with X button
-        var propsHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 24, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
-        propsHeader.Children.Add(new TextBlock 
-        { 
-            Text = "FormBuilder",
-            FontSize = 14,
-            FontWeight = FontWeight.Bold,
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-        });
-        
-        var propsCloseBtn = new Button
-        {
-            Content = "✕",
-            Width = 20,
-            Height = 20,
-            FontSize = 14,
-            Padding = new Avalonia.Thickness(0),
-            Background = Brushes.Transparent,
-            BorderThickness = new Avalonia.Thickness(0),
-            Foreground = new SolidColorBrush(Color.Parse("#666"))
-        };
-        propsCloseBtn.Click += (s, e) => { propsBorder.IsVisible = false; };
-        Grid.SetColumn(propsCloseBtn, 1);
-        propsHeader.Children.Add(propsCloseBtn);
-        
-        propsHeaderStack.Children.Add(propsHeader);
 
         // Tiny control selector with TinyCombo
         //var selectorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
@@ -489,7 +463,13 @@ selectorRow.Children.Add(controlSelector);
         // Create inner stack for properties
         var innerPropsStack = new StackPanel { Spacing = 5 };
         propsStack.Children.Add(innerPropsStack);
-        propertiesPanel = new PropertiesPanel(innerPropsStack);
+
+	var propertiesPanel = new PropertiesPanel(propsStack);
+
+	propertiesPanel.PanelCloseRequested += (s, e) =>
+	{
+	    propsBorder.IsVisible = false;
+	};
         
         // Show MainWindow properties on open
         propertiesPanel.ShowPropertiesFor(window);
