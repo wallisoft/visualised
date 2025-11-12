@@ -275,6 +275,78 @@ private void AddFontRow(Control control, string displayName)
 	    return box;
 	}
 
+private Control CreateTinyEffectCombo(Control control, PropertyInfo prop)
+{
+    var combo = new TinyCombo();
+
+    // Populate with presets
+    combo.Items.Add("None");
+    combo.Items.Add("Subtle Shadow");
+    combo.Items.Add("Strong Shadow");
+    combo.Items.Add("Long Shadow");
+    combo.Items.Add("Light Blur");
+    combo.Items.Add("Medium Blur");
+    combo.Items.Add("Heavy Blur");
+    combo.Items.Add("Soft Glow");
+    combo.Items.Add("Hard Edge");
+    combo.Items.Add("Frosted Glass");
+
+    // Set current value
+    var effect = prop.GetValue(control) as Effect;
+    combo.Text = EffectToString(effect);
+
+    // Handle changes
+    combo.SelectionChanged += (s, selected) =>
+    {
+        prop.SetValue(control, StringToEffect(selected.ToString()));
+    };
+
+    return combo;
+}
+
+private string EffectToString(Effect? effect)
+{
+    if (effect == null) return "None";
+
+    if (effect is DropShadowEffect shadow)
+    {
+        if (shadow.OffsetX == 0 && shadow.OffsetY == 0 && shadow.BlurRadius > 15)
+            return "Soft Glow";
+        if (shadow.BlurRadius == 0)
+            return "Hard Edge";
+        if (shadow.OffsetX >= 8 || shadow.OffsetY >= 8)
+            return "Long Shadow";
+        if (shadow.BlurRadius > 12)
+            return "Strong Shadow";
+        return "Subtle Shadow";
+    }
+
+    if (effect is BlurEffect blur)
+    {
+        if (blur.Radius >= 15) return "Frosted Glass";
+        if (blur.Radius >= 7) return "Medium Blur";
+        return "Light Blur";
+    }
+
+    return "None";
+}
+
+private Effect? StringToEffect(string? name)
+{
+    return name switch
+    {
+        "Subtle Shadow" => new DropShadowEffect { BlurRadius = 8, Color = Colors.Black, OffsetX = 2, OffsetY = 2, Opacity = 0.3 },
+        "Strong Shadow" => new DropShadowEffect { BlurRadius = 15, Color = Colors.Black, OffsetX = 4, OffsetY = 4, Opacity = 0.6 },
+        "Long Shadow" => new DropShadowEffect { BlurRadius = 5, Color = Colors.Black, OffsetX = 10, OffsetY = 10, Opacity = 0.4 },
+        "Light Blur" => new BlurEffect { Radius = 3 },
+        "Medium Blur" => new BlurEffect { Radius = 8 },
+        "Heavy Blur" => new BlurEffect { Radius = 20 },
+        "Soft Glow" => new DropShadowEffect { BlurRadius = 20, Color = Color.Parse("#4CAF50"), OffsetX = 0, OffsetY = 0, Opacity = 0.8 },
+        "Hard Edge" => new DropShadowEffect { BlurRadius = 0, Color = Colors.Black, OffsetX = 3, OffsetY = 3, Opacity = 0.9 },
+        "Frosted Glass" => new BlurEffect { Radius = 15 },
+        _ => null
+    };
+}
 
     private bool ShouldSkip(PropertyInfo prop)
     {
