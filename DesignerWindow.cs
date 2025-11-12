@@ -377,37 +377,54 @@ designCanvas = new Canvas
 	// Header stays fixed at top
 	var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(5, 5, 5, 5), Spacing = 5 };  // Reduced margins
 
-	// FormBuilder header with close button
+	// FormBuilder header with flow direction toggle and close button
 	var formBuilderHeader = new Border
 	{
 	    Background = Brushes.Transparent,
-	    Padding = new Avalonia.Thickness(5, 3, 5, 3),  // Reduced padding
-	    Margin = new Avalonia.Thickness(0)  // No margin
+	    Padding = new Avalonia.Thickness(5, 3, 5, 3),
+	    Margin = new Avalonia.Thickness(0)
 	};
 
 	var headerGrid = new Grid
 	{
-	    ColumnDefinitions = new ColumnDefinitions("*,Auto")
+	    ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto")
 	};
 
 	var formBuilderTitle = new TextBlock
 	{
-	    Name = "formBuilderTitle",  // Give it a name so we can update it
+	    Name = "formBuilderTitle",
 	    Text = "FormBuilder",
-	    FontSize = 11,  // Smaller
+	    FontSize = 17,
 	    FontWeight = FontWeight.Bold,
 	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
 	    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
 	};
 
+	var flowBtn = new Button
+	{
+	    Content = "→",
+	    Width = 20,
+	    Height = 20,
+	    FontSize = 14,
+	    FontWeight = FontWeight.Bold,
+	    Padding = new Avalonia.Thickness(0, -2, 0, 0),
+	    Background = Brushes.Transparent,
+	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
+	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+	    BorderThickness = new Avalonia.Thickness(2),
+	    CornerRadius = new CornerRadius(2),
+	    Cursor = new Cursor(StandardCursorType.Hand),
+	    Margin = new Avalonia.Thickness(0, 0, 3, 0)
+	};
+
 	var closeBtn = new Button
 	{
 	    Content = "✕",
-	    Width = 20,  // Smaller
+	    Width = 20,
 	    Height = 20,
-	    FontSize = 11,
+	    FontSize = 14,
 	    FontWeight = FontWeight.Bold,
-	    Padding = new Avalonia.Thickness(0),
+	    Padding = new Avalonia.Thickness(0, -2, 0, 0),
 	    Background = Brushes.Transparent,
 	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
 	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
@@ -416,17 +433,28 @@ designCanvas = new Canvas
 	    Cursor = new Cursor(StandardCursorType.Hand)
 	};
 
+	flowBtn.Click += (s, e) =>
+	{
+	    window.FlowDirection = window.FlowDirection == FlowDirection.LeftToRight
+		? FlowDirection.RightToLeft
+		: FlowDirection.LeftToRight;
+	    flowBtn.Content = window.FlowDirection == FlowDirection.RightToLeft ? "←" : "→";
+	};
+
 	closeBtn.Click += (s, e) => propsBorder.IsVisible = false;
 
 	Grid.SetColumn(formBuilderTitle, 0);
-	Grid.SetColumn(closeBtn, 1);
+	Grid.SetColumn(flowBtn, 1);
+	Grid.SetColumn(closeBtn, 2);
 
 	headerGrid.Children.Add(formBuilderTitle);
+	headerGrid.Children.Add(flowBtn);
 	headerGrid.Children.Add(closeBtn);
 	formBuilderHeader.Child = headerGrid;
 
 	propsHeaderStack.Children.Add(formBuilderHeader);
-	// Then your control selector code continues...
+
+	// Hello Claude :o)
 
         // Scrollable properties area  
         var propsScroll = new ScrollViewer 
