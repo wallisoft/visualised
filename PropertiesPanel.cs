@@ -25,36 +25,31 @@ public class PropertiesPanel
     {
         panel = targetPanel;
     }
-   public void ShowPropertiesFor(Control control)
-{
-    selectedControl = control;
-    panel.Children.Clear();
-    
-    // Re-add title bar
-    var titleBar = new Border
-    {
-        Background = new SolidColorBrush(Color.Parse("#66bb6a")),
-        Padding = new Thickness(10, 5, 10, 5),
-        Margin = new Thickness(0, 0, 0, 10)
-    };
-    
-    var title = new TextBlock
-    {
-        Text = $"Properties: {control.GetType().Name}",
-        FontSize = 13,
-        FontWeight = FontWeight.Bold,
-        Foreground = Brushes.White
-    };
-    
-    titleBar.Child = title;
-    panel.Children.Add(titleBar);
-    
-    var controlType = control.GetType().Name;
-    // ... rest of existing ShowPropertiesFor code 
-	    
+   
+    public void ShowPropertiesFor(Control control)
+	{
+	    selectedControl = control;
+
+	    // Update FormBuilder title if it exists
+	    if (panel.Parent?.Parent is StackPanel headerStack)
+	    {
+		var titleBlock = headerStack.Children
+		    .OfType<Border>()
+		    .FirstOrDefault()?.Child as Grid;
+
+		var titleText = titleBlock?.Children.OfType<TextBlock>().FirstOrDefault();
+		if (titleText != null)
+		    titleText.Text = $"FormBuilder: {control.GetType().Name}";
+	    }
+
+	    panel.Children.Clear();
+
+	    var controlType = control.GetType().Name;
+
 	    // Get property display order from database
 	    var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
 	    using var conn = new SqliteConnection($"Data Source={dbPath}");
+
 	    conn.Open();
 	    
 	    var displayRules = new Dictionary<string, (int order, bool hidden)>();
