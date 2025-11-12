@@ -826,8 +826,8 @@ designCanvas = new Canvas
                 Canvas.SetTop(control, testY);
                 MakeDraggableWithCursors(control);
                 designCanvas.Children.Add(control);
-        CheckAndHideInstructions();
-        CheckAndHideInstructions();
+		//CheckAndHideInstructions();
+		CheckAndHideInstructions();
                 SelectControl(control);
                 PropertyStore.SyncControl(control);
                 DebugLog($"[ADD] {controlType} → {control.Name}");
@@ -1238,6 +1238,8 @@ designCanvas = new Canvas
     private static void SelectControl(Control control)
     {
         selectedControl = control;
+        Console.WriteLine($"[SELECT] Calling ShowPropertiesFor for {control.GetType().Name}");
+    	Console.WriteLine($"[SELECT] propertiesPanel is null: {propertiesPanel == null}");
         propertiesPanel?.ShowPropertiesFor(control);
         UpdateSelectionBorder();
         Console.WriteLine($"[SELECT] {control.Name ?? control.GetType().Name}");
