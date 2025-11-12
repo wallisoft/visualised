@@ -380,7 +380,7 @@ designCanvas = new Canvas
 	// FormBuilder header with close button
 	var formBuilderHeader = new Border
 	{
-	    Background = new SolidColorBrush(Color.Parse("#66bb6a")),
+	    Background = Brushes.Transparent,
 	    Padding = new Avalonia.Thickness(10, 5, 10, 5),
 	    Margin = new Avalonia.Thickness(0, 0, 0, 10)
 	};
@@ -392,24 +392,26 @@ designCanvas = new Canvas
 
 	var formBuilderTitle = new TextBlock
 	{
-	    Text = "FormBuilder",
+	    Text = "FormBuilder & Properties",
 	    FontSize = 14,
 	    FontWeight = FontWeight.Bold,
-	    Foreground = Brushes.White,
+	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
 	    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
 	};
 
 	var closeBtn = new Button
 	{
 	    Content = "✕",
-	    Width = 20,
-	    Height = 20,
+	    Width = 24,
+	    Height = 24,
 	    FontSize = 12,
 	    FontWeight = FontWeight.Bold,
 	    Padding = new Avalonia.Thickness(0),
 	    Background = Brushes.Transparent,
-	    Foreground = Brushes.White,
-	    BorderThickness = new Avalonia.Thickness(0),
+	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
+	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+	    BorderThickness = new Avalonia.Thickness(2),
+	    CornerRadius = new CornerRadius(2),
 	    Cursor = new Cursor(StandardCursorType.Hand)
 	};
 
@@ -423,6 +425,7 @@ designCanvas = new Canvas
 	formBuilderHeader.Child = headerGrid;
 
 	propsHeaderStack.Children.Add(formBuilderHeader);
+		propsHeaderStack.Children.Add(formBuilderHeader);
 
 	// Then your control selector code continues...
 
@@ -492,11 +495,6 @@ designCanvas = new Canvas
         //    selectorRow.Children.Add(controlSelector);
         selectorRow.Children.Add(addBtn);
         propsHeaderStack.Children.Add(selectorRow);
-        
-
-
-        
-
         
         propsScroll.Content = propsStack;
         
