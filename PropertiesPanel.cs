@@ -147,6 +147,7 @@ private void AddFontRow(Control control, string displayName)
 
     private void AddPropertyRow(Control control, PropertyInfo prop)
     {
+	        Console.WriteLine($"[DEBUG] Adding property: {prop.Name}, Type: {prop.PropertyType.Name}");
         var row = new StackPanel 
         { 
             Orientation = Orientation.Horizontal, 
