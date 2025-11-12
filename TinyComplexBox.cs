@@ -22,7 +22,8 @@ public class TinyComplexBox : StackPanel
         set
         {
             currentValue = value;
-            UpdateLabel();
+            if (valueLabel != null)  // Only update if label exists
+                UpdateLabel();
         }
     }
     
@@ -34,56 +35,37 @@ public class TinyComplexBox : StackPanel
     
     public event EventHandler<object>? ValueChanged;
     
-    public TinyComplexBox()
+   public TinyComplexBox()
+{
+    Orientation = Orientation.Horizontal;
+    Spacing = 0;
+    
+    valueLabel = new Label
     {
-        Orientation = Orientation.Horizontal;
-        Spacing = 0;
-        
-       valueLabel = new Label
-{
-    Width = 70,  // Was 120
-    MinHeight = 15,
-    FontSize = 11,
-    FontWeight = FontWeight.Bold,
-    Padding = new Thickness(4, 2, 4, 2),
-    Background = Brushes.White,
-    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-    BorderThickness = new Thickness(1),
-    CornerRadius = new CornerRadius(2),
-    HorizontalContentAlignment = HorizontalAlignment.Left,
-    VerticalContentAlignment = VerticalAlignment.Center,
-    Cursor = new Cursor(StandardCursorType.Ibeam)
-};
-
-// Update the display to round:
-string display = currentValue switch
-{
-    Thickness t => $"{Math.Round(t.Left)},{Math.Round(t.Top)},{Math.Round(t.Right)},{Math.Round(t.Bottom)}",
-    CornerRadius cr => $"{Math.Round(cr.TopLeft)},{Math.Round(cr.TopRight)},{Math.Round(cr.BottomRight)},{Math.Round(cr.BottomLeft)}",
-    Point p => $"{Math.Round(p.X)},{Math.Round(p.Y)}",
-    Size s => $"{Math.Round(s.Width)},{Math.Round(s.Height)}",
-    Rect r => $"{Math.Round(r.X)},{Math.Round(r.Y)},{Math.Round(r.Width)},{Math.Round(r.Height)}",
-    PixelPoint pp => $"{pp.X},{pp.Y}",
-    RelativePoint rp => $"{Math.Round(rp.Point.X)},{Math.Round(rp.Point.Y)}",
-    _ => currentValue.ToString() ?? "(unknown)"
-};
-
-// And update editBox width:
-editBox = new TextBox
-{
-    Text = valueLabel.Content?.ToString() ?? "",
-    Width = 70,  // Was 120
-    // ... rest
-};
-        
-valueLabel.PointerPressed += (s, e) =>
-        {
-            ShowEditBox();
-            e.Handled = true;
-        };
-        
-        Children.Add(valueLabel);
-    }
+        Width = 70,
+        MinHeight = 15,
+        FontSize = 11,
+        FontWeight = FontWeight.Bold,
+        Padding = new Thickness(4, 2, 4, 2),
+        Background = Brushes.White,
+        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+        BorderThickness = new Thickness(1),
+        CornerRadius = new CornerRadius(2),
+        HorizontalContentAlignment = HorizontalAlignment.Left,
+        VerticalContentAlignment = VerticalAlignment.Center,
+        Cursor = new Cursor(StandardCursorType.Ibeam)
+    };
+    
+    valueLabel.PointerPressed += (s, e) =>
+    {
+        ShowEditBox();
+        e.Handled = true;
+    };
+    
+    Children.Add(valueLabel);
+    
+    UpdateLabel();  // Now it's safe to call
+}
     
    private void UpdateLabel()
 {
