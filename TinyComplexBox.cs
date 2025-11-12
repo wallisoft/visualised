@@ -85,28 +85,31 @@ valueLabel.PointerPressed += (s, e) =>
         Children.Add(valueLabel);
     }
     
-    private void UpdateLabel()
+   private void UpdateLabel()
+{
+    if (valueLabel == null) return;  // Add this line
+    
+    if (currentValue == null)
     {
-        if (currentValue == null)
-        {
-            valueLabel.Content = "(not set)";
-            return;
-        }
-        
-        string display = currentValue switch
-        {
-	        Thickness t => $"{t.Left},{t.Top},{t.Right},{t.Bottom}",
-            CornerRadius cr => $"{cr.TopLeft},{cr.TopRight},{cr.BottomRight},{cr.BottomLeft}",
-            Point p => $"{p.X},{p.Y}",
-            Size s => $"{s.Width},{s.Height}",
-            Rect r => $"{r.X},{r.Y},{r.Width},{r.Height}",
-            PixelPoint pp => $"{pp.X},{pp.Y}",
-            RelativePoint rp => $"{rp.Point.X},{rp.Point.Y}",
-            _ => currentValue.ToString() ?? "(unknown)"
-        };
-        
-        valueLabel.Content = display;
+        valueLabel.Content = "(not set)";
+        return;
     }
+    
+    string display = currentValue switch
+    {
+        Thickness t => $"{Math.Round(t.Left)},{Math.Round(t.Top)},{Math.Round(t.Right)},{Math.Round(t.Bottom)}",
+        CornerRadius cr => $"{Math.Round(cr.TopLeft)},{Math.Round(cr.TopRight)},{Math.Round(cr.BottomRight)},{Math.Round(cr.BottomLeft)}",
+        Point p => $"{Math.Round(p.X)},{Math.Round(p.Y)}",
+        Size s => $"{Math.Round(s.Width)},{Math.Round(s.Height)}",
+        Rect r => $"{Math.Round(r.X)},{Math.Round(r.Y)},{Math.Round(r.Width)},{Math.Round(r.Height)}",
+        PixelPoint pp => $"{pp.X},{pp.Y}",
+        RelativePoint rp => $"{Math.Round(rp.Point.X)},{Math.Round(rp.Point.Y)}",
+        _ => currentValue.ToString() ?? "(unknown)"
+    };
+    
+    valueLabel.Content = display;
+}
+
     
     private void ShowEditBox()
     {
