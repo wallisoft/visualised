@@ -182,6 +182,10 @@ private void AddFontRow(Control control, string displayName)
             row.Children.Add(CreateTinyColorPicker(control, prop));
         else if (prop.PropertyType.IsEnum)
             row.Children.Add(CreateTinyCombo(control, prop));
+	else if (prop.PropertyType == typeof(Thickness) ||
+            prop.PropertyType == typeof(CornerRadius) ||
+            prop.PropertyType == typeof(Point))
+            row.Children.Add(CreateTinyComplexBox(control, prop));
         else
             row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
         
@@ -246,6 +250,22 @@ private void AddFontRow(Control control, string displayName)
 	    picker.ColorChanged += (s, color) => prop.SetValue(control, new SolidColorBrush(color));
 	    return picker;
     }
+
+	private Control CreateTinyComplexBox(Control control, PropertyInfo prop)
+	{
+	    var box = new TinyComplexBox
+	    {
+		PropertyType = prop.PropertyType,
+		Value = prop.GetValue(control)
+	    };
+
+	    box.ValueChanged += (s, value) =>
+	    {
+		prop.SetValue(control, value);
+	    };
+
+	    return box;
+	}
 
 
     private bool ShouldSkip(PropertyInfo prop)
