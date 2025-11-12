@@ -177,7 +177,7 @@ private void AddFontRow(Control control, string displayName)
         else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
             row.Children.Add(CreateTinyTextBox(control, prop));
         else if (prop.PropertyType == typeof(bool))
-            row.Children.Add(new CheckBox { IsChecked = (bool?)prop.GetValue(control),Height = 20 });
+            row.Children.Add(new TinyCheckBox { IsChecked = (bool?)prop.GetValue(control) });
 	else if (prop.PropertyType.Name.Contains("Brush") || prop.PropertyType.Name == "IBrush")
             row.Children.Add(CreateTinyColorPicker(control, prop));
         else if (prop.PropertyType.IsEnum)
