@@ -284,18 +284,15 @@ designCanvas = new Canvas
             // Update ghost position if dragging from toolbox
             if (isDraggingFromToolbox)
             {
-                Console.WriteLine($"[DRAG DEBUG] Canvas moved: isDragging={isDraggingFromToolbox}, ghost={dragGhost != null}, popup={ghostPopup != null}");
                 
                 if (dragGhost != null && ghostPopup != null)
                 {
                     var screenPos = designCanvas.PointToScreen(pos);
                     ghostPopup.HorizontalOffset = screenPos.X - 40;
                     ghostPopup.VerticalOffset = screenPos.Y - 15;
-                    Console.WriteLine($"[DRAG DEBUG] Ghost moved to: {screenPos.X - 40:F0},{screenPos.Y - 15:F0}");
                 }
                 else
                 {
-                    Console.WriteLine($"[DRAG DEBUG] Ghost or popup is NULL!");
                 }
             }
         };
@@ -563,9 +560,6 @@ designCanvas = new Canvas
     
         private static void StartToolboxDrag(string controlType, Point startPos)
     {
-        Console.WriteLine($"[DRAG DEBUG] ========================================");
-        Console.WriteLine($"[DRAG DEBUG] StartToolboxDrag called for {controlType}");
-        Console.WriteLine($"[DRAG DEBUG] Start position: {startPos.X:F0},{startPos.Y:F0}");
         
         isDraggingFromToolbox = true;
         dragControlType = controlType;
@@ -589,7 +583,6 @@ designCanvas = new Canvas
             }
         };
         
-        Console.WriteLine($"[DRAG DEBUG] Ghost created: {dragGhost != null}");
         
         // Create popup for ghost
         ghostPopup = new Popup
@@ -600,30 +593,21 @@ designCanvas = new Canvas
             IsLightDismissEnabled = false
         };
         
-        Console.WriteLine($"[DRAG DEBUG] Popup created and opened: {ghostPopup.IsOpen}");
-        Console.WriteLine($"[DRAG DEBUG] ========================================");
     }
     
         private static void EndToolboxDrag()
     {
-        Console.WriteLine($"[DRAG DEBUG] ========================================");
-        Console.WriteLine($"[DRAG DEBUG] EndToolboxDrag called");
-        Console.WriteLine($"[DRAG DEBUG] isDraggingFromToolbox: {isDraggingFromToolbox}");
-        Console.WriteLine($"[DRAG DEBUG] ghostPopup != null: {ghostPopup != null}");
         
         isDraggingFromToolbox = false;
         dragControlType = null;
         
         if (ghostPopup != null)
         {
-            Console.WriteLine($"[DRAG DEBUG] Closing popup");
             ghostPopup.IsOpen = false;
             ghostPopup = null;
         }
         
         dragGhost = null;
-        Console.WriteLine($"[DRAG DEBUG] Drag ended and cleaned up");
-        Console.WriteLine($"[DRAG DEBUG] ========================================");
     }
     
     private static void CreateControlAtPosition(string controlType, double x, double y)
