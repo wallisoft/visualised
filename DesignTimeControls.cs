@@ -37,6 +37,14 @@ public class DesignButton : Border
 
 public class DesignTextBox : Border
 {
+    private TextBlock textBlock;
+    
+    public string Text
+    {
+        get => textBlock.Text ?? "";
+        set => textBlock.Text = value;
+    }
+    
     public DesignTextBox()
     {
         Width = 150;
@@ -45,12 +53,14 @@ public class DesignTextBox : Border
         BorderBrush = new SolidColorBrush(Color.Parse("#999"));
         BorderThickness = new Avalonia.Thickness(1);
         
-        Child = new TextBlock 
+        textBlock = new TextBlock 
         { 
             Text = "TextBox",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Avalonia.Thickness(3, 0)
         };
+        
+        Child = textBlock;
     }
 }
 
@@ -221,11 +231,8 @@ public static class DesignProperties
     public static readonly AttachedProperty<bool> IsResizableProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("IsResizable", typeof(DesignProperties), defaultValue: true);
     
-    public static bool GetIsResizable(Control control)
-    {
-        var val = control.GetValue(IsResizableProperty);
-        return val;
-    }
+    public static bool GetIsResizable(Control control) => 
+        control.GetValue(IsResizableProperty);
     
     public static void SetIsResizable(Control control, bool value) => 
         control.SetValue(IsResizableProperty, value);
@@ -233,11 +240,8 @@ public static class DesignProperties
     public static readonly AttachedProperty<bool> IsDraggableProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("IsDraggable", typeof(DesignProperties), defaultValue: true);
     
-    public static bool GetIsDraggable(Control control)
-    {
-        var val = control.GetValue(IsDraggableProperty);
-        return val;
-    }
+    public static bool GetIsDraggable(Control control) => 
+        control.GetValue(IsDraggableProperty);
     
     public static void SetIsDraggable(Control control, bool value) => 
         control.SetValue(IsDraggableProperty, value);
@@ -245,13 +249,9 @@ public static class DesignProperties
     public static readonly AttachedProperty<string> ScriptProperty =
         AvaloniaProperty.RegisterAttached<Control, string>("Script", typeof(DesignProperties), defaultValue: "");
     
-    public static string GetScript(Control control)
-    {
-        var val = control.GetValue(ScriptProperty);
-        return val ?? "";
-    }
+    public static string GetScript(Control control) => 
+        control.GetValue(ScriptProperty) ?? "";
     
     public static void SetScript(Control control, string value) => 
         control.SetValue(ScriptProperty, value ?? "");
 }
-
