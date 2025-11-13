@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Data.Sqlite;
 
 namespace VB;
 
@@ -222,6 +223,80 @@ public class DesignerWindow
                     DebugLog($"[DESIGNER] Added {vmlControl.Type} '{vmlControl.Name}' at ({Canvas.GetLeft(dummy)},{Canvas.GetTop(dummy)}) {dummy.Width}x{dummy.Height}");
                     lastLoadedControl = dummy;
                 }
+
+                // Load designer-created controls from properties table
+                var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
+                using (var conn = new SqliteConnection($"Data Source={dbPath}"))
+                {
+                    conn.Open();
+
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = "SELECT DISTINCT control_name FROM properties WHERE control_name NOT LIKE '_%' AND control_name NOT IN (SELECT DISTINCT control_name FROM ui_properties)";
+                    using var reader = cmd.ExecuteReader();
+
+                    var savedControls = new List<string>();
+                    while (reader.Read())
+                        savedControls.Add(reader.GetString(0));
+
+                    reader.Close();
+
+                    foreach (var controlName in savedControls)
+                    {
+                        // Infer type from name (Button_1 → Button)
+                        var controlType = controlName.Contains('_') ? controlName.Split('_')[0] : "Button";
+
+                        Console.WriteLine($"[LOAD] Restoring {controlName} ({controlType}) from properties table");
+
+                        var (dummy, real) = CreateControlPair(controlType, controlName);
+                        if (dummy == null) continue;
+
+                        // Load all properties
+                        var savedProps = PropertyStore.GetControlProperties(controlName);
+
+                        double x = 150, y = 150, w = 0, h = 0;
+
+                        foreach (var kvp in savedProps)
+                        {
+                            if (kvp.Value == null) continue;
+
+                            // Handle positioning
+                            if (kvp.Key == "X") { double.TryParse(kvp.Value.ToString(), out x); continue; }
+                            if (kvp.Key == "Y") { double.TryParse(kvp.Value.ToString(), out y); continue; }
+                            if (kvp.Key == "Width") { double.TryParse(kvp.Value.ToString(), out w); continue; }
+                            if (kvp.Key == "Height") { double.TryParse(kvp.Value.ToString(), out h); continue; }
+
+                            try
+                            {
+                                var propInfo = real.GetType().GetProperty(kvp.Key);
+                                if (propInfo != null && propInfo.CanWrite)
+                                {
+                                    var value = Convert.ChangeType(kvp.Value, propInfo.PropertyType);
+                                    propInfo.SetValue(real, value);
+
+                                    // Sync display to dummy
+                                    if (kvp.Key == "Content" || kvp.Key == "Text")
+                                        dummy.GetType().GetProperty(kvp.Key)?.SetValue(dummy, kvp.Value);
+                                }
+                            }
+                            catch { }
+                        }
+
+                        Canvas.SetLeft(dummy, x);
+                        Canvas.SetTop(dummy, y);
+                        Canvas.SetLeft(real, x);
+                        Canvas.SetTop(real, y);
+
+                        if (w > 0) { dummy.Width = w; real.Width = w; }
+                        if (h > 0) { dummy.Height = h; real.Height = h; }
+
+                        designCanvas.Children.Add(dummy);
+                        designCanvas.Children.Add(real);
+                        MakeDraggableWithCursors(dummy);
+
+                        lastLoadedControl = dummy;
+                        }
+                    }
+
                 if (lastLoadedControl != null) SelectControl(lastLoadedControl);
                 
                 // Resize overlay if VML specifies Window dimensions
