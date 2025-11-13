@@ -104,6 +104,14 @@ public class DesignCheckBox : StackPanel
 
 public class DesignComboBox : Border
 {
+    private TextBlock textBlock;
+    
+    public string Text
+    {
+        get => textBlock.Text ?? "";
+        set => textBlock.Text = value;
+    }
+    
     public DesignComboBox()
     {
         Width = 120;
@@ -116,13 +124,13 @@ public class DesignComboBox : Border
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
         
-        var text = new TextBlock 
+        textBlock = new TextBlock 
         { 
             Text = "ComboBox",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Avalonia.Thickness(3, 0)
         };
-        Grid.SetColumn(text, 0);
+        Grid.SetColumn(textBlock, 0);
         
         var arrow = new TextBlock 
         { 
@@ -133,7 +141,7 @@ public class DesignComboBox : Border
         };
         Grid.SetColumn(arrow, 1);
         
-        grid.Children.Add(text);
+        grid.Children.Add(textBlock);
         grid.Children.Add(arrow);
         
         Child = grid;
@@ -142,6 +150,14 @@ public class DesignComboBox : Border
 
 public class DesignListBox : Border
 {
+    private TextBlock textBlock;
+
+    public string Text
+    {
+        get => textBlock.Text ?? "";
+        set => textBlock.Text = value;
+    }
+
     public DesignListBox()
     {
         Width = 150;
@@ -149,12 +165,14 @@ public class DesignListBox : Border
         Background = Brushes.White;
         BorderBrush = new SolidColorBrush(Color.Parse("#999"));
         BorderThickness = new Avalonia.Thickness(1);
-        
-        Child = new TextBlock 
-        { 
+
+        textBlock = new TextBlock
+        {
             Text = "ListBox",
             Margin = new Avalonia.Thickness(5)
         };
+
+        Child = textBlock;
     }
 }
 
