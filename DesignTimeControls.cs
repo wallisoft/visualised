@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Layout;
+using System.Linq; 
 
 namespace VB;
 
@@ -105,6 +106,7 @@ public class DesignCheckBox : StackPanel
 public class DesignComboBox : Border
 {
     private TextBlock textBlock;
+    public System.Collections.ObjectModel.ObservableCollection<object> Items { get; } = new();
     
     public string Text
     {
@@ -114,6 +116,13 @@ public class DesignComboBox : Border
     
     public DesignComboBox()
     {
+        Items.CollectionChanged += (s, e) => 
+        {
+            // Update display when items change
+            if (Items.Count > 0)
+                Text = Items[0].ToString() ?? "ComboBox";
+        };
+        
         Width = 120;
         Height = 25;
         Background = Brushes.White;
@@ -151,27 +160,34 @@ public class DesignComboBox : Border
 public class DesignListBox : Border
 {
     private TextBlock textBlock;
-
+    public System.Collections.ObjectModel.ObservableCollection<object> Items { get; } = new();
+    
     public string Text
     {
         get => textBlock.Text ?? "";
         set => textBlock.Text = value;
     }
-
+    
     public DesignListBox()
     {
+        Items.CollectionChanged += (s, e) => 
+        {
+            if (Items.Count > 0)
+                Text = string.Join(", ", Items.Take(3)) + (Items.Count > 3 ? "..." : "");
+        };
+        
         Width = 150;
         Height = 100;
         Background = Brushes.White;
         BorderBrush = new SolidColorBrush(Color.Parse("#999"));
         BorderThickness = new Avalonia.Thickness(1);
-
-        textBlock = new TextBlock
-        {
+        
+        textBlock = new TextBlock 
+        { 
             Text = "ListBox",
             Margin = new Avalonia.Thickness(5)
         };
-
+        
         Child = textBlock;
     }
 }
