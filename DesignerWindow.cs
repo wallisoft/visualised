@@ -165,8 +165,13 @@ public class DesignerWindow
                     }
 
                     var savedProps = PropertyStore.GetControlProperties(dummy.Name);
+
+                    Console.WriteLine($"[LOAD] Loading saved props for {dummy.Name}: {savedProps.Count} properties");
+
                     foreach (var kvp in savedProps)
                     {
+                        Console.WriteLine($"[LOAD] Restoring {dummy.Name}.{kvp.Key} = {kvp.Value}");
+
                         if (kvp.Key == "X" || kvp.Key == "Y" || kvp.Key == "Width" || kvp.Key == "Height")
                             continue; // Skip positioning
 
@@ -184,7 +189,10 @@ public class DesignerWindow
                                     dummy.GetType().GetProperty(kvp.Key)?.SetValue(dummy, kvp.Value);
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[LOAD] Failed to restore {kvp.Key}: {ex.Message}");
+                        }
                     }
                                                             
                     designCanvas.Children.Add(dummy);
