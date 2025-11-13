@@ -171,20 +171,33 @@ public class DesignerWindow
                     foreach (var kvp in savedProps)
                     {
                         Console.WriteLine($"[LOAD] Restoring {dummy.Name}.{kvp.Key} = {kvp.Value}");
-
-                        if (kvp.Key == "X" || kvp.Key == "Y" || kvp.Key == "Width" || kvp.Key == "Height")
-                            continue; // Skip positioning
-
+                        
+                        if (kvp.Key == "X" || kvp.Key == "Y" || kvp.Key == "Width" || kvp.Key == "Height") 
+                            continue;
+                        
                         try
                         {
-                            // Apply to real control
+                            // Special handling for Items collection
+                            if (kvp.Key == "Items" && kvp.Value != null)
+                            {
+                                var itemsProp = real.GetType().GetProperty("Items");
+                                if (itemsProp?.GetValue(real) is System.Collections.IList realItems)
+                                {
+                                    var items = kvp.Value.ToString()!.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                                    foreach (var item in items)
+                                        realItems.Add(item.Trim());
+                                }
+                                continue;
+                            }
+                            
+                            // Regular properties
                             var propInfo = real.GetType().GetProperty(kvp.Key);
                             if (propInfo != null && propInfo.CanWrite && kvp.Value != null)
                             {
                                 var value = Convert.ChangeType(kvp.Value, propInfo.PropertyType);
                                 propInfo.SetValue(real, value);
-
-                                // Sync display properties back to dummy
+                                
+                                // Sync to dummy
                                 if (kvp.Key == "Content" || kvp.Key == "Text")
                                     dummy.GetType().GetProperty(kvp.Key)?.SetValue(dummy, kvp.Value);
                             }
@@ -194,8 +207,8 @@ public class DesignerWindow
                             Console.WriteLine($"[LOAD] Failed to restore {kvp.Key}: {ex.Message}");
                         }
                     }
-                                                            
-                    designCanvas.Children.Add(dummy);
+                                                                                
+                                        designCanvas.Children.Add(dummy);
                     designCanvas.Children.Add(real);  // Add real too!
 
                     // Position real at same location
