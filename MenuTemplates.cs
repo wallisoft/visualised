@@ -209,11 +209,11 @@ public static class MenuTemplates
         menu.Items.Add(new Separator());
         menu.Items.Add(CreateItem("Edit Script...", window.HandleEditScript, "F2"));
         menu.Items.Add(new Separator());
-        menu.Items.Add(CreateItem("Bring to Front", window.HandleBringToFront, "Ctrl+]"));
-        menu.Items.Add(CreateItem("Send to Back", window.HandleSendToBack, "Ctrl+["));
+//         menu.Items.Add(CreateItem("Bring to Front", window.HandleBringToFront, "Ctrl+]"));
+//         menu.Items.Add(CreateItem("Send to Back", window.HandleSendToBack, "Ctrl+["));
         menu.Items.Add(new Separator());
-        menu.Items.Add(CreateItem("Align", window.HandleAlign));
-        menu.Items.Add(CreateItem("Size", window.HandleSize));
+//         menu.Items.Add(CreateItem("Align", window.HandleAlign));
+//         menu.Items.Add(CreateItem("Size", window.HandleSize));
         menu.Items.Add(new Separator());
         menu.Items.Add(CreateItem("Properties", window.HandleProperties, "F4"));
         return menu;

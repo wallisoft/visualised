@@ -470,3 +470,5 @@
 [05:56:55.025] [ADD] TextBox → TextBox_1
 [05:57:36.151] [CONTROL] Named: ListBox_1
 [05:57:36.494] [ADD] ListBox → ListBox_1
+[05:59:12.632] [CONTROL] Named: Button_1
+[05:59:13.033] [ADD] Button → Button_1

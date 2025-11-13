@@ -47,7 +47,6 @@ public partial class MainWindow : Window
             "SimpleTextEditor" => MenuTemplates.CreateSimpleTextEditorMenu(this),
             _ => MenuTemplates.CreateBasicMenu(this)
         };
-        Console.WriteLine($"[MENU] Applied: {MenuTemplate}");
     }
     
     public void ApplyContextMenuTemplate()
@@ -59,7 +58,6 @@ public partial class MainWindow : Window
             "TextEditor" => MenuTemplates.CreateTextEditorContextMenu(this),
             _ => MenuTemplates.CreateBasicContextMenu(this)
         };
-        Console.WriteLine($"[CONTEXT] Applied: {ContextMenuTemplate}");
     }
     
     // FILE
@@ -169,10 +167,6 @@ public partial class MainWindow : Window
     }
     
     // CONTEXT
-    public void HandleBringToFront(object? s, RoutedEventArgs e) => Console.WriteLine("[CONTEXT] Bring to Front");
-    public void HandleSendToBack(object? s, RoutedEventArgs e) => Console.WriteLine("[CONTEXT] Send to Back");
-    public void HandleAlign(object? s, RoutedEventArgs e) => Console.WriteLine("[CONTEXT] Align");
-    public void HandleSize(object? s, RoutedEventArgs e) => Console.WriteLine("[CONTEXT] Size");
     
     // HELP
     public void HandleDocumentation(object? s, RoutedEventArgs e) => Console.WriteLine("[HELP] Documentation");
