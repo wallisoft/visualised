@@ -378,6 +378,7 @@ designCanvas = new Canvas
 	var propsHeaderStack = new StackPanel { Margin = new Avalonia.Thickness(5, 5, 5, 5), Spacing = 5 };  // Reduced margins
 
 	// FormBuilder header with flow direction toggle and close button
+	// FormBuilder header with close button
 	var formBuilderHeader = new Border
 	{
 	    Background = Brushes.Transparent,
@@ -387,7 +388,7 @@ designCanvas = new Canvas
 
 	var headerGrid = new Grid
 	{
-	    ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto")
+	    ColumnDefinitions = new ColumnDefinitions("*,Auto")  // Back to 2 columns
 	};
 
 	var formBuilderTitle = new TextBlock
@@ -398,23 +399,6 @@ designCanvas = new Canvas
 	    FontWeight = FontWeight.Bold,
 	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
 	    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-	};
-
-	var flowBtn = new Button
-	{
-	    Content = "→",
-	    Width = 20,
-	    Height = 20,
-	    FontSize = 14,
-	    FontWeight = FontWeight.Bold,
-	    Padding = new Avalonia.Thickness(0, -2, 0, 0),
-	    Background = Brushes.Transparent,
-	    Foreground = new SolidColorBrush(Color.Parse("#424242")),
-	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-	    BorderThickness = new Avalonia.Thickness(2),
-	    CornerRadius = new CornerRadius(2),
-	    Cursor = new Cursor(StandardCursorType.Hand),
-	    Margin = new Avalonia.Thickness(0, 0, 3, 0)
 	};
 
 	var closeBtn = new Button
@@ -430,29 +414,22 @@ designCanvas = new Canvas
 	    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
 	    BorderThickness = new Avalonia.Thickness(2),
 	    CornerRadius = new CornerRadius(2),
+	    HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+	    VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
 	    Cursor = new Cursor(StandardCursorType.Hand)
-	};
-
-	flowBtn.Click += (s, e) =>
-	{
-	    window.FlowDirection = window.FlowDirection == FlowDirection.LeftToRight
-		? FlowDirection.RightToLeft
-		: FlowDirection.LeftToRight;
-	    flowBtn.Content = window.FlowDirection == FlowDirection.RightToLeft ? "←" : "→";
 	};
 
 	closeBtn.Click += (s, e) => propsBorder.IsVisible = false;
 
 	Grid.SetColumn(formBuilderTitle, 0);
-	Grid.SetColumn(flowBtn, 1);
-	Grid.SetColumn(closeBtn, 2);
+	Grid.SetColumn(closeBtn, 1);
 
 	headerGrid.Children.Add(formBuilderTitle);
-	headerGrid.Children.Add(flowBtn);
 	headerGrid.Children.Add(closeBtn);
 	formBuilderHeader.Child = headerGrid;
 
 	propsHeaderStack.Children.Add(formBuilderHeader);
+
 
 	// Hello Claude :o)
 
