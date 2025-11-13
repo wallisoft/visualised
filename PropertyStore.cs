@@ -179,7 +179,7 @@ public static class PropertyStore
     }
     
 
-    private static Dictionary<string, object?> GetControlProperties(string controlName)
+    public static Dictionary<string, object?> GetControlProperties(string controlName)
     {
         var props = new Dictionary<string, object?>();
         
