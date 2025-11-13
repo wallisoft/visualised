@@ -163,7 +163,30 @@ public class DesignerWindow
                         }
                         catch { }
                     }
-                                        
+
+                    var savedProps = PropertyStore.GetControlProperties(dummy.Name);
+                    foreach (var kvp in savedProps)
+                    {
+                        if (kvp.Key == "X" || kvp.Key == "Y" || kvp.Key == "Width" || kvp.Key == "Height")
+                            continue; // Skip positioning
+
+                        try
+                        {
+                            // Apply to real control
+                            var propInfo = real.GetType().GetProperty(kvp.Key);
+                            if (propInfo != null && propInfo.CanWrite && kvp.Value != null)
+                            {
+                                var value = Convert.ChangeType(kvp.Value, propInfo.PropertyType);
+                                propInfo.SetValue(real, value);
+
+                                // Sync display properties back to dummy
+                                if (kvp.Key == "Content" || kvp.Key == "Text")
+                                    dummy.GetType().GetProperty(kvp.Key)?.SetValue(dummy, kvp.Value);
+                            }
+                        }
+                        catch { }
+                    }
+                                                            
                     designCanvas.Children.Add(dummy);
                     designCanvas.Children.Add(real);  // Add real too!
 
