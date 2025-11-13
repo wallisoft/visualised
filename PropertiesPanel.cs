@@ -521,9 +521,13 @@ private Effect? StringToEffect(string? name)
 
         okBtn.Click += (s, e) =>
         {
-            prop.SetValue(control, editor.Text);
-            SyncToRealControl(control, prop.Name, editor.Text);  // ADD THIS
-            PropertyStore.SyncControl(control);
+            prop.SetValue(control, editor.Text);  // Update dummy display
+            SyncToRealControl(control, prop.Name, editor.Text);  // Copy to real
+
+            var real = control.Tag as Control;
+            if (real != null)
+            PropertyStore.SyncControl(real);  // Save REAL control!
+
             window.Close();
         };
 
@@ -616,11 +620,14 @@ private Effect? StringToEffect(string? name)
                 items.Clear();
                 var lines = editor.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
-                    items.Add(line.Trim());
+                items.Add(line.Trim());
 
-                SyncToRealControl(control, "Items", items);  
-                PropertyStore.SyncControl(control); 
-		    }
+                SyncToRealControl(control, "Items", items);
+
+                var real = control.Tag as Control;
+                if (real != null)
+                    PropertyStore.SyncControl(real);  // Save REAL control!
+            }
 		    window.Close();
 	    };
 	    
