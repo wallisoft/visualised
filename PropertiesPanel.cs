@@ -430,78 +430,80 @@ private Effect? StringToEffect(string? name)
         return skip.Contains(prop.Name);
     }
 
-	private async void ShowComplexContentEditor(Control control, PropertyInfo prop, object? currentValue)
-	{
-	    var editor = new TextBox
-	    {
-		Text = currentValue?.ToString() ?? "",
-		Width = 400,
-		Height = 200,
-		AcceptsReturn = true,
-		TextWrapping = TextWrapping.Wrap
-	    };
+    private async void ShowComplexContentEditor(Control control, PropertyInfo prop, object? currentValue)
+    {
+        var editor = new TextBox
+        {
+            Text = currentValue?.ToString() ?? "",
+            Width = 400,
+            Height = 200,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap
+        };
 
-	    var okBtn = new Button
-	    {
-		Content = "OK",
-		Width = 80,
-		FontWeight = FontWeight.Bold,
-		Background = Brushes.White,
-		Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-		BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-		BorderThickness = new Thickness(2)
-	    };
+        var okBtn = new Button
+        {
+            Content = "OK",
+            Width = 80,
+            FontWeight = FontWeight.Bold,
+            Background = Brushes.White,
+            Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+            BorderThickness = new Thickness(2)
+        };
 
-	    var cancelBtn = new Button
-	    {
-		Content = "Cancel",
-		Width = 80,
-		FontWeight = FontWeight.Bold,
-		Background = Brushes.White,
-		Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-		BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-		BorderThickness = new Thickness(2)
-	    };
+        var cancelBtn = new Button
+        {
+            Content = "Cancel",
+            Width = 80,
+            FontWeight = FontWeight.Bold,
+            Background = Brushes.White,
+            Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+            BorderThickness = new Thickness(2)
+        };
 
-	    var buttonPanel = new StackPanel
-	    {
-		Orientation = Orientation.Horizontal,
-		HorizontalAlignment = HorizontalAlignment.Right,
-		Spacing = 10,
-		Margin = new Thickness(0, 10, 0, 0),
-		Children = { okBtn, cancelBtn }
-	    };
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 10,
+            Margin = new Thickness(0, 10, 0, 0)
+        };
+        buttonPanel.Children.Add(okBtn);
+        buttonPanel.Children.Add(cancelBtn);
 
-	    var container = new Border
-	    {
-		Padding = new Thickness(20),
-		Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
-		Child = new StackPanel
-		{
-		    Children = { editor, buttonPanel }
-		}
-	    };
+        var stack = new StackPanel();
+        stack.Children.Add(editor);
+        stack.Children.Add(buttonPanel);
 
-	    var window = new Window
-	    {
-		Title = $"Edit {prop.Name}",
-		Content = container,
-		Width = 440,
-		Height = 280,
-		CanResize = false,
-		WindowStartupLocation = WindowStartupLocation.CenterOwner
-	    };
+        var container = new Border
+        {
+            Padding = new Thickness(20),
+            Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
+            Child = stack
+        };
 
-	    okBtn.Click += (s, e) =>
-	    {
-		prop.SetValue(control, editor.Text);
-		window.Close();
-	    };
+        var window = new Window
+        {
+            Title = $"Edit {prop.Name}",
+            Content = container,
+            Width = 440,
+            Height = 280,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
 
-	    cancelBtn.Click += (s, e) => window.Close();
+        okBtn.Click += (s, e) =>
+        {
+            prop.SetValue(control, editor.Text);
+            window.Close();
+        };
 
-	    await window.ShowDialog(GetParentWindow());
-	}
+        cancelBtn.Click += (s, e) => window.Close();
+
+        await window.ShowDialog(GetParentWindow());
+    }
 
     private Window? GetParentWindow()
     {
@@ -510,7 +512,7 @@ private Effect? StringToEffect(string? name)
         {
             if (current is Window window)
                 return window;
-	    current = current.GetVisualParent(); 
+            current = current.GetVisualParent();
         }
         return null;
     }
