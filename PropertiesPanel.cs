@@ -164,7 +164,6 @@ private void AddFontRow(Control control, string displayName)
 
     private void AddPropertyRow(Control control, PropertyInfo prop)
     {
-	        Console.WriteLine($"[DEBUG] Adding property: {prop.Name}, Type: {prop.PropertyType.Name}");
         var row = new StackPanel 
         { 
             Orientation = Orientation.Horizontal, 
@@ -175,7 +174,6 @@ private void AddFontRow(Control control, string displayName)
 	// Debug - check what we're getting for color properties
 	if (prop.Name == "Background" || prop.Name == "Foreground" || prop.Name == "BorderBrush")
 	{
-	    Console.WriteLine($"[DEBUG] {prop.Name}: Type={prop.PropertyType.Name}, FullName={prop.PropertyType.FullName}");
 	}
         
         // Left label - 11px normal
@@ -246,9 +244,7 @@ else if (prop.PropertyType == typeof(Effect) || prop.PropertyType.Name == "IEffe
             row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
         
 
-	Console.WriteLine($"[DEBUG] Adding row for {prop.Name} to panel");
 	panel.Children.Add(row);
-	Console.WriteLine($"[DEBUG] Panel now has {panel.Children.Count} children");
 
     }
     
@@ -257,7 +253,6 @@ private Control CreateTinyTextBox(Control control, PropertyInfo prop)
     var tiny = new TinyTextBox();
     var value = prop.GetValue(control);
 
-    Console.WriteLine($"[DEBUG] CreateTinyTextBox for {prop.Name}, value={value}, type={value?.GetType().Name ?? "null"}");
 
     // Round doubles to int for display
     if (value is double d)
