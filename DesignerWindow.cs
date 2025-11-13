@@ -103,8 +103,8 @@ public class DesignerWindow
                 foreach (var vmlControl in vmlControls)
                 {
                     if (vmlControl.Type == "Window") continue;
-                    
-                    var dummy = CreateDesignControl(vmlControl.Type);
+
+		    var (dummy, real) = CreateControlPair(vmlControl.Type, vmlControl.Name ?? vmlControl.Type);
                     if (dummy == null) continue;
                     
                     dummy.Name = vmlControl.Name ?? vmlControl.Type;
@@ -611,39 +611,40 @@ designCanvas = new Canvas
     }
     
     private static void CreateControlAtPosition(string controlType, double x, double y)
-    {
+	 {
         if (designCanvas == null) return;
-        
-        var control = CreateDesignControl(controlType);
-        if (control == null) return;
-        
-        DesignProperties.SetIsResizable(control, true);
-        DesignProperties.SetIsDraggable(control, true);
-        
-        // Auto-generate name
+ 
+        // Auto-generate name first
         if (!controlCounters.ContainsKey(controlType))
-            controlCounters[controlType] = 0;
-        
+        controlCounters[controlType] = 0;
+ 
         controlCounters[controlType]++;
         var controlName = $"{controlType}_{controlCounters[controlType]}";
-        control.Name = controlName;
-        
+
+        var (dummy, real) = CreateControlPair(controlType, controlName);
+        if (dummy == null) return;
+
+        DesignProperties.SetIsResizable(dummy, true);
+        DesignProperties.SetIsDraggable(dummy, true);
+
         DebugLog($"[CONTROL] Named: {controlName}");
-        
-        // Place at mouse position
-        Canvas.SetLeft(control, Math.Max(0, x - 40));
-        Canvas.SetTop(control, Math.Max(0, y - 15));
-        
-        MakeDraggableWithCursors(control);
-        designCanvas.Children.Add(control);
+
+        // Place both at same position
+        Canvas.SetLeft(dummy, Math.Max(0, x - 40));
+        Canvas.SetTop(dummy, Math.Max(0, y - 15));
+        Canvas.SetLeft(real, Math.Max(0, x - 40));
+        Canvas.SetTop(real, Math.Max(0, y - 15));
+
+        MakeDraggableWithCursors(dummy);
+        designCanvas.Children.Add(dummy);
+                designCanvas.Children.Add(real);  // Add both!
         CheckAndHideInstructions();
-        CheckAndHideInstructions();
-        SelectControl(control);
-        PropertyStore.SyncControl(control);
-        
+        SelectControl(dummy);
+        PropertyStore.SyncControl(dummy);
+
         DebugLog($"[ADD] {controlType} at {x:F0},{y:F0}");
-    }
-    
+    }  
+			
     private static void UpdateStatusBar(MainWindow window)
     {
         if (statusText == null) return;
@@ -774,59 +775,58 @@ designCanvas = new Canvas
     }
     
     private static void AddControlToCanvas(string controlType)
+{
+    if (designCanvas == null) return;
+    
+    // Auto-generate name first
+    if (!controlCounters.ContainsKey(controlType))
+        controlCounters[controlType] = 0;
+    
+    controlCounters[controlType]++;
+    var controlName = $"{controlType}_{controlCounters[controlType]}";
+    
+    var (dummy, real) = CreateControlPair(controlType, controlName);
+    if (dummy == null) return;
+    
+    DesignProperties.SetIsResizable(dummy, true);
+    DesignProperties.SetIsDraggable(dummy, true);
+    
+    DebugLog($"[CONTROL] Named: {controlName}");
+    
+    var baseX = 150.0;
+    var baseY = 150.0;
+    var offset = 0;
+    
+    while (true)
     {
-        if (designCanvas == null) return;
+        var testX = baseX + (offset * 20);
+        var testY = baseY + (offset * 20);
         
-        var control = CreateDesignControl(controlType);
-        if (control == null) return;
-        
-        DesignProperties.SetIsResizable(control, true);
-        DesignProperties.SetIsDraggable(control, true);
-        
-        // Auto-generate name
-        if (!controlCounters.ContainsKey(controlType))
-            controlCounters[controlType] = 0;
-        
-        controlCounters[controlType]++;
-        var controlName = $"{controlType}_{controlCounters[controlType]}";
-        control.Name = controlName;
-        
-        DebugLog($"[CONTROL] Named: {controlName}");
-        
-        var baseX = 150.0;
-        var baseY = 150.0;
-        var offset = 0;
-        
-        while (true)
+        var occupied = GetDesignControls().Any(c =>
         {
-            var testX = baseX + (offset * 20);
-            var testY = baseY + (offset * 20);
-            
-            var occupied = GetDesignControls().Any(c =>
-            {
-                var cx = Canvas.GetLeft(c);
-                var cy = Canvas.GetTop(c);
-                return Math.Abs(cx - testX) < 5 && Math.Abs(cy - testY) < 5;
-            });
-            
-            if (!occupied)
-            {
-                Canvas.SetLeft(control, testX);
-                Canvas.SetTop(control, testY);
-                MakeDraggableWithCursors(control);
-                designCanvas.Children.Add(control);
-		//CheckAndHideInstructions();
-		CheckAndHideInstructions();
-                SelectControl(control);
-                PropertyStore.SyncControl(control);
-                DebugLog($"[ADD] {controlType} → {control.Name}");
-                return;
-            }
-            
-            offset++;
-            if (offset > 100) break;
+            var cx = Canvas.GetLeft(c);
+            var cy = Canvas.GetTop(c);
+            return Math.Abs(cx - testX) < 5 && Math.Abs(cy - testY) < 5;
+        });
+        
+        if (!occupied)
+        {
+            Canvas.SetLeft(dummy, testX);
+            Canvas.SetTop(dummy, testY);
+            Canvas.SetLeft(real, testX);
+            Canvas.SetTop(real, testY);
+            MakeDraggableWithCursors(dummy);
+            designCanvas.Children.Add(dummy);
+            designCanvas.Children.Add(real);  // Add both!
+            CheckAndHideInstructions();
+            SelectControl(dummy);
+            PropertyStore.SyncControl(dummy);
+            DebugLog($"[ADD] {controlType} → {controlName}");
+            return;
         }
+        offset++;
     }
+}
     
             private static void MakeDraggableWithCursors(Control control)
     {
@@ -1280,23 +1280,49 @@ designCanvas = new Canvas
         return controls;
     }
     
-    private static Control? CreateDesignControl(string controlType)
-{
-    return controlType switch
-    {
-        "Button" => new DesignButton(),
-        "TextBox" => new DesignTextBox(),
-        "TextBlock" => new DesignTextBlock(),
-        "CheckBox" => new DesignCheckBox(),
-        "ComboBox" => new DesignComboBox(),
-        "ListBox" => new DesignListBox(),
-        "RadioButton" => new DesignRadioButton(),
-        "StackPanel" => new DesignPanel("StackPanel"),
-        "Grid" => new DesignPanel("Grid"),
-        "Border" => new DesignBorder(),
-        _ => null
-    };
-}
+    private static (Control dummy, Control real) CreateControlPair(string controlType, string name)
+	{
+	    Control? dummy = controlType switch
+	    {
+		"Button" => new DesignButton(),
+		"TextBox" => new DesignTextBox(),
+		"TextBlock" => new DesignTextBlock(),
+		"CheckBox" => new DesignCheckBox(),
+		"ComboBox" => new DesignComboBox(),
+		"ListBox" => new DesignListBox(),
+		"RadioButton" => new DesignRadioButton(),
+		"StackPanel" => new DesignPanel("StackPanel"),
+		"Grid" => new DesignPanel("Grid"),
+		"Border" => new DesignBorder(),
+		_ => null
+	    };
+
+	    Control? real = controlType switch
+	    {
+		"Button" => new Button { Content = "Button" },
+		"TextBox" => new TextBox { Text = "TextBox" },
+		"TextBlock" => new TextBlock { Text = "Label" },
+		"CheckBox" => new CheckBox { Content = "CheckBox" },
+		"ComboBox" => new ComboBox(),
+		"ListBox" => new ListBox(),
+		"RadioButton" => new RadioButton { Content = "RadioButton" },
+		"StackPanel" => new StackPanel(),
+		"Grid" => new Grid(),
+		"Border" => new Border(),
+		_ => null
+	    };
+
+	    if (dummy != null && real != null)
+	    {
+		real.Name = name;
+		real.IsVisible = false;
+		real.IsEnabled = false;
+		real.IsHitTestVisible = false;
+		dummy.Tag = real;  // Link them
+	    }
+
+	    return (dummy!, real!);
+	}
 }
 
 
