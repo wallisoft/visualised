@@ -7,6 +7,14 @@ namespace VB;
 
 public class DesignButton : Border
 {
+    private TextBlock textBlock;
+    
+    public object? Content
+    {
+        get => textBlock.Text;
+        set => textBlock.Text = value?.ToString() ?? "";
+    }
+    
     public DesignButton()
     {
         Width = 100;
@@ -16,12 +24,14 @@ public class DesignButton : Border
         BorderThickness = new Avalonia.Thickness(1);
         CornerRadius = new Avalonia.CornerRadius(3);
         
-        Child = new TextBlock 
+        textBlock = new TextBlock 
         { 
             Text = "Button",
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
+        
+        Child = textBlock;
     }
 }
 
