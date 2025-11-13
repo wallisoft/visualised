@@ -129,21 +129,51 @@ public class DesignerWindow
                         
                         try
                         {
-                            var propInfo = dummy.GetType().GetProperty(prop.Key);
-                            if (propInfo != null && propInfo.CanWrite)
+                            // Special handling for Items
+                            if (prop.Key == "Items")
                             {
-                                var value = Convert.ChangeType(prop.Value, propInfo.PropertyType);
-                                propInfo.SetValue(dummy, value);
+                                var itemsProp = dummy.GetType().GetProperty("Items");
+                                if (itemsProp?.GetValue(dummy) is System.Collections.IList itemsList)
+                                {
+                                    var items = prop.Value.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                                    foreach (var item in items)
+                                        itemsList.Add(item.Trim());
+                                    
+                                    // Sync to real control too
+                                    if (real != null)
+                                    {
+                                        var realItemsProp = real.GetType().GetProperty("Items");
+                                        if (realItemsProp?.GetValue(real) is System.Collections.IList realItems)
+                                        {
+                                            foreach (var item in items)
+                                                realItems.Add(item.Trim());
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var propInfo = dummy.GetType().GetProperty(prop.Key);
+                                if (propInfo != null && propInfo.CanWrite)
+                                {
+                                    var value = Convert.ChangeType(prop.Value, propInfo.PropertyType);
+                                    propInfo.SetValue(dummy, value);
+                                }
                             }
                         }
                         catch { }
                     }
-                    
+                                        
                     designCanvas.Children.Add(dummy);
+                    designCanvas.Children.Add(real);  // Add real too!
+
+                    // Position real at same location
+                    Canvas.SetLeft(real, Canvas.GetLeft(dummy));
+                    Canvas.SetTop(real, Canvas.GetTop(dummy));
+
                     MakeDraggableWithCursors(dummy);
                     PropertyStore.SyncControl(dummy);
-                    MakeDraggableWithCursors(dummy);
-                    PropertyStore.SyncControl(dummy);
+
                     if (vmlControls.IndexOf(vmlControl) == vmlControls.Count - 1) SelectControl(dummy);
                     DebugLog($"[DESIGNER] Added {vmlControl.Type} '{vmlControl.Name}' at ({Canvas.GetLeft(dummy)},{Canvas.GetTop(dummy)}) {dummy.Width}x{dummy.Height}");
                     lastLoadedControl = dummy;
