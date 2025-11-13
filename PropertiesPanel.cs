@@ -191,28 +191,10 @@ private void AddFontRow(Control control, string displayName)
 	if (prop.Name == "Content" || prop.Name == "Text")
 	{
 	    var value = prop.GetValue(control);
-	    
-	    // Simple string content - use TinyTextBox
-	    if (value is string || value == null)
-	    {
-		row.Children.Add(CreateTinyTextBox(control, prop));
-	    }
-	    else
-	    {
-		// Complex content - use grey button to open editor
-		var btn = new TinyButton 
-		{ 
-		    Text = value.GetType().Name 
-		};
-		btn.SetButtonColor("#757575");  // Grey for system
-		
-		btn.Clicked += (s, e) =>
-		{
-		    ShowComplexContentEditor(control, prop, value);
-		};
-		
-		row.Children.Add(btn);
-	    }
+	    var btn = new TinyButton { Text = value?.ToString() ?? "(empty)" };
+	    btn.SetButtonColor("#757575");
+	    btn.Clicked += (s, e) => ShowComplexContentEditor(control, prop, value);
+	    row.Children.Add(btn);
 	}
 	else if (prop.PropertyType == typeof(string))
     row.Children.Add(CreateTinyTextBox(control, prop));
