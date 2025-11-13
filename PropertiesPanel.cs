@@ -618,7 +618,8 @@ private Effect? StringToEffect(string? name)
                 foreach (var line in lines)
                     items.Add(line.Trim());
 
-                SyncToRealControl(control, "Items", items);  // ADD THIS
+                SyncToRealControl(control, "Items", items);  
+                PropertyStore.SyncControl(control); 
 		    }
 		    window.Close();
 	    };
