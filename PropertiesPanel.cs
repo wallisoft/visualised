@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.VisualTree;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -190,12 +191,31 @@ private void AddFontRow(Control control, string displayName)
         
         // Create appropriate editor based on type
 	if (prop.Name == "Content" || prop.Name == "Text")
+	if (prop.Name == "Content" || prop.Name == "Text")
 	{
-	    Console.WriteLine($"[DEBUG] Creating TinyTextBox for {prop.Name}");
-	    var textBox = CreateTinyTextBox(control, prop);
-	    Console.WriteLine($"[DEBUG] TinyTextBox created, adding to row");
-	    row.Children.Add(textBox);
-	    Console.WriteLine($"[DEBUG] Added to row, row has {row.Children.Count} children");
+	    var value = prop.GetValue(control);
+	    
+	    // Simple string content - use TinyTextBox
+	    if (value is string || value == null)
+	    {
+		row.Children.Add(CreateTinyTextBox(control, prop));
+	    }
+	    else
+	    {
+		// Complex content - use grey button to open editor
+		var btn = new TinyButton 
+		{ 
+		    Text = value.GetType().Name 
+		};
+		btn.SetButtonColor("#757575");  // Grey for system
+		
+		btn.Clicked += (s, e) =>
+		{
+		    ShowComplexContentEditor(control, prop, value);
+		};
+		
+		row.Children.Add(btn);
+	    }
 	}
 	else if (prop.PropertyType == typeof(string))
     row.Children.Add(CreateTinyTextBox(control, prop));
@@ -411,25 +431,88 @@ private Effect? StringToEffect(string? name)
         return skip.Contains(prop.Name);
     }
 
-    private string AbbreviatePropertyName(string name)
+	private async void ShowComplexContentEditor(Control control, PropertyInfo prop, object? currentValue)
+	{
+	    var editor = new TextBox
+	    {
+		Text = currentValue?.ToString() ?? "",
+		Width = 400,
+		Height = 200,
+		AcceptsReturn = true,
+		TextWrapping = TextWrapping.Wrap
+	    };
+
+	    var okBtn = new Button
+	    {
+		Content = "OK",
+		Width = 80,
+		FontWeight = FontWeight.Bold,
+		Background = Brushes.White,
+		Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderThickness = new Thickness(2)
+	    };
+
+	    var cancelBtn = new Button
+	    {
+		Content = "Cancel",
+		Width = 80,
+		FontWeight = FontWeight.Bold,
+		Background = Brushes.White,
+		Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderThickness = new Thickness(2)
+	    };
+
+	    var buttonPanel = new StackPanel
+	    {
+		Orientation = Orientation.Horizontal,
+		HorizontalAlignment = HorizontalAlignment.Right,
+		Spacing = 10,
+		Margin = new Thickness(0, 10, 0, 0),
+		Children = { okBtn, cancelBtn }
+	    };
+
+	    var container = new Border
+	    {
+		Padding = new Thickness(20),
+		Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
+		Child = new StackPanel
+		{
+		    Children = { editor, buttonPanel }
+		}
+	    };
+
+	    var window = new Window
+	    {
+		Title = $"Edit {prop.Name}",
+		Content = container,
+		Width = 440,
+		Height = 280,
+		CanResize = false,
+		WindowStartupLocation = WindowStartupLocation.CenterOwner
+	    };
+
+	    okBtn.Click += (s, e) =>
+	    {
+		prop.SetValue(control, editor.Text);
+		window.Close();
+	    };
+
+	    cancelBtn.Click += (s, e) => window.Close();
+
+	    await window.ShowDialog(GetParentWindow());
+	}
+
+    private Window? GetParentWindow()
     {
-        return name
-            .Replace("Vertical", "Vrt")
-            .Replace("Horizontal", "Hrz")
-            .Replace("Template", "Tmpl")
-            .Replace("Behaviour", "Bhvr")
-            .Replace("Behavior", "Bhvr")  // US spelling too
-            .Replace("Context", "Ctxt")
-            .Replace("Content", "Cntnt")
-            .Replace("Current", "Curr")
-            .Replace("Project", "Proj")
-            .Replace("Extend", "Ext")
-            .Replace("Keyboard", "Keyb")
-            .Replace("Transparency", "Trans")
-            .Replace("Transform", "Trnsfm")
-            .Replace("Adorner", "Adrnr")
-            .Replace("Origin", "Orgn")
-            .Replace("Position", "Pos")
-            .Replace("Requested", "Rqstd");
+        var current = panel as Visual;
+        while (current != null)
+        {
+            if (current is Window window)
+                return window;
+	    current = current.GetVisualParent(); 
+        }
+        return null;
     }
 }
