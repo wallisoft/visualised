@@ -148,6 +148,7 @@ public static class PropertyStore
                 var value = prop.GetValue(control);
                 if (value != null)
                     Set(control.Name, prop.Name, value.ToString());
+                    UpdateVML(control.Name, prop.Name, value.ToString()); 
             }
             catch
             {
@@ -156,6 +157,28 @@ public static class PropertyStore
         }
     }
     
+        public static void UpdateVML(string controlName, string propertyName, string value)
+    {
+        var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
+        using var conn = new SqliteConnection($"Data Source={dbPath}");
+        conn.Open();
+        
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            UPDATE source_files 
+            SET content = REPLACE(
+                content,
+                'Name=""' || @controlName || '""',
+                'Name=""' || @controlName || '"" ' || @propertyName || '=""' || @value || '""'
+            )
+            WHERE path = 'designer.vml'";
+        cmd.Parameters.AddWithValue("@controlName", controlName);
+        cmd.Parameters.AddWithValue("@propertyName", propertyName);
+        cmd.Parameters.AddWithValue("@value", value);
+        cmd.ExecuteNonQuery();
+    }
+    
+
     private static Dictionary<string, object?> GetControlProperties(string controlName)
     {
         var props = new Dictionary<string, object?>();
