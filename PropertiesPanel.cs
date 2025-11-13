@@ -402,8 +402,12 @@ private Effect? StringToEffect(string? name)
 
     private bool ShouldSkip(PropertyInfo prop)
     {
+        // Skip Name - it's immutable after styling
+        if (prop.Name == "Name") return true;
+
         // Only skip truly dangerous/system properties
         var skip = new[] { "Parent", "DataContext" };
+
         return skip.Contains(prop.Name);
     }
 

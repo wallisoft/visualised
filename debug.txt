@@ -484,3 +484,9 @@
 [06:28:15.950] [ADD] TextBlock → TextBlock_1
 [06:28:41.826] [CONTROL] Named: ListBox_1
 [06:28:42.181] [ADD] ListBox → ListBox_1
+[06:33:39.589] [CONTROL] Named: Button_1
+[06:33:39.994] [ADD] Button → Button_1
+[06:33:48.932] [CONTROL] Named: ComboBox_1
+[06:33:49.301] [ADD] ComboBox → ComboBox_1
+[06:35:04.685] [CONTROL] Named: ListBox_1
+[06:35:05.558] [ADD] ListBox → ListBox_1
