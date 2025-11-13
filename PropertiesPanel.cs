@@ -205,18 +205,34 @@ private void AddFontRow(Control control, string displayName)
 	if (prop.Name == "Content" || prop.Name == "Text")
 	{
 	    var value = prop.GetValue(control);
-	    var btn = new TinyButton { Text = value?.ToString() ?? "(empty)" };
+	    var displayText = value?.ToString() ?? "(empty)";
+
+	    // Truncate for display
+	    if (displayText.Contains('\n'))
+	    {
+		displayText = displayText.Split('\n')[0] + "...";
+	    }
+	    else if (displayText.Length > 20)
+	    {
+		displayText = displayText.Substring(0, 20) + "...";
+	    }
+
+	    var btn = new TinyButton { Text = displayText };
 	    btn.SetButtonColor("#757575");
 	    btn.Clicked += (s, e) => ShowComplexContentEditor(control, prop, value);
 	    row.Children.Add(btn);
+	    panel.Children.Add(row);
+	    return;  // Important - exit early!
 	}
+
+	// Regular string properties use TinyTextBox
 	else if (prop.PropertyType == typeof(string))
 	{
 	    row.Children.Add(CreateTinyTextBox(control, prop));
 	}
 
-        // Create appropriate editor based on type
-	if (prop.Name == "Content" || prop.Name == "Text")
+		// Create appropriate editor based on type
+		if (prop.Name == "Content" || prop.Name == "Text")
 	{
 	    var value = prop.GetValue(control);
 	    var btn = new TinyButton { Text = value?.ToString() ?? "(empty)" };
