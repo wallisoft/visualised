@@ -454,3 +454,5 @@
 [05:50:02.509] [ADD] Button → Button_1
 [05:50:21.392] [CONTROL] Named: TextBlock_1
 [05:50:21.804] [ADD] TextBlock → TextBlock_1
+[05:51:29.163] [CONTROL] Named: ComboBox_1
+[05:51:30.075] [ADD] ComboBox → ComboBox_1
