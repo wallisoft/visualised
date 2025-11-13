@@ -522,6 +522,8 @@ private Effect? StringToEffect(string? name)
         okBtn.Click += (s, e) =>
         {
             prop.SetValue(control, editor.Text);
+            SyncToRealControl(control, prop.Name, editor.Text);  // ADD THIS
+            PropertyStore.SyncControl(control);
             window.Close();
         };
 
@@ -609,20 +611,42 @@ private Effect? StringToEffect(string? name)
 	    
 	    okBtn.Click += (s, e) =>
 	    {
-		if (items != null)
-		{
-		    items.Clear();
-		    var lines = editor.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-		    foreach (var line in lines)
-			items.Add(line.Trim());
-		}
-		window.Close();
+            if (items != null)
+            {
+                items.Clear();
+                var lines = editor.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                    items.Add(line.Trim());
+
+                SyncToRealControl(control, "Items", items);  // ADD THIS
+		    }
+		    window.Close();
 	    };
 	    
 	    cancelBtn.Click += (s, e) => window.Close();
 	    
 	    await window.ShowDialog(GetParentWindow());
 	}
+
+
+        private void SyncToRealControl(Control dummy, string propertyName, object? value)
+{
+    if (dummy.Tag is Control real)
+    {
+        try 
+        { 
+            var realProp = real.GetType().GetProperty(propertyName);
+            if (realProp != null && realProp.CanWrite)
+            {
+                realProp.SetValue(real, value);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SYNC] Failed to sync {propertyName}: {ex.Message}");
+        }
+    }
+}
 
 	    private Window? GetParentWindow()
 	    {
