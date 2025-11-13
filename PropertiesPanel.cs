@@ -217,49 +217,56 @@ private void AddFontRow(Control control, string displayName)
 	    }
 	}
 	else if (prop.PropertyType == typeof(string))
-    row.Children.Add(CreateTinyTextBox(control, prop));
-        else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
-            row.Children.Add(CreateTinyTextBox(control, prop));
-        else if (prop.PropertyType == typeof(bool))
-            row.Children.Add(new TinyCheckBox { IsChecked = (bool?)prop.GetValue(control) });
+	{
+	    row.Children.Add(CreateTinyTextBox(control, prop));
+	}
+	else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(int))
+	{
+	    row.Children.Add(CreateTinyTextBox(control, prop));
+	}
+	else if (prop.PropertyType == typeof(bool))
+	{
+	    row.Children.Add(new TinyCheckBox { IsChecked = (bool?)prop.GetValue(control) });
+	}
 	else if (prop.PropertyType.Name.Contains("Brush") || prop.PropertyType.Name == "IBrush")
-            row.Children.Add(CreateTinyColorPicker(control, prop));
-        else if (prop.PropertyType.IsEnum)
-            row.Children.Add(CreateTinyCombo(control, prop));
+	{
+	    row.Children.Add(CreateTinyColorPicker(control, prop));
+	}
+	else if (prop.PropertyType.IsEnum)
+	{
+	    row.Children.Add(CreateTinyCombo(control, prop));
+	}
 	else if (prop.PropertyType == typeof(Thickness) ||
-            prop.PropertyType == typeof(CornerRadius) ||
-            prop.PropertyType == typeof(Point))
-            row.Children.Add(CreateTinyComplexBox(control, prop));
-	else if (prop.PropertyType == typeof(Thickness) ||
-            prop.PropertyType == typeof(CornerRadius) ||
-            prop.PropertyType == typeof(Point) ||
-            prop.PropertyType == typeof(Size) ||
-            prop.PropertyType == typeof(Rect) ||
-            prop.PropertyType == typeof(PixelPoint) ||
-            prop.PropertyType == typeof(RelativePoint))
-            row.Children.Add(CreateTinyComplexBox(control, prop));
+		 prop.PropertyType == typeof(CornerRadius) ||
+		 prop.PropertyType == typeof(Point) ||
+		 prop.PropertyType == typeof(Size) ||
+		 prop.PropertyType == typeof(Rect) ||
+		 prop.PropertyType == typeof(PixelPoint) ||
+		 prop.PropertyType == typeof(RelativePoint))
+	{
+	    row.Children.Add(CreateTinyComplexBox(control, prop));
+	}
 	else if (prop.PropertyType.Name.Contains("Menu") || prop.PropertyType.Name.Contains("Flyout"))
-            row.Children.Add(CreateTinyButton(control, prop));
-else if (prop.PropertyType == typeof(Effect) || prop.PropertyType.Name == "IEffect")
-            row.Children.Add(CreateTinyEffectCombo(control, prop));
-        else
-            row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
-        
+	{
+	    row.Children.Add(CreateTinyButton(control, prop));
+	}
+	else if (prop.PropertyType == typeof(Effect) || prop.PropertyType.Name == "IEffect")
+	{
+	    row.Children.Add(CreateTinyEffectCombo(control, prop));
+	}
+	else
+	{
+	    row.Children.Add(new TextBlock { Text = "(complex)", FontSize = 11 });
+	}
+	} 
+	private Control CreateTinyTextBox(Control control, PropertyInfo prop)
+	{
+	    var tiny = new TinyTextBox();
+	    var value = prop.GetValue(control);
 
-	Console.WriteLine($"[DEBUG] Adding row for {prop.Name} to panel");
-	panel.Children.Add(row);
-	Console.WriteLine($"[DEBUG] Panel now has {panel.Children.Count} children");
+	    Console.WriteLine($"[DEBUG] CreateTinyTextBox for {prop.Name}, value={value}, type={value?.GetType().Name ?? "null"}");
 
-    }
-    
-private Control CreateTinyTextBox(Control control, PropertyInfo prop)
-{
-    var tiny = new TinyTextBox();
-    var value = prop.GetValue(control);
-
-    Console.WriteLine($"[DEBUG] CreateTinyTextBox for {prop.Name}, value={value}, type={value?.GetType().Name ?? "null"}");
-
-    // Round doubles to int for display
+	    // Round doubles to int for display
     if (value is double d)
         tiny.Text = Math.Round(d).ToString();
     else if (value is int i)
