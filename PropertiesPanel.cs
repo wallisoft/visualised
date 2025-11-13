@@ -185,8 +185,36 @@ private void AddFontRow(Control control, string displayName)
             TextAlignment = TextAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center
         };
+
         row.Children.Add(label);
-        
+	
+	// Create appropriate editor based on type
+
+	// Handle Items property
+	if (prop.Name == "Items")
+	{
+	    var btn = new TinyButton { Text = "Edit Items..." };
+	    btn.SetButtonColor("#757575");
+	    btn.Clicked += (s, e) => ShowItemsEditor(control, prop);
+	    row.Children.Add(btn);
+	    panel.Children.Add(row);
+	    return;
+	}
+
+	// Handle Content/Text with multiline editor
+	if (prop.Name == "Content" || prop.Name == "Text")
+	{
+	    var value = prop.GetValue(control);
+	    var btn = new TinyButton { Text = value?.ToString() ?? "(empty)" };
+	    btn.SetButtonColor("#757575");
+	    btn.Clicked += (s, e) => ShowComplexContentEditor(control, prop, value);
+	    row.Children.Add(btn);
+	}
+	else if (prop.PropertyType == typeof(string))
+	{
+	    row.Children.Add(CreateTinyTextBox(control, prop));
+	}
+
         // Create appropriate editor based on type
 	if (prop.Name == "Content" || prop.Name == "Text")
 	{
@@ -486,9 +514,103 @@ private Effect? StringToEffect(string? name)
         await window.ShowDialog(GetParentWindow());
     }
 
-    private Window? GetParentWindow()
-    {
-        var current = panel as Visual;
+    private async void ShowItemsEditor(Control control, PropertyInfo prop)
+	{
+	    var items = prop.GetValue(control) as System.Collections.IList;
+	    var currentText = items != null ? string.Join("\n", items.Cast<object>()) : "";
+	    
+	    var hint = new TextBlock
+	    {
+		Text = "One item per line. For complex items, use code in FormLoad event.",
+		FontSize = 10,
+		Foreground = new SolidColorBrush(Color.Parse("#999999")),
+		FontStyle = FontStyle.Italic,
+		Margin = new Thickness(0, 0, 0, 5)
+	    };
+	    
+	    var editor = new TextBox
+	    {
+		Text = currentText,
+		Width = 400,
+		Height = 200,
+		AcceptsReturn = true,
+		TextWrapping = TextWrapping.Wrap
+	    };
+	    
+	    var okBtn = new Button 
+	    { 
+		Content = "OK", 
+		Width = 80,
+		FontWeight = FontWeight.Bold,
+		Background = Brushes.White,
+		Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderThickness = new Thickness(2)
+	    };
+	    
+	    var cancelBtn = new Button 
+	    { 
+		Content = "Cancel", 
+		Width = 80,
+		FontWeight = FontWeight.Bold,
+		Background = Brushes.White,
+		Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+		BorderThickness = new Thickness(2)
+	    };
+	    
+	    var buttonPanel = new StackPanel
+	    {
+		Orientation = Orientation.Horizontal,
+		HorizontalAlignment = HorizontalAlignment.Right,
+		Spacing = 10,
+		Margin = new Thickness(0, 10, 0, 0)
+	    };
+	    buttonPanel.Children.Add(okBtn);
+	    buttonPanel.Children.Add(cancelBtn);
+	    
+	    var stack = new StackPanel();
+	    stack.Children.Add(hint);
+	    stack.Children.Add(editor);
+	    stack.Children.Add(buttonPanel);
+	    
+	    var container = new Border
+	    {
+		Padding = new Thickness(20),
+		Background = new SolidColorBrush(Color.Parse("#F7F7F7")),
+		Child = stack
+	    };
+	    
+	    var window = new Window
+	    {
+		Title = "Edit Items",
+		Content = container,
+		Width = 440,
+		Height = 300,
+		CanResize = false,
+		WindowStartupLocation = WindowStartupLocation.CenterOwner
+	    };
+	    
+	    okBtn.Click += (s, e) =>
+	    {
+		if (items != null)
+		{
+		    items.Clear();
+		    var lines = editor.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+		    foreach (var line in lines)
+			items.Add(line.Trim());
+		}
+		window.Close();
+	    };
+	    
+	    cancelBtn.Click += (s, e) => window.Close();
+	    
+	    await window.ShowDialog(GetParentWindow());
+	}
+
+	    private Window? GetParentWindow()
+	    {
+		var current = panel as Visual;
         while (current != null)
         {
             if (current is Window window)
