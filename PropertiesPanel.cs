@@ -191,7 +191,6 @@ private void AddFontRow(Control control, string displayName)
         
         // Create appropriate editor based on type
 	if (prop.Name == "Content" || prop.Name == "Text")
-	if (prop.Name == "Content" || prop.Name == "Text")
 	{
 	    var value = prop.GetValue(control);
 	    
