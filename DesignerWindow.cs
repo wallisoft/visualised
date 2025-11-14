@@ -225,6 +225,8 @@ public class DesignerWindow
         
         // Load controls from PropertyStore
         LoadPropertyStoreControls();
+
+        // At end of BuildUI, before Console.WriteLine("[UI] Designer ready!")
         
         Console.WriteLine("[UI] Designer ready!");
 
