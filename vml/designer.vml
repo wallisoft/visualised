@@ -12,7 +12,7 @@ RowDefinitions=Auto,*,Auto
 @Border MenuBar
 Parent=MainGrid
 Grid.Row=0
-Background=#66bb6a
+Background=#107C10
 Height=30
 
 @TextBlock MenuText
@@ -93,8 +93,8 @@ Spacing=5
 @Border StatusBar
 Parent=MainGrid
 Grid.Row=2
-Background=#f0f0f0
-BorderBrush=#cccccc
+Background=#107C10
+BorderBrush=#0d6b0d
 BorderThickness=0,1,0,0
 Height=25
 
@@ -102,5 +102,6 @@ Height=25
 Parent=StatusBar
 Text=Ready
 VerticalAlignment=Center
+Foreground=White
 Margin=10,0,0,0
 FontSize=11
