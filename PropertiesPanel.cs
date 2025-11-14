@@ -526,9 +526,11 @@ private Effect? StringToEffect(string? name)
 
             var real = control.Tag as Control;
             if (real != null)
-            PropertyStore.SyncControl(real);  // Save REAL control!
+                PropertyStore.SyncControl(real);  // Save REAL control!
 
             window.Close();
+            // Refresh properties panel
+            ShowPropertiesFor(control);
         };
 
         cancelBtn.Click += (s, e) => window.Close();
@@ -629,6 +631,7 @@ private Effect? StringToEffect(string? name)
                     PropertyStore.SyncControl(real);  // Save REAL control!
             }
 		    window.Close();
+            ShowPropertiesFor(control);
 	    };
 	    
 	    cancelBtn.Click += (s, e) => window.Close();
