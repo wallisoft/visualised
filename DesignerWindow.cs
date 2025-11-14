@@ -400,7 +400,7 @@ public class DesignerWindow
         // Grid.SetColumn(toolbox, 0);
         // workspace.Children.Add(toolbox);
         
-designCanvas = new Canvas 
+        designCanvas = new Canvas 
         { 
             Width = DefaultCanvasWidth,
             Height = DefaultCanvasHeight,
