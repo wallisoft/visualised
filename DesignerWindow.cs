@@ -225,10 +225,13 @@ public class DesignerWindow
                 }
 
                 // Load designer-created controls from properties table
+                Console.WriteLine("[LOAD] Starting properties table scan...");
                 var dbPath = Path.Combine(Environment.CurrentDirectory, "visualised.db");
+                Console.WriteLine($"[LOAD] Database path: {dbPath}");
                 using (var conn = new SqliteConnection($"Data Source={dbPath}"))
                 {
                     conn.Open();
+                        Console.WriteLine("[LOAD] Database opened successfully");
 
                     using var cmd = conn.CreateCommand();
                     cmd.CommandText = "SELECT DISTINCT control_name FROM properties WHERE substr(control_name, 1, 1) != '_'";
