@@ -80,7 +80,7 @@ private static void BuildUI(MainWindow window, string vmlPath)
     // ========================================
     var workspace = new Grid
     {
-        ColumnDefinitions = new ColumnDefinitions("320,*,0")
+        ColumnDefinitions = new ColumnDefinitions("270,*,0")
     };
     Grid.SetRow(workspace, 1);
 
