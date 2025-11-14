@@ -725,6 +725,11 @@ public class DesignerWindow
                 conn.Open();
                 Console.WriteLine("[LOAD] Database opened successfully");
 
+                var clearCmd = conn.CreateCommand();
+                clearCmd.CommandText = "DELETE FROM properties WHERE substr(control_name, 1, 1) != '_'";
+                clearCmd.ExecuteNonQuery();
+                Console.WriteLine("[LOAD] Cleared previous session - fresh designer state");
+
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "SELECT DISTINCT control_name FROM properties WHERE substr(control_name, 1, 1) != '_'";
                 using var reader = cmd.ExecuteReader();
@@ -733,6 +738,7 @@ public class DesignerWindow
                 while (reader.Read())
                 {
                     var name = reader.GetString(0);
+
                     // Skip if already loaded from VML
                     if (designCanvas.Children.OfType<Control>().Any(c => c.Name == name))
                         continue;
