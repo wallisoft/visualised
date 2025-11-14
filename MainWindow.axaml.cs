@@ -95,7 +95,7 @@ public partial class MainWindow : Window
         var name = Path.GetFileNameWithoutExtension(path);
         ProjectManager.AddProject(name, path);
         
-        DesignerWindow.LoadVmlIntoCanvas(this, path);
+        DesignerWindow.LoadAndApply(this, path);
     }
     
     public void HandleSave(object? s, RoutedEventArgs e) => Console.WriteLine("[FILE] Save");
