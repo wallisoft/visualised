@@ -1,0 +1,15 @@
+# Test
+
+@Window TestWindow
+Title=Test
+Width=800
+Height=600
+
+@Border TestBorder
+Parent=TestWindow
+Background=#ffffff
+Padding=10
+
+@TextBlock TestText
+Parent=TestBorder
+Text=Hello World
