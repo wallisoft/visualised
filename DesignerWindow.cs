@@ -231,7 +231,7 @@ public class DesignerWindow
                     conn.Open();
 
                     using var cmd = conn.CreateCommand();
-                    cmd.CommandText = "SELECT DISTINCT control_name FROM properties WHERE control_name NOT LIKE '_%' AND control_name NOT IN (SELECT DISTINCT control_name FROM ui_properties)";
+                    cmd.CommandText = "SELECT DISTINCT control_name FROM properties WHERE substr(control_name, 1, 1) != '_'";
                     using var reader = cmd.ExecuteReader();
 
                     var savedControls = new List<string>();
