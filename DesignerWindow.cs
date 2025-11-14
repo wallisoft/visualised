@@ -44,250 +44,320 @@ public class DesignerWindow
     // ========================================
     // BUILD MAIN UI
     // ========================================
-    private static void BuildUI(MainWindow window, string vmlPath)
+    // ========================================
+// BUILD MAIN UI
+// ========================================
+private static TextBlock? statusText;
+
+private static void BuildUI(MainWindow window, string vmlPath)
+{
+    // Main container with menu, workspace, status
+    var mainGrid = new Grid
     {
-        // Main 3-column grid: FormBuilder | Canvas | Empty
-        var workspace = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("220,*,0")
-        };
+        RowDefinitions = new RowDefinitions("Auto,*,Auto")
+    };
 
-        // ========================================
-        // COLUMN 0: FORMBUILDER PANEL
-        // ========================================
-        var formBuilderBorder = new Border
-        {
-            Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(2),
-            CornerRadius = new CornerRadius(2),
-            Padding = new Thickness(5)
-        };
-        Grid.SetColumn(formBuilderBorder, 0);
-        
-        var formBuilderStack = new StackPanel 
+    // ========================================
+    // ROW 0: MENU BAR (PLACEHOLDER)
+    // ========================================
+    var menuBar = new Border
+    {
+        Background = new SolidColorBrush(Color.Parse("#66bb6a")),
+        Height = 30,
+        Child = new TextBlock 
         { 
-            Margin = new Thickness(5), 
-            Spacing = 5 
-        };
-        
-        // Title bar with X button
-        var titleBar = new Border
+            Text = "  Menu (placeholder)", 
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = Brushes.White,
+            FontWeight = FontWeight.Bold
+        }
+    };
+    Grid.SetRow(menuBar, 0);
+    mainGrid.Children.Add(menuBar);
+
+    // ========================================
+    // ROW 1: WORKSPACE (3-COLUMN GRID)
+    // ========================================
+    var workspace = new Grid
+    {
+        ColumnDefinitions = new ColumnDefinitions("220,*,0")
+    };
+    Grid.SetRow(workspace, 1);
+
+    // ========================================
+    // COLUMN 0: FORMBUILDER PANEL
+    // ========================================
+    var formBuilderBorder = new Border
+    {
+        Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
+        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+        BorderThickness = new Thickness(2),
+        CornerRadius = new CornerRadius(2),
+        Padding = new Thickness(5),
+        Margin = new Thickness(5)
+    };
+    Grid.SetColumn(formBuilderBorder, 0);
+    
+    var formBuilderStack = new StackPanel 
+    { 
+        Margin = new Thickness(5), 
+        Spacing = 5 
+    };
+    
+    // Title bar with X button
+    var titleBar = new Border
+    {
+        Background = Brushes.Transparent,
+        Padding = new Thickness(5, 3, 5, 3),
+        Margin = new Thickness(0, 0, 0, 10)
+    };
+    
+    var titleGrid = new Grid
+    {
+        ColumnDefinitions = new ColumnDefinitions("*,Auto")
+    };
+    
+    var title = new TextBlock
+    {
+        Text = "FormBuilder & Properties",
+        FontSize = 17,
+        FontWeight = FontWeight.Bold,
+        Foreground = new SolidColorBrush(Color.Parse("#424242")),
+        VerticalAlignment = VerticalAlignment.Center
+    };
+    
+    var closeBtn = new Button
+    {
+        Content = "✕",
+        Width = 20,
+        Height = 20,
+        FontSize = 14,
+        FontWeight = FontWeight.Bold,
+        Padding = new Thickness(0, -2, 0, 0),
+        Background = Brushes.Transparent,
+        Foreground = new SolidColorBrush(Color.Parse("#424242")),
+        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+        BorderThickness = new Thickness(2),
+        CornerRadius = new CornerRadius(2),
+        Cursor = new Cursor(StandardCursorType.Hand)
+    };
+    
+    closeBtn.Click += (s, e) => formBuilderBorder.IsVisible = false;
+    
+    Grid.SetColumn(title, 0);
+    Grid.SetColumn(closeBtn, 1);
+    titleGrid.Children.Add(title);
+    titleGrid.Children.Add(closeBtn);
+    titleBar.Child = titleGrid;
+    formBuilderStack.Children.Add(titleBar);
+    
+    // Control selector
+    var selectorRow = new StackPanel 
+    { 
+        Orientation = Orientation.Horizontal, 
+        Spacing = 5,
+        Margin = new Thickness(0, 10, 0, 10)
+    };
+    
+    var controlSelector = new TinyCombo();
+    controlSelector.Items.Add("Button");
+    controlSelector.Items.Add("TextBox");
+    controlSelector.Items.Add("TextBlock");
+    controlSelector.Items.Add("CheckBox");
+    controlSelector.Items.Add("ComboBox");
+    controlSelector.Items.Add("ListBox");
+    controlSelector.Items.Add("RadioButton");
+    controlSelector.Items.Add("StackPanel");
+    controlSelector.Items.Add("Grid");
+    controlSelector.Items.Add("Border");
+    controlSelector.Items.Add("─────────");
+    controlSelector.Items.Add("MainWindow");
+    controlSelector.Text = "Button";
+    
+    string selectedControlType = "Button";
+    controlSelector.SelectionChanged += async (s, selected) =>
+    {
+        if (selected?.ToString() == "MainWindow")
         {
-            Background = Brushes.Transparent,
-            Padding = new Thickness(5, 3, 5, 3)
-        };
-        
-        var titleGrid = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto")
-        };
-        
-        var title = new TextBlock
-        {
-            Text = "FormBuilder & Properties",
-            FontSize = 17,
-            FontWeight = FontWeight.Bold,
-            Foreground = new SolidColorBrush(Color.Parse("#424242")),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        
-        var closeBtn = new Button
-        {
-            Content = "✕",
-            Width = 20,
-            Height = 20,
-            FontSize = 14,
-            FontWeight = FontWeight.Bold,
-            Padding = new Thickness(0, -2, 0, 0),
-            Background = Brushes.Transparent,
-            Foreground = new SolidColorBrush(Color.Parse("#424242")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-            BorderThickness = new Thickness(2),
-            CornerRadius = new CornerRadius(2),
-            Cursor = new Cursor(StandardCursorType.Hand)
-        };
-        
-        closeBtn.Click += (s, e) => formBuilderBorder.IsVisible = false;
-        
-        Grid.SetColumn(title, 0);
-        Grid.SetColumn(closeBtn, 1);
-        titleGrid.Children.Add(title);
-        titleGrid.Children.Add(closeBtn);
-        titleBar.Child = titleGrid;
-        formBuilderStack.Children.Add(titleBar);
-        
-        // Control selector
-        var selectorRow = new StackPanel 
-        { 
-            Orientation = Orientation.Horizontal, 
-            Spacing = 5,
-            Margin = new Thickness(0, 10, 0, 10)
-        };
-        
-        var controlSelector = new TinyCombo();
-        controlSelector.Items.Add("Button");
-        controlSelector.Items.Add("TextBox");
-        controlSelector.Items.Add("TextBlock");
-        controlSelector.Items.Add("CheckBox");
-        controlSelector.Items.Add("ComboBox");
-        controlSelector.Items.Add("ListBox");
-        controlSelector.Items.Add("RadioButton");
-        controlSelector.Items.Add("StackPanel");
-        controlSelector.Items.Add("Grid");
-        controlSelector.Items.Add("Border");
-        controlSelector.Items.Add("─────────");
-        controlSelector.Items.Add("MainWindow");
-        controlSelector.Text = "Button";
-        
-        string selectedControlType = "Button";
-        controlSelector.SelectionChanged += async (s, selected) =>
-        {
-            if (selected?.ToString() == "MainWindow")
+            var warningStack = new StackPanel
             {
-                var warningStack = new StackPanel
+                Spacing = 15,
+                Margin = new Thickness(20),
+                Children =
                 {
-                    Spacing = 15,
-                    Margin = new Thickness(20),
-                    Children =
-                    {
-                        new TextBlock 
-                        { 
-                            Text = "MainWindow can only be created once per application.",
-                            TextWrapping = TextWrapping.Wrap,
-                            FontSize = 13
-                        },
-                        new Button 
-                        { 
-                            Content = "OK",
-                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                            Width = 80,
-                            Background = Brushes.White,
-                            BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-                            BorderThickness = new Thickness(2)
-                        }
+                    new TextBlock 
+                    { 
+                        Text = "MainWindow can only be created once per application.",
+                        TextWrapping = TextWrapping.Wrap,
+                        FontSize = 13
+                    },
+                    new Button 
+                    { 
+                        Content = "OK",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Width = 80,
+                        Background = Brushes.White,
+                        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+                        BorderThickness = new Thickness(2)
                     }
-                };
-                
-                var warning = new Window
-                {
-                    Title = "Cannot Add MainWindow",
-                    Width = 400,
-                    Height = 150,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Content = warningStack
-                };
-                
-                ((Button)warningStack.Children[1]).Click += (s2, e2) => warning.Close();
-                await warning.ShowDialog(window);
-                
-                controlSelector.Text = "";
-                return;
-            }
+                }
+            };
             
-            selectedControlType = selected?.ToString() ?? "Button";
-        };
+            var warning = new Window
+            {
+                Title = "Cannot Add MainWindow",
+                Width = 400,
+                Height = 150,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = warningStack
+            };
+            
+            ((Button)warningStack.Children[1]).Click += (s2, e2) => warning.Close();
+            await warning.ShowDialog(window);
+            
+            controlSelector.Text = "";
+            return;
+        }
         
-        selectorRow.Children.Add(controlSelector);
-        
-        var addBtn = new Button
-        {
-            Content = "Add",
-            Width = 70,
-            Height = 28,
-            FontSize = 13,
-            FontWeight = FontWeight.Bold,
-            Background = Brushes.White,
-            Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-            BorderThickness = new Thickness(2),
-            CornerRadius = new CornerRadius(3),
-            Cursor = new Cursor(StandardCursorType.Hand)
-        };
-        
-        addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
-        
-        selectorRow.Children.Add(addBtn);
-        formBuilderStack.Children.Add(selectorRow);
-        
-        // Properties panel (scrollable)
-        var propsScroll = new ScrollViewer
-        {
-            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-            Padding = new Thickness(5)
-        };
-        
-        var propsStack = new StackPanel { Spacing = 5 };
-        propsScroll.Content = propsStack;
-        formBuilderStack.Children.Add(propsScroll);
-        
-        propertiesPanel = new PropertiesPanel(propsStack);
-        propertiesPanel.PanelCloseRequested += (s, e) => 
-        {
-            formBuilderBorder.IsVisible = false;
-        };
-        
-        formBuilderBorder.Child = formBuilderStack;
-        workspace.Children.Add(formBuilderBorder);
+        selectedControlType = selected?.ToString() ?? "Button";
+    };
+    
+    selectorRow.Children.Add(controlSelector);
+    
+    var addBtn = new Button
+    {
+        Content = "Add",
+        Width = 70,
+        Height = 28,
+        FontSize = 13,
+        FontWeight = FontWeight.Bold,
+        Background = Brushes.White,
+        Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+        BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+        BorderThickness = new Thickness(2),
+        CornerRadius = new CornerRadius(3),
+        Cursor = new Cursor(StandardCursorType.Hand)
+    };
+    
+    addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
+    
+    selectorRow.Children.Add(addBtn);
+    formBuilderStack.Children.Add(selectorRow);
+    
+    // Properties panel (scrollable)
+    var propsScroll = new ScrollViewer
+    {
+        VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+        Padding = new Thickness(5)
+    };
+    
+    var propsStack = new StackPanel { Spacing = 5 };
+    propsScroll.Content = propsStack;
+    formBuilderStack.Children.Add(propsScroll);
+    
+    propertiesPanel = new PropertiesPanel(propsStack);
+    propertiesPanel.PanelCloseRequested += (s, e) => 
+    {
+        formBuilderBorder.IsVisible = false;
+    };
+    
+    formBuilderBorder.Child = formBuilderStack;
+    workspace.Children.Add(formBuilderBorder);
 
-        // ========================================
-        // COLUMN 1: CANVAS WITH OVERLAY
-        // ========================================
-        var canvasScroll = new ScrollViewer
-        {
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-        };
-        Grid.SetColumn(canvasScroll, 1);
-        
-        designCanvas = new Canvas
-        {
-            Width = 4000,
-            Height = 4000,
-            Background = new SolidColorBrush(Color.Parse("#f5f5f5"))
-        };
-        
-        // 800x600 centered overlay
-        designOverlay = new Rectangle
-        {
-            Width = 800,
-            Height = 600,
-            Fill = new SolidColorBrush(Color.FromArgb(30, 102, 187, 106)),
-            Stroke = new SolidColorBrush(Color.Parse("#66bb6a")),
-            StrokeThickness = 2,
-            IsHitTestVisible = false
-        };
-        
-        // Center overlay: (4000-800)/2 = 1600, (4000-600)/2 = 1700
-        Canvas.SetLeft(designOverlay, 1600);
-        Canvas.SetTop(designOverlay, 1700);
-        designCanvas.Children.Add(designOverlay);
-        
-        // Selection border
-        selectionBorder = new Rectangle
-        {
-            Stroke = Brushes.Blue,
-            StrokeThickness = 2,
-            Fill = Brushes.Transparent,
-            IsHitTestVisible = false,
-            IsVisible = false
-        };
-        designCanvas.Children.Add(selectionBorder);
-        
-        canvasScroll.Content = designCanvas;
-        workspace.Children.Add(canvasScroll);
-        
-        // Set window content
-        window.Content = workspace;
-        
-        // ========================================
-        // LOAD CONTROLS
-        // ========================================
-        LoadVmlControls(vmlPath);
-        LoadPropertyStoreControls();
-        
-        Console.WriteLine("[UI] Designer ready!");
-    }
+    // ========================================
+    // COLUMN 1: CANVAS WITH OVERLAY
+    // ========================================
+    var canvasScroll = new ScrollViewer
+    {
+        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+        VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+    };
+    Grid.SetColumn(canvasScroll, 1);
+    
+    designCanvas = new Canvas
+    {
+        Width = 4000,
+        Height = 4000,
+        Background = new SolidColorBrush(Color.Parse("#f5f5f5"))
+    };
+    
+    // 800x600 centered overlay, 100px from top
+    designOverlay = new Rectangle
+    {
+        Width = 800,
+        Height = 600,
+        Fill = new SolidColorBrush(Color.FromArgb(30, 102, 187, 106)),
+        Stroke = new SolidColorBrush(Color.Parse("#66bb6a")),
+        StrokeThickness = 2,
+        IsHitTestVisible = false
+    };
+    
+    // Center horizontally in 4000px canvas: (4000-800)/2 = 1600
+    Canvas.SetLeft(designOverlay, 1600);
+    Canvas.SetTop(designOverlay, 100);  // 100px from top
+    designCanvas.Children.Add(designOverlay);
+    
+    // Selection border
+    selectionBorder = new Rectangle
+    {
+        Stroke = Brushes.Blue,
+        StrokeThickness = 2,
+        Fill = Brushes.Transparent,
+        IsHitTestVisible = false,
+        IsVisible = false
+    };
+    designCanvas.Children.Add(selectionBorder);
+    
+    canvasScroll.Content = designCanvas;
+    workspace.Children.Add(canvasScroll);
+    
+    mainGrid.Children.Add(workspace);
+
+    // ========================================
+    // ROW 2: STATUS BAR
+    // ========================================
+    var statusBar = new Border
+    {
+        Background = new SolidColorBrush(Color.Parse("#f0f0f0")),
+        BorderBrush = new SolidColorBrush(Color.Parse("#ccc")),
+        BorderThickness = new Thickness(0, 1, 0, 0),
+        Height = 25
+    };
+    
+    statusText = new TextBlock
+    {
+        Text = "Ready",
+        VerticalAlignment = VerticalAlignment.Center,
+        Margin = new Thickness(10, 0, 0, 0),
+        FontSize = 11
+    };
+    
+    statusBar.Child = statusText;
+    Grid.SetRow(statusBar, 2);
+    mainGrid.Children.Add(statusBar);
+    
+    // Set window content
+    window.Content = mainGrid;
+    
+    // ========================================
+    // LOAD CONTROLS
+    // ========================================
+    LoadVmlControls(vmlPath);
+    LoadPropertyStoreControls();
+    
+    Console.WriteLine("[UI] Designer ready!");
+}
+
+// ========================================
+// UPDATE STATUS BAR
+// ========================================
+private static void UpdateStatusBar()
+{
+    if (statusText == null) return;
+    
+    var controlName = selectedControl?.Name ?? "None";
+    statusText.Text = $"Selected: {controlName}";
+}
 
     // ========================================
     // LOAD VML CONTROLS
@@ -531,6 +601,7 @@ public class DesignerWindow
         selectedControl = control;
         propertiesPanel?.ShowPropertiesFor(control);
         UpdateSelectionBorder();
+        UpdateStatusBar(); 
     }
     
     private static void UpdateSelectionBorder()
