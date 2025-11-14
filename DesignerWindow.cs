@@ -68,7 +68,7 @@ public class DesignerWindow
         }
         
         // Find key controls by name in tree
-        var mainGrid = FindControlInTree<Grid>(root, "MainGrid");
+        var mainGrid = root as Grid; 
         var workspace = FindControlInTree<Grid>(root, "Workspace");
         var formBuilderStack = FindControlInTree<StackPanel>(root, "FormBuilderStack");
         var selectorRow = FindControlInTree<StackPanel>(root, "SelectorRow");
