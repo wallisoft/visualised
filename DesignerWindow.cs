@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -22,9 +21,11 @@ public class DesignerWindow
     private static Canvas? designCanvas;
     private static Control? selectedControl;
     private static Rectangle? selectionBorder;
-    private static PropertiesPanel? propertiesPanel;
-    private static Dictionary<string, int> controlCounters = new();
     private static Rectangle? designOverlay;
+    private static PropertiesPanel? propertiesPanel;
+    private static TextBlock? statusText;
+    private static Border? formBuilderBorder;
+    private static Dictionary<string, int> controlCounters = new();
     
     // Drag state
     private static bool isDragging = false;
@@ -42,392 +43,407 @@ public class DesignerWindow
     }
 
     // ========================================
-    // BUILD MAIN UI
+    // BUILD MAIN UI FROM VML
     // ========================================
-    // ========================================
-// BUILD MAIN UI
-// ========================================
-private static TextBlock? statusText;
-
-private static void BuildUI(MainWindow window, string vmlPath)
-{
-    // Main container with menu, workspace, status
-    var mainGrid = new Grid
+    private static void BuildUI(MainWindow window, string vmlPath)
     {
-        RowDefinitions = new RowDefinitions("Auto,*,Auto")
-    };
-
-    // ========================================
-    // ROW 0: MENU BAR (PLACEHOLDER)
-    // ========================================
-    var menuBar = new Border
-    {
-        Background = new SolidColorBrush(Color.Parse("#66bb6a")),
-        Height = 30,
-        Child = new TextBlock 
-        { 
-            Text = "  Menu (placeholder)", 
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = Brushes.White,
-            FontWeight = FontWeight.Bold
-        }
-    };
-    Grid.SetRow(menuBar, 0);
-    mainGrid.Children.Add(menuBar);
-
-    // ========================================
-    // ROW 1: WORKSPACE (3-COLUMN GRID)
-    // ========================================
-    var workspace = new Grid
-    {
-        ColumnDefinitions = new ColumnDefinitions("250,*,0")
-    };
-    Grid.SetRow(workspace, 1);
-
-    // ========================================
-    // COLUMN 0: FORMBUILDER PANEL
-    // ========================================
-    var formBuilderBorder = new Border
-    {
-        Background = new SolidColorBrush(Color.Parse("#e8f5e9")),
-        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-        BorderThickness = new Thickness(2),
-        CornerRadius = new CornerRadius(2),
-        Padding = new Thickness(5),
-        Margin = new Thickness(5)
-    };
-    Grid.SetColumn(formBuilderBorder, 0);
-    
-    var formBuilderStack = new StackPanel 
-    { 
-        Margin = new Thickness(5), 
-        Spacing = 5 
-    };
-    
-    // Title bar with X button
-    var titleBar = new Border
-    {
-        Background = Brushes.Transparent,
-        Padding = new Thickness(5, 3, 5, 3),
-        Margin = new Thickness(0, 0, 0, 10)
-    };
-    
-    var titleGrid = new Grid
-    {
-        ColumnDefinitions = new ColumnDefinitions("*,Auto")
-    };
-    
-    var title = new TextBlock
-    {
-        Text = "FormBuilder",
-        FontSize = 17,
-        FontWeight = FontWeight.Bold,
-        Foreground = new SolidColorBrush(Color.Parse("#424242")),
-        VerticalAlignment = VerticalAlignment.Center
-    };
-    
-    var closeBtn = new Button
-    {
-        Content = "✕",
-        Width = 20,
-        Height = 20,
-        FontSize = 14,
-        FontWeight = FontWeight.Bold,
-        Padding = new Thickness(0, -2, 0, 0),
-        Background = Brushes.Transparent,
-        Foreground = new SolidColorBrush(Color.Parse("#424242")),
-        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-        BorderThickness = new Thickness(2),
-        CornerRadius = new CornerRadius(2),
-        Cursor = new Cursor(StandardCursorType.Hand)
-    };
-    
-    closeBtn.Click += (s, e) => formBuilderBorder.IsVisible = false;
-    
-    Grid.SetColumn(title, 0);
-    Grid.SetColumn(closeBtn, 1);
-    titleGrid.Children.Add(title);
-    titleGrid.Children.Add(closeBtn);
-    titleBar.Child = titleGrid;
-    formBuilderStack.Children.Add(titleBar);
-    
-    // Control selector
-    var selectorRow = new StackPanel 
-    { 
-        Orientation = Orientation.Horizontal, 
-        Spacing = 5,
-        Margin = new Thickness(0, 10, 0, 10)
-    };
-    
-    var controlSelector = new TinyCombo();
-    controlSelector.Items.Add("Button");
-    controlSelector.Items.Add("TextBox");
-    controlSelector.Items.Add("TextBlock");
-    controlSelector.Items.Add("CheckBox");
-    controlSelector.Items.Add("ComboBox");
-    controlSelector.Items.Add("ListBox");
-    controlSelector.Items.Add("RadioButton");
-    controlSelector.Items.Add("StackPanel");
-    controlSelector.Items.Add("Grid");
-    controlSelector.Items.Add("Border");
-    controlSelector.Items.Add("─────────");
-    controlSelector.Items.Add("MainWindow");
-    controlSelector.Text = "Button";
-    
-    string selectedControlType = "Button";
-    controlSelector.SelectionChanged += async (s, selected) =>
-    {
-        if (selected?.ToString() == "MainWindow")
+        // Load designer UI from VML
+        Console.WriteLine($"[VML] Loading designer from {vmlPath}");
+        var dbPath = PropertyStore.GetDbPath();
+        var root = LoadControlTreeFromDatabase(dbPath);
+        
+        // Find key controls by name in tree
+        var mainGrid = FindControlInTree<Grid>(root, "MainGrid");
+        var workspace = FindControlInTree<Grid>(root, "Workspace");
+        var formBuilderStack = FindControlInTree<StackPanel>(root, "FormBuilderStack");
+        var selectorRow = FindControlInTree<StackPanel>(root, "SelectorRow");
+        var propertiesStack = FindControlInTree<StackPanel>(root, "propertiesStack");
+        statusText = FindControlInTree<TextBlock>(root, "statusText");
+        formBuilderBorder = FindControlInTree<Border>(root, "formBuilderBorder");
+        
+        // ========================================
+        // ADD CONTROL SELECTOR (Code-only)
+        // ========================================
+        if (selectorRow != null)
         {
-            var warningStack = new StackPanel
+            var controlSelector = new TinyCombo();
+            controlSelector.Items.Add("Button");
+            controlSelector.Items.Add("TextBox");
+            controlSelector.Items.Add("TextBlock");
+            controlSelector.Items.Add("CheckBox");
+            controlSelector.Items.Add("ComboBox");
+            controlSelector.Items.Add("ListBox");
+            controlSelector.Items.Add("RadioButton");
+            controlSelector.Items.Add("StackPanel");
+            controlSelector.Items.Add("Grid");
+            controlSelector.Items.Add("Border");
+            controlSelector.Items.Add("─────────");
+            controlSelector.Items.Add("MainWindow");
+            controlSelector.Text = "Button";
+            
+            string selectedControlType = "Button";
+            controlSelector.SelectionChanged += async (s, selected) =>
             {
-                Spacing = 15,
-                Margin = new Thickness(20),
-                Children =
+                if (selected?.ToString() == "MainWindow")
                 {
-                    new TextBlock 
-                    { 
-                        Text = "MainWindow can only be created once per application.",
-                        TextWrapping = TextWrapping.Wrap,
-                        FontSize = 13
-                    },
-                    new Button 
-                    { 
-                        Content = "OK",
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                        Width = 80,
-                        Background = Brushes.White,
-                        BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
-                        BorderThickness = new Thickness(2)
-                    }
+                    await ShowMainWindowWarning(window);
+                    controlSelector.Text = "";
+                    return;
                 }
+                selectedControlType = selected?.ToString() ?? "Button";
             };
             
-            var warning = new Window
+            var addBtn = new Button
             {
-                Title = "Cannot Add MainWindow",
-                Width = 400,
-                Height = 150,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Content = warningStack
+                Content = "Add",
+                Width = 70,
+                Height = 28,
+                FontSize = 13,
+                FontWeight = FontWeight.Bold,
+                Background = Brushes.White,
+                Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(3),
+                Cursor = new Cursor(StandardCursorType.Hand)
             };
             
-            ((Button)warningStack.Children[1]).Click += (s2, e2) => warning.Close();
-            await warning.ShowDialog(window);
+            addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
             
-            controlSelector.Text = "";
-            return;
+            selectorRow.Children.Add(controlSelector);
+            selectorRow.Children.Add(addBtn);
         }
         
-        selectedControlType = selected?.ToString() ?? "Button";
-    };
-    
-    selectorRow.Children.Add(controlSelector);
-    
-    var addBtn = new Button
-    {
-        Content = "Add",
-        Width = 70,
-        Height = 28,
-        FontSize = 13,
-        FontWeight = FontWeight.Bold,
-        Background = Brushes.White,
-        Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-        BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
-        BorderThickness = new Thickness(2),
-        CornerRadius = new CornerRadius(3),
-        Cursor = new Cursor(StandardCursorType.Hand)
-    };
-    
-    addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
-    
-    selectorRow.Children.Add(addBtn);
-    formBuilderStack.Children.Add(selectorRow);
-    
-    // Properties panel (scrollable)
-    var propsScroll = new ScrollViewer
-    {
-        VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-        Padding = new Thickness(5)
-    };
-    
-    var propsStack = new StackPanel { Spacing = 5 };
-    propsScroll.Content = propsStack;
-    formBuilderStack.Children.Add(propsScroll);
-    
-    propertiesPanel = new PropertiesPanel(propsStack);
-    propertiesPanel.PanelCloseRequested += (s, e) => 
-    {
-        formBuilderBorder.IsVisible = false;
-    };
-    
-    formBuilderBorder.Child = formBuilderStack;
-    workspace.Children.Add(formBuilderBorder);
+        // ========================================
+        // ADD CANVAS WITH OVERLAY (Code-only)
+        // ========================================
+        if (workspace != null)
+        {
+            var canvasScroll = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            };
+            Grid.SetColumn(canvasScroll, 1);
+            
+            designCanvas = new Canvas
+            {
+                Width = 4000,
+                Height = 4000,
+                Background = new SolidColorBrush(Color.Parse("#f5f5f5"))
+            };
+            
+            // 800x600 overlay centered in viewport
+            designOverlay = new Rectangle
+            {
+                Width = 800,
+                Height = 600,
+                Fill = new SolidColorBrush(Color.FromArgb(30, 102, 187, 106)),
+                Stroke = new SolidColorBrush(Color.Parse("#66bb6a")),
+                StrokeThickness = 2,
+                IsHitTestVisible = false
+            };
+            
+            Canvas.SetLeft(designOverlay, 150);
+            Canvas.SetTop(designOverlay, 100);
+            designCanvas.Children.Add(designOverlay);
+            
+            // Overlay label
+            var overlayLabel = new TextBlock
+            {
+                Text = "800x600 Design Area",
+                FontSize = 14,
+                FontWeight = FontWeight.Bold,
+                Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
+                Background = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
+                Padding = new Thickness(10, 5),
+                IsHitTestVisible = false
+            };
+            
+            Canvas.SetLeft(overlayLabel, 160);
+            Canvas.SetTop(overlayLabel, 110);
+            designCanvas.Children.Add(overlayLabel);
+            
+            // Selection border
+            selectionBorder = new Rectangle
+            {
+                Stroke = Brushes.Blue,
+                StrokeThickness = 2,
+                Fill = Brushes.Transparent,
+                IsHitTestVisible = false,
+                IsVisible = false
+            };
+            designCanvas.Children.Add(selectionBorder);
+            
+            canvasScroll.Content = designCanvas;
+            workspace.Children.Add(canvasScroll);
+        }
+        
+        // ========================================
+        // INITIALIZE PROPERTIES PANEL
+        // ========================================
+        if (propertiesStack != null)
+        {
+            propertiesPanel = new PropertiesPanel(propertiesStack);
+            propertiesPanel.PanelCloseRequested += (s, e) => 
+            {
+                if (formBuilderBorder != null)
+                    formBuilderBorder.IsVisible = false;
+            };
+        }
+        
+        // ========================================
+        // WIRE CLOSE BUTTON
+        // ========================================
+        var closeBtn = FindControlInTree<Button>(root, "closePanelBtn");
+        if (closeBtn != null)
+        {
+            closeBtn.Click += (s, e) => 
+            {
+                if (formBuilderBorder != null)
+                    formBuilderBorder.IsVisible = false;
+            };
+        }
+        
+        // Set window content
+        window.Content = mainGrid;
+        
+        // Load controls from PropertyStore
+        LoadPropertyStoreControls();
+        
+        Console.WriteLine("[UI] Designer ready!");
+
 
     // ========================================
-    // COLUMN 1: CANVAS WITH OVERLAY
+    // HELPER: FIND CONTROL BY NAME
     // ========================================
-    var canvasScroll = new ScrollViewer
-    {
-        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-        VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-    };
-    Grid.SetColumn(canvasScroll, 1);
-    
-    designCanvas = new Canvas
-    {
-        Width = 4000,
-        Height = 4000,
-        Background = new SolidColorBrush(Color.Parse("#f5f5f5"))
-    };
-    
-    // 800x600 centered overlay, 100px from top
-    designOverlay = new Rectangle
-    {
-        Width = 800,
-        Height = 600,
-        Fill = new SolidColorBrush(Color.FromArgb(30, 102, 187, 106)),
-        Stroke = new SolidColorBrush(Color.Parse("#66bb6a")),
-        StrokeThickness = 2,
-        IsHitTestVisible = false
-    };
-
-    Canvas.SetLeft(designOverlay, 150);  // Centered in 1100px viewport
-    Canvas.SetTop(designOverlay, 100);   // 100px from top
-    designCanvas.Children.Add(designOverlay);
-
-    // Add label to overlay
-    var overlayLabel = new TextBlock
-    {
-        Text = "800x600 Design Area",
-        FontSize = 14,
-        FontWeight = FontWeight.Bold,
-        Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
-        Background = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
-        Padding = new Thickness(10, 5),
-        IsHitTestVisible = false
-    };
-
-    Canvas.SetLeft(overlayLabel, 160);  // 10px inside overlay
-    Canvas.SetTop(overlayLabel, 110);   // 10px inside overlay
-    designCanvas.Children.Add(overlayLabel);
-    
-    // Selection border
-    selectionBorder = new Rectangle
-    {
-        Stroke = Brushes.Blue,
-        StrokeThickness = 2,
-        Fill = Brushes.Transparent,
-        IsHitTestVisible = false,
-        IsVisible = false
-    };
-    designCanvas.Children.Add(selectionBorder);
-    
-    canvasScroll.Content = designCanvas;
-    workspace.Children.Add(canvasScroll);
-    
-    mainGrid.Children.Add(workspace);
-
-    // ========================================
-    // ROW 2: STATUS BAR
-    // ========================================
-    var statusBar = new Border
-    {
-        Background = new SolidColorBrush(Color.Parse("#f0f0f0")),
-        BorderBrush = new SolidColorBrush(Color.Parse("#ccc")),
-        BorderThickness = new Thickness(0, 1, 0, 0),
-        Height = 25
-    };
-    
-    statusText = new TextBlock
-    {
-        Text = "Ready",
-        VerticalAlignment = VerticalAlignment.Center,
-        Margin = new Thickness(10, 0, 0, 0),
-        FontSize = 11
-    };
-    
-    statusBar.Child = statusText;
-    Grid.SetRow(statusBar, 2);
-    mainGrid.Children.Add(statusBar);
-    
     // Set window content
     window.Content = mainGrid;
-    
-    // ========================================
-    // LOAD CONTROLS
-    // ========================================
-    LoadVmlControls(vmlPath);
+
+    // Load controls from PropertyStore
     LoadPropertyStoreControls();
-    
+
     Console.WriteLine("[UI] Designer ready!");
-}
-
-// ========================================
-// UPDATE STATUS BAR
-// ========================================
-private static void UpdateStatusBar()
-{
-    if (statusText == null) return;
-    
-    var controlName = selectedControl?.Name ?? "None";
-    statusText.Text = $"Selected: {controlName}";
-}
+    }
 
     // ========================================
-    // LOAD VML CONTROLS
+    // HELPER: FIND CONTROL IN VISUAL TREE
     // ========================================
-    private static void LoadVmlControls(string vmlPath)
+    private static T? FindControlInTree<T>(Control? root, string name) where T : Control
     {
-        Console.WriteLine($"[VML] Loading from {vmlPath}");
-        var vmlControls = VmlLoader.Load(vmlPath);
-        
-        if (designCanvas == null) return;
-        
-        foreach (var vmlControl in vmlControls)
+        if (root == null) return null;
+        if (root is T match && root.Name == name) return match;
+
+        // Search children recursively
+        if (root is Panel panel)
         {
-            if (vmlControl.Type == "Window") continue;
-            
-            var (dummy, real) = CreateControlPair(vmlControl.Type, vmlControl.Name ?? vmlControl.Type);
-            if (dummy == null) continue;
-            
-            // Apply VML properties
-            if (vmlControl.Properties.TryGetValue("X", out var xStr) && double.TryParse(xStr, out var x))
-                Canvas.SetLeft(dummy, x);
-            
-            if (vmlControl.Properties.TryGetValue("Y", out var yStr) && double.TryParse(yStr, out var y))
-                Canvas.SetTop(dummy, y);
-            
-            if (vmlControl.Properties.TryGetValue("Width", out var wStr) && double.TryParse(wStr, out var width))
-                dummy.Width = width;
-            
-            if (vmlControl.Properties.TryGetValue("Height", out var hStr) && double.TryParse(hStr, out var height))
-                dummy.Height = height;
-            
-            // Apply other properties
-            foreach (var prop in vmlControl.Properties)
+            foreach (var child in panel.Children.OfType<Control>())
             {
-                if (prop.Key == "X" || prop.Key == "Y" || prop.Key == "Width" || prop.Key == "Height") continue;
-                
-                try
-                {
-                    var propInfo = real.GetType().GetProperty(prop.Key);
-                    if (propInfo != null && propInfo.CanWrite)
-                    {
-                        var value = Convert.ChangeType(prop.Value, propInfo.PropertyType);
-                        propInfo.SetValue(real, value);
-                    }
-                }
-                catch { }
+                var found = FindControlInTree<T>(child, name);
+                if (found != null) return found;
             }
-            
-            Canvas.SetLeft(real, Canvas.GetLeft(dummy));
-            Canvas.SetTop(real, Canvas.GetLeft(dummy));
-            
-            designCanvas.Children.Add(dummy);
-            designCanvas.Children.Add(real);
-            MakeDraggable(dummy);
         }
+        else if (root is ContentControl contentControl && contentControl.Content is Control childControl)
+        {
+            return FindControlInTree<T>(childControl, name);
+        }
+        else if (root is Decorator decorator && decorator.Child is Control decoratorChild)
+        {
+            return FindControlInTree<T>(decoratorChild, name);
+        }
+        else if (root is ScrollViewer scrollViewer && scrollViewer.Content is Control scrollChild)
+        {
+            return FindControlInTree<T>(scrollChild, name);
+        }
+
+        return null;
+    }
+
+    // ========================================
+    // LOAD CONTROL TREE FROM DATABASE
+    // ========================================
+    private static Control LoadControlTreeFromDatabase(string dbPath)
+    {
+        using var conn = new SqliteConnection($"Data Source={dbPath}");
+        conn.Open();
+
+        // Get root control
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT id, control_type, name FROM ui_tree WHERE is_root = 1 OR parent_id IS NULL LIMIT 1";
+        using var reader = cmd.ExecuteReader();
+
+        if (!reader.Read())
+            throw new Exception("No root control found in ui_tree");
+
+        var rootId = reader.GetInt32(0);
+        var rootType = reader.GetString(1);
+        var rootName = reader.IsDBNull(2) ? null : reader.GetString(2);
+        reader.Close();
+
+        Console.WriteLine($"[DB] Loading root: {rootType} ({rootName})");
+
+        // Build tree recursively
+        return BuildControlFromDatabase(conn, rootId, rootType, rootName);
+    }
+
+    // ========================================
+// BUILD CONTROL RECURSIVELY FROM DATABASE
+// ========================================
+private static Control BuildControlFromDatabase(SqliteConnection conn, int id, string controlType, string? name)
+{
+    // Create control
+    Control control = controlType switch
+    {
+        "Window" => new Window(),
+        "Grid" => new Grid(),
+        "Border" => new Border(),
+        "StackPanel" => new StackPanel(),
+        "DockPanel" => new DockPanel(),
+        "TextBlock" => new TextBlock(),
+        "Button" => new Button(),
+        "TextBox" => new TextBox(),
+        "ScrollViewer" => new ScrollViewer(),
+        "Panel" => new Panel(),
+        _ => throw new Exception($"Unknown control type: {controlType}")
+    };
+
+    if (name != null) control.Name = name;
+
+    Console.WriteLine($"[DB] Building {controlType} '{name ?? "unnamed"}'");
+
+    // Load properties
+    using var propCmd = conn.CreateCommand();
+    propCmd.CommandText = "SELECT property_name, property_value FROM ui_properties WHERE ui_tree_id = @id";
+    propCmd.Parameters.AddWithValue("@id", id);
+
+    using var propReader = propCmd.ExecuteReader();
+    while (propReader.Read())
+    {
+        var propName = propReader.GetString(0);
+        var propValue = propReader.GetString(1);
+        ApplyPropertyFromDatabase(control, propName, propValue);
+    }
+    propReader.Close();
+
+    // Load children
+    using var childCmd = conn.CreateCommand();
+    childCmd.CommandText = "SELECT id, control_type, name FROM ui_tree WHERE parent_id = @id ORDER BY display_order";
+    childCmd.Parameters.AddWithValue("@id", id);
+
+    using var childReader = childCmd.ExecuteReader();
+    var children = new List<(int id, string type, string? name)>();
+
+    while (childReader.Read())
+    {
+        children.Add((
+            childReader.GetInt32(0),
+            childReader.GetString(1),
+            childReader.IsDBNull(2) ? null : childReader.GetString(2)
+        ));
+    }
+    childReader.Close();
+
+    // Recursively build children
+    foreach (var (childId, childType, childName) in children)
+    {
+        var child = BuildControlFromDatabase(conn, childId, childType, childName);
+
+        if (control is Panel panel)
+            panel.Children.Add(child);
+        else if (control is ContentControl content)
+            content.Content = child;
+        else if (control is Decorator decorator)
+            decorator.Child = child;
+        else if (control is ScrollViewer scroll)
+            scroll.Content = child;
+    }
+
+    return control;
+}
+
+    // ========================================
+    // APPLY PROPERTY FROM DATABASE
+    // ========================================
+    private static void ApplyPropertyFromDatabase(Control control, string propertyName, string propertyValue)
+    {
+        try
+        {
+            var prop = control.GetType().GetProperty(propertyName);
+            if (prop == null || !prop.CanWrite) return;
+
+            // Type conversion
+            object? value = prop.PropertyType.Name switch
+            {
+                "Double" => double.Parse(propertyValue),
+                "Int32" => int.Parse(propertyValue),
+                "Boolean" => bool.Parse(propertyValue),
+                "String" => propertyValue,
+                "IBrush" => Brush.Parse(propertyValue),
+                "Thickness" => Thickness.Parse(propertyValue),
+                "CornerRadius" => CornerRadius.Parse(propertyValue),
+                "RowDefinitions" => RowDefinitions.Parse(propertyValue),
+                "ColumnDefinitions" => ColumnDefinitions.Parse(propertyValue),
+                "HorizontalAlignment" => Enum.Parse(typeof(HorizontalAlignment), propertyValue),
+                "VerticalAlignment" => Enum.Parse(typeof(VerticalAlignment), propertyValue),
+                "FontWeight" => propertyValue.ToLower() switch
+                {
+                    "bold" => FontWeight.Bold,
+                    "normal" => FontWeight.Normal,
+                    "light" => FontWeight.Light,
+                    _ => FontWeight.Normal
+                },
+                _ => Convert.ChangeType(propertyValue, prop.PropertyType)
+            };
+
+            prop.SetValue(control, value);
+            Console.WriteLine($"[DB]   Set {propertyName} = {propertyValue}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DB]   Failed to apply {propertyName}={propertyValue}: {ex.Message}");
+        }
+    }
+
+    // ========================================
+    // SHOW MAINWINDOW WARNING
+    // ========================================
+    private static async System.Threading.Tasks.Task ShowMainWindowWarning(Window owner)
+    {
+        var warningStack = new StackPanel
+        {
+            Spacing = 15,
+            Margin = new Thickness(20),
+            Children =
+            {
+                new TextBlock 
+                { 
+                    Text = "MainWindow can only be created once per application.",
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 13
+                },
+                new Button 
+                { 
+                    Content = "OK",
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                    Width = 80,
+                    Background = Brushes.White,
+                    BorderBrush = new SolidColorBrush(Color.Parse("#66bb6a")),
+                    BorderThickness = new Thickness(2)
+                }
+            }
+        };
+        
+        var warning = new Window
+        {
+            Title = "Cannot Add MainWindow",
+            Width = 400,
+            Height = 150,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = warningStack
+        };
+        
+        ((Button)warningStack.Children[1]).Click += (s2, e2) => warning.Close();
+        await warning.ShowDialog(owner);
     }
 
     // ========================================
@@ -515,7 +531,7 @@ private static void UpdateStatusBar()
     // ========================================
     // CREATE CONTROL PAIR
     // ========================================
-    private static (Control dummy, Control real) CreateControlPair(string controlType, string name)
+    private static (Control? dummy, Control? real) CreateControlPair(string controlType, string name)
     {
         Control? dummy = controlType switch 
         {
@@ -549,6 +565,7 @@ private static void UpdateStatusBar()
         
         if (dummy != null && real != null)
         {
+            dummy.Name = name;
             real.Name = name;
             real.IsVisible = false;
             real.IsEnabled = false;
@@ -556,7 +573,7 @@ private static void UpdateStatusBar()
             dummy.Tag = real;
         }
         
-        return (dummy!, real!);
+        return (dummy, real);
     }
 
     // ========================================
@@ -574,9 +591,9 @@ private static void UpdateStatusBar()
         var controlName = $"{controlType}_{controlCounters[controlType]}";
         
         var (dummy, real) = CreateControlPair(controlType, controlName);
-        if (dummy == null) return;
+        if (dummy == null || real == null) return;
         
-        // Stack at 200,200 with offset
+        // Stack at 200,200 with offset to avoid overlap
         var baseX = 200.0;
         var baseY = 200.0;
         var offset = 0;
@@ -587,7 +604,9 @@ private static void UpdateStatusBar()
             var testY = baseY + (offset * 20);
             
             var occupied = designCanvas.Children.OfType<Control>()
-                .Any(c => Math.Abs(Canvas.GetLeft(c) - testX) < 5 && Math.Abs(Canvas.GetTop(c) - testY) < 5);
+                .Any(c => c != designOverlay && c != selectionBorder && 
+                     Math.Abs(Canvas.GetLeft(c) - testX) < 5 && 
+                     Math.Abs(Canvas.GetTop(c) - testY) < 5);
             
             if (!occupied)
             {
@@ -602,9 +621,11 @@ private static void UpdateStatusBar()
                 SelectControl(dummy);
                 PropertyStore.SyncControl(real);
                 
+                Console.WriteLine($"[DESIGNER] Added {controlType} '{controlName}' at ({testX},{testY})");
                 return;
             }
             offset++;
+            if (offset > 20) break; // Safety limit
         }
     }
 
@@ -616,7 +637,7 @@ private static void UpdateStatusBar()
         selectedControl = control;
         propertiesPanel?.ShowPropertiesFor(control);
         UpdateSelectionBorder();
-        UpdateStatusBar(); 
+        UpdateStatusBar();
     }
     
     private static void UpdateSelectionBorder()
@@ -643,6 +664,13 @@ private static void UpdateStatusBar()
         designCanvas.Children.Add(selectedControl);
         designCanvas.Children.Remove(selectionBorder);
         designCanvas.Children.Add(selectionBorder);
+    }
+    
+    private static void UpdateStatusBar()
+    {
+        if (statusText == null) return;
+        var controlName = selectedControl?.Name ?? "None";
+        statusText.Text = $"Selected: {controlName}";
     }
 
     // ========================================
@@ -722,13 +750,13 @@ private static void UpdateStatusBar()
         {
             if (isDragging || resizeEdge != null)
             {
-                // Save position
+                // Save position/size to PropertyStore
                 if (control.Tag is Control real)
                 {
-                    PropertyStore.Set(control.Name, "X", Canvas.GetLeft(control).ToString());
-                    PropertyStore.Set(control.Name, "Y", Canvas.GetTop(control).ToString());
-                    PropertyStore.Set(control.Name, "Width", control.Bounds.Width.ToString());
-                    PropertyStore.Set(control.Name, "Height", control.Bounds.Height.ToString());
+                    PropertyStore.Set(real.Name!, "X", Canvas.GetLeft(control).ToString());
+                    PropertyStore.Set(real.Name!, "Y", Canvas.GetTop(control).ToString());
+                    PropertyStore.Set(real.Name!, "Width", control.Bounds.Width.ToString());
+                    PropertyStore.Set(real.Name!, "Height", control.Bounds.Height.ToString());
                 }
                 
                 isDragging = false;
@@ -817,7 +845,7 @@ private static void UpdateStatusBar()
                 break;
         }
         
-        // Sync to real
+        // Sync to real control
         if (control.Tag is Control real)
         {
             real.Width = control.Width;

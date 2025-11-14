@@ -1,8 +1,121 @@
-# Designer Window Configuration
-Title=Visualised Form Editor
-Width=1310
-Height=766
-MenuTemplate=VisualisedFormEditor
-ContextMenuTemplate=VisualisedEditor
+# Designer Window - The IDE Defining Itself
 
+@Window Designer
+Title=Visualised Form Editor
+Width=1350
+Height=750
+
+@Grid MainGrid
+Parent=Designer
+RowDefinitions=Auto,*,Auto
+
+# ==========================================
+# ROW 0: MENU BAR
+# ==========================================
+
+@Border MenuBar
+Parent=MainGrid
+Grid.Row=0
+Background=#66bb6a
+Height=30
+
+@TextBlock MenuText
+Parent=MenuBar
+Text=  Menu (placeholder)
+VerticalAlignment=Center
+Foreground=White
+FontWeight=Bold
+
+# ==========================================
+# ROW 1: WORKSPACE
+# ==========================================
+
+@Grid Workspace
+Parent=MainGrid
+Grid.Row=1
+ColumnDefinitions=250,*,0
+Background=#e0e0e0
+
+# FORMBUILDER PANEL
+
+@Border formBuilderBorder
+Parent=Workspace
+Grid.Column=0
+Background=#e8f5e9
+BorderBrush=#66bb6a
+BorderThickness=2
+CornerRadius=2
+Padding=20
+Margin=5
+
+@StackPanel FormBuilderStack
+Parent=formBuilderBorder
+Spacing=5
+
+@Border TitleBar
+Parent=FormBuilderStack
+Padding=5,3
+Margin=0,0,0,10
+
+@Grid TitleGrid
+Parent=TitleBar
+ColumnDefinitions=*,Auto
+
+@TextBlock FormTitle
+Parent=TitleGrid
+Grid.Column=0
+Text=FormBuilder
+FontSize=17
+FontWeight=Bold
+Foreground=#424242
+VerticalAlignment=Center
+
+@Button closePanelBtn
+Parent=TitleGrid
+Grid.Column=1
+Content=✕
+Width=20
+Height=20
+FontSize=14
+FontWeight=Bold
+Padding=0,-2,0,0
+Background=Transparent
+Foreground=#424242
+BorderBrush=#66bb6a
+BorderThickness=2
+CornerRadius=2
+
+@StackPanel SelectorRow
+Parent=FormBuilderStack
+Orientation=Horizontal
+Spacing=5
+Margin=0,10,0,10
+
+@ScrollViewer PropsScroll
+Parent=FormBuilderStack
+VerticalScrollBarVisibility=Visible
+Padding=5
+
+@StackPanel propertiesStack
+Parent=PropsScroll
+Spacing=5
+
+# ==========================================
+# ROW 2: STATUS BAR
+# ==========================================
+
+@Border StatusBar
+Parent=MainGrid
+Grid.Row=2
+Background=#f0f0f0
+BorderBrush=#cccccc
+BorderThickness=0,1,0,0
+Height=25
+
+@TextBlock statusText
+Parent=StatusBar
+Text=Ready
+VerticalAlignment=Center
+Margin=10,0,0,0
+FontSize=11
 
