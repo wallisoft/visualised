@@ -8,7 +8,7 @@ namespace VB;
 
 public static class PropertyStore
 {
-    private static string GetDbPath()
+    public static string GetDbPath()
     {
         // 1. Check for local database (dev/testing)
         var localDb = Path.Combine(Directory.GetCurrentDirectory(), "visualised.db");

@@ -712,10 +712,90 @@ designCanvas = new Canvas
         
         UpdateStatusBar(window);
         Console.WriteLine("[UI] Designer ready with drag-drop!");
-    }
-    
+
+        // Load designer-created controls from properties table
+        Console.WriteLine("[LOAD] Starting properties table scan...");
+        var dbPath = PropertyStore.GetDbPath();  // Use PropertyStore's logic, not hardcoded!
+        Console.WriteLine($"[LOAD] Database path: {dbPath}");
+
+        if (designCanvas != null)
+        {
+            using (var conn = new SqliteConnection($"Data Source={dbPath}"))
+            {
+                conn.Open();
+                Console.WriteLine("[LOAD] Database opened successfully");
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT DISTINCT control_name FROM properties WHERE substr(control_name, 1, 1) != '_'";
+                using var reader = cmd.ExecuteReader();
+
+                var savedControls = new List<string>();
+                while (reader.Read())
+                {
+                    var name = reader.GetString(0);
+                    // Skip if already loaded from VML
+                    if (designCanvas.Children.OfType<Control>().Any(c => c.Name == name))
+                        continue;
+                    savedControls.Add(name);
+                }
+
+                reader.Close();
+                Console.WriteLine($"[LOAD] Found {savedControls.Count} controls to restore");
+
+                foreach (var controlName in savedControls)
+                {
+                    Console.WriteLine($"[LOAD] Restoring: {controlName}");
+
+                    var controlType = controlName.Contains('_') ? controlName.Split('_')[0] : "Button";
+                    var (dummy, real) = CreateControlPair(controlType, controlName);
+                    if (dummy == null) continue;
+
+                    var savedProps = PropertyStore.GetControlProperties(controlName);
+
+                    double x = 200, y = 200, w = 0, h = 0;
+
+                    foreach (var kvp in savedProps)
+                    {
+                        if (kvp.Value == null) continue;
+
+                        if (kvp.Key == "X") { double.TryParse(kvp.Value.ToString(), out x); continue; }
+                        if (kvp.Key == "Y") { double.TryParse(kvp.Value.ToString(), out y); continue; }
+                        if (kvp.Key == "Width") { double.TryParse(kvp.Value.ToString(), out w); continue; }
+                        if (kvp.Key == "Height") { double.TryParse(kvp.Value.ToString(), out h); continue; }
+
+                        try
+                        {
+                            var propInfo = real.GetType().GetProperty(kvp.Key);
+                            if (propInfo != null && propInfo.CanWrite)
+                            {
+                                var value = Convert.ChangeType(kvp.Value, propInfo.PropertyType);
+                                propInfo.SetValue(real, value);
+
+                                if (kvp.Key == "Content" || kvp.Key == "Text")
+                                    dummy.GetType().GetProperty(kvp.Key)?.SetValue(dummy, kvp.Value);
+                            }
+                        }
+                        catch { }
+                    }
+
+                    Canvas.SetLeft(dummy, x);
+                    Canvas.SetTop(dummy, y);
+                    Canvas.SetLeft(real, x);
+                    Canvas.SetTop(real, y);
+
+                    if (w > 0) { dummy.Width = w; real.Width = w; }
+                    if (h > 0) { dummy.Height = h; real.Height = h; }
+
+                    designCanvas.Children.Add(dummy);
+                    designCanvas.Children.Add(real);
+                    MakeDraggableWithCursors(dummy);
+                }
+            }
+        }
+        }
+            
         private static void StartToolboxDrag(string controlType, Point startPos)
-    {
+        {
         
         isDraggingFromToolbox = true;
         dragControlType = controlType;
