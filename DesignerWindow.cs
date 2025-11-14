@@ -291,11 +291,26 @@ private static void BuildUI(MainWindow window, string vmlPath)
         StrokeThickness = 2,
         IsHitTestVisible = false
     };
-    
-    // Center horizontally in 4000px canvas: (4000-800)/2 = 1600
-    Canvas.SetLeft(designOverlay, 1600);
-    Canvas.SetTop(designOverlay, 100);  // 100px from top
+
+    Canvas.SetLeft(designOverlay, 150);  // Centered in 1100px viewport
+    Canvas.SetTop(designOverlay, 100);   // 100px from top
     designCanvas.Children.Add(designOverlay);
+
+    // Add label to overlay
+    var overlayLabel = new TextBlock
+    {
+        Text = "800x600 Design Area",
+        FontSize = 14,
+        FontWeight = FontWeight.Bold,
+        Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
+        Background = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
+        Padding = new Thickness(10, 5),
+        IsHitTestVisible = false
+    };
+
+    Canvas.SetLeft(overlayLabel, 160);  // 10px inside overlay
+    Canvas.SetTop(overlayLabel, 110);   // 10px inside overlay
+    designCanvas.Children.Add(overlayLabel);
     
     // Selection border
     selectionBorder = new Rectangle
