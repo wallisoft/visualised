@@ -43,6 +43,11 @@ public partial class App : Application
                     
                     // Fallback to designer
                     var mainWindow = new MainWindow();
+
+                    #if DEBUG
+                    mainWindow.AttachDevTools();  // ADD THIS
+                    #endif
+
                     DesignerWindow.LoadAndApply(mainWindow, "vml/designer.vml");
                     desktop.MainWindow = mainWindow;
                 }
