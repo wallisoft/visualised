@@ -240,8 +240,12 @@ public class DesignerWindow
 
                     reader.Close();
 
+                    Console.WriteLine($"[LOAD] Found {savedControls.Count} controls to restore from properties table");
+
+
                     foreach (var controlName in savedControls)
                     {
+                            Console.WriteLine($"[LOAD] Attempting to restore: {controlName}");
                         // Infer type from name (Button_1 → Button)
                         var controlType = controlName.Contains('_') ? controlName.Split('_')[0] : "Button";
 
