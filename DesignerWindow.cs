@@ -80,7 +80,7 @@ private static void BuildUI(MainWindow window, string vmlPath)
     // ========================================
     var workspace = new Grid
     {
-        ColumnDefinitions = new ColumnDefinitions("220,*,0")
+        ColumnDefinitions = new ColumnDefinitions("320,*,0")
     };
     Grid.SetRow(workspace, 1);
 
@@ -119,7 +119,7 @@ private static void BuildUI(MainWindow window, string vmlPath)
     
     var title = new TextBlock
     {
-        Text = "FormBuilder & Properties",
+        Text = "FormBuilder",
         FontSize = 17,
         FontWeight = FontWeight.Bold,
         Foreground = new SolidColorBrush(Color.Parse("#424242")),
