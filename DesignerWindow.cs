@@ -53,9 +53,19 @@ public class DesignerWindow
     private static void BuildUI(MainWindow window, string vmlPath)
     {
         // Load designer UI from VML
-        Console.WriteLine($"[VML] Loading designer from {vmlPath}");
         var dbPath = PropertyStore.GetDbPath();
         var root = LoadControlTreeFromDatabase(dbPath);
+
+        // If root is a Window, apply its properties to our MainWindow
+        if (root is Window vmlWindow)
+        {
+            window.Width = vmlWindow.Width;
+            window.Height = vmlWindow.Height;
+            if (vmlWindow.Title != null) window.Title = vmlWindow.Title;
+
+            // Use the Window's content (should be MainGrid)
+            root = (vmlWindow.Content as Control) ?? root;
+        }
         
         // Find key controls by name in tree
         var mainGrid = FindControlInTree<Grid>(root, "MainGrid");
@@ -292,79 +302,79 @@ public class DesignerWindow
     }
 
     // ========================================
-// BUILD CONTROL RECURSIVELY FROM DATABASE
-// ========================================
-private static Control BuildControlFromDatabase(SqliteConnection conn, int id, string controlType, string? name)
-{
-    // Create control
-    Control control = controlType switch
+    // BUILD CONTROL RECURSIVELY FROM DATABASE
+    // ========================================
+    private static Control BuildControlFromDatabase(SqliteConnection conn, int id, string controlType, string? name)
     {
-        "Window" => new Window(),
-        "Grid" => new Grid(),
-        "Border" => new Border(),
-        "StackPanel" => new StackPanel(),
-        "DockPanel" => new DockPanel(),
-        "TextBlock" => new TextBlock(),
-        "Button" => new Button(),
-        "TextBox" => new TextBox(),
-        "ScrollViewer" => new ScrollViewer(),
-        "Panel" => new Panel(),
-        _ => throw new Exception($"Unknown control type: {controlType}")
-    };
+        // Create control
+        Control control = controlType switch
+        {
+            "Window" => new Window(),
+            "Grid" => new Grid(),
+            "Border" => new Border(),
+            "StackPanel" => new StackPanel(),
+            "DockPanel" => new DockPanel(),
+            "TextBlock" => new TextBlock(),
+            "Button" => new Button(),
+            "TextBox" => new TextBox(),
+            "ScrollViewer" => new ScrollViewer(),
+            "Panel" => new Panel(),
+            _ => throw new Exception($"Unknown control type: {controlType}")
+        };
 
-    if (name != null) control.Name = name;
+        if (name != null) control.Name = name;
 
-    Console.WriteLine($"[DB] Building {controlType} '{name ?? "unnamed"}'");
+        Console.WriteLine($"[DB] Building {controlType} '{name ?? "unnamed"}'");
 
-    // Load properties
-    using var propCmd = conn.CreateCommand();
-    propCmd.CommandText = "SELECT property_name, property_value FROM ui_properties WHERE ui_tree_id = @id";
-    propCmd.Parameters.AddWithValue("@id", id);
+        // Load properties
+        using var propCmd = conn.CreateCommand();
+        propCmd.CommandText = "SELECT property_name, property_value FROM ui_properties WHERE ui_tree_id = @id";
+        propCmd.Parameters.AddWithValue("@id", id);
 
-    using var propReader = propCmd.ExecuteReader();
-    while (propReader.Read())
-    {
-        var propName = propReader.GetString(0);
-        var propValue = propReader.GetString(1);
-        ApplyPropertyFromDatabase(control, propName, propValue);
+        using var propReader = propCmd.ExecuteReader();
+        while (propReader.Read())
+        {
+            var propName = propReader.GetString(0);
+            var propValue = propReader.GetString(1);
+            ApplyPropertyFromDatabase(control, propName, propValue);
+        }
+        propReader.Close();
+
+        // Load children
+        using var childCmd = conn.CreateCommand();
+        childCmd.CommandText = "SELECT id, control_type, name FROM ui_tree WHERE parent_id = @id ORDER BY display_order";
+        childCmd.Parameters.AddWithValue("@id", id);
+
+        using var childReader = childCmd.ExecuteReader();
+        var children = new List<(int id, string type, string? name)>();
+
+        while (childReader.Read())
+        {
+            children.Add((
+                childReader.GetInt32(0),
+                childReader.GetString(1),
+                childReader.IsDBNull(2) ? null : childReader.GetString(2)
+            ));
+        }
+        childReader.Close();
+
+        // Recursively build children
+        foreach (var (childId, childType, childName) in children)
+        {
+            var child = BuildControlFromDatabase(conn, childId, childType, childName);
+
+            if (control is Panel panel)
+                panel.Children.Add(child);
+            else if (control is ContentControl content)
+                content.Content = child;
+            else if (control is Decorator decorator)
+                decorator.Child = child;
+            else if (control is ScrollViewer scroll)
+                scroll.Content = child;
+        }
+
+        return control;
     }
-    propReader.Close();
-
-    // Load children
-    using var childCmd = conn.CreateCommand();
-    childCmd.CommandText = "SELECT id, control_type, name FROM ui_tree WHERE parent_id = @id ORDER BY display_order";
-    childCmd.Parameters.AddWithValue("@id", id);
-
-    using var childReader = childCmd.ExecuteReader();
-    var children = new List<(int id, string type, string? name)>();
-
-    while (childReader.Read())
-    {
-        children.Add((
-            childReader.GetInt32(0),
-            childReader.GetString(1),
-            childReader.IsDBNull(2) ? null : childReader.GetString(2)
-        ));
-    }
-    childReader.Close();
-
-    // Recursively build children
-    foreach (var (childId, childType, childName) in children)
-    {
-        var child = BuildControlFromDatabase(conn, childId, childType, childName);
-
-        if (control is Panel panel)
-            panel.Children.Add(child);
-        else if (control is ContentControl content)
-            content.Content = child;
-        else if (control is Decorator decorator)
-            decorator.Child = child;
-        else if (control is ScrollViewer scroll)
-            scroll.Content = child;
-    }
-
-    return control;
-}
 
     // ========================================
     // APPLY PROPERTY FROM DATABASE
@@ -375,7 +385,7 @@ private static Control BuildControlFromDatabase(SqliteConnection conn, int id, s
         {
             var prop = control.GetType().GetProperty(propertyName);
             if (prop == null || !prop.CanWrite) return;
-
+            
             // Type conversion
             object? value = prop.PropertyType.Name switch
             {
@@ -390,6 +400,8 @@ private static Control BuildControlFromDatabase(SqliteConnection conn, int id, s
                 "ColumnDefinitions" => ColumnDefinitions.Parse(propertyValue),
                 "HorizontalAlignment" => Enum.Parse(typeof(HorizontalAlignment), propertyValue),
                 "VerticalAlignment" => Enum.Parse(typeof(VerticalAlignment), propertyValue),
+                "Orientation" => Enum.Parse(typeof(Orientation), propertyValue),
+                "ScrollBarVisibility" => Enum.Parse(typeof(ScrollBarVisibility), propertyValue),
                 "FontWeight" => propertyValue.ToLower() switch
                 {
                     "bold" => FontWeight.Bold,
@@ -399,7 +411,7 @@ private static Control BuildControlFromDatabase(SqliteConnection conn, int id, s
                 },
                 _ => Convert.ChangeType(propertyValue, prop.PropertyType)
             };
-
+            
             prop.SetValue(control, value);
             Console.WriteLine($"[DB]   Set {propertyName} = {propertyValue}");
         }
