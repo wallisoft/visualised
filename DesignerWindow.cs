@@ -146,20 +146,20 @@ public class DesignerWindow
             };
 
             addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
-
-            controlSelector.SelectionChanged += async (s, selected) =>
+            controlSelector.SelectionChanged += async (s, e) =>  // Change 'selected' to 'e'
             {
-                if (selected?.ToString() == "MainWindow")
+                if (controlSelector.SelectedItem?.ToString() == "MainWindow")  // Use SelectedItem
                 {
                     await ShowMainWindowWarning(window);
-                    controlSelector.Text = "";
+                    controlSelector.SelectedIndex = 0;  // Reset to first item
                     return;
                 }
-                selectedControlType = selected?.ToString() ?? "Button";
+                selectedControlType = controlSelector.SelectedItem?.ToString() ?? "Button";  // Use SelectedItem
+                Console.WriteLine($"[SELECTOR] Changed to: {selectedControlType}");
             };
-            
             selectorRow.Children.Add(controlSelector);
             selectorRow.Children.Add(addBtn);
+
         }
         
         // ========================================
