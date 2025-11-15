@@ -385,6 +385,35 @@ public class DesignerWindow
     {
         try
         {
+            if (propertyName.Contains("."))
+            {
+                var parts = propertyName.Split('.');
+                var ownerType = parts[0];
+                var propName = parts[1];
+
+                if (ownerType == "Grid")
+                {
+                    if (propName == "Row" && int.TryParse(propertyValue, out var row))
+                    {
+                        Grid.SetRow(control, row);
+                        Console.WriteLine($"[DB]   Set Grid.Row = {row}");
+                        return;
+                    }
+                    if (propName == "Column" && int.TryParse(propertyValue, out var col))
+                    {
+                        Grid.SetColumn(control, col);
+                        Console.WriteLine($"[DB]   Set Grid.Column = {col}");
+                        return;
+                    }
+                }
+                else if (ownerType == "DockPanel" && propName == "Dock")
+                {
+                    var dock = Enum.Parse(typeof(Dock), propertyValue);
+                    DockPanel.SetDock(control, (Dock)dock);
+                    Console.WriteLine($"[DB]   Set DockPanel.Dock = {dock}");
+                    return;
+                }
+            }
             var prop = control.GetType().GetProperty(propertyName);
             if (prop == null || !prop.CanWrite) return;
             
