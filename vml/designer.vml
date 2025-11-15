@@ -26,7 +26,7 @@ FontWeight=Bold
 Parent=MainGrid
 Grid.Row=1
 ColumnDefinitions=270,*,0
-Background=#e0e0e0
+Background=#e8f5e9
 
 @Border formBuilderBorder
 Parent=Workspace
