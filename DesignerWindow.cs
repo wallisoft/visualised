@@ -180,13 +180,92 @@ public class DesignerWindow
                 Background = new SolidColorBrush(Color.Parse("#e8f5e9")) 
             };
 
-            // Register FIRST, before any controls added
+            designCanvas = new Canvas
+            {
+                Width = 4000,
+                Height = 4000,
+                Background = new SolidColorBrush(Color.Parse("#e8f5e9"))
+            };
+
+            // ADD THESE VARIABLES:
+            Control? activeControl = null;
+            var activeState = new DragState();
+
+            // REPLACE THE EXISTING PointerMoved WITH ALL THREE HANDLERS:
+            designCanvas.PointerPressed += (s, e) =>
+            {
+                if (!e.GetCurrentPoint(designCanvas).Properties.IsLeftButtonPressed) return;
+                
+                var canvasPos = e.GetPosition(designCanvas);
+                
+                // Find which control was clicked
+                foreach (var child in designCanvas.Children.OfType<Control>()
+                    .Where(c => c != selectionBorder && c != designOverlay))
+                {
+                    var bounds = new Rect(Canvas.GetLeft(child), Canvas.GetTop(child), 
+                        child.Bounds.Width, child.Bounds.Height);
+                    
+                    if (bounds.Contains(canvasPos))
+                    {
+                        activeControl = child;
+                        var localPos = new Point(canvasPos.X - bounds.X, canvasPos.Y - bounds.Y);
+                        var zone = GetResizeZone(child, localPos);
+                        
+                        if (zone != null)
+                        {
+                            activeState.ResizeEdge = zone;
+                            activeState.IsDragging = false;
+                            Console.WriteLine($"[MOUSE] Starting RESIZE: {zone}");
+                        }
+                        else
+                        {
+                            activeState.IsDragging = true;
+                            activeState.ResizeEdge = null;
+                            Console.WriteLine($"[MOUSE] Starting DRAG");
+                        }
+                        
+                        activeState.DragStart = canvasPos;
+                        activeState.StartX = Canvas.GetLeft(child);
+                        activeState.StartY = Canvas.GetTop(child);
+                        
+                        SelectControl(child);
+                        e.Handled = true;
+                        break;
+                    }
+                }
+            };
+
             designCanvas.PointerMoved += (s, e) =>
             {
-                var mousePos = e.GetPosition(designCanvas);
-                var offsetX = (int)mousePos.X - 150;
-                var offsetY = (int)mousePos.Y - 100;
-
+                var canvasPos = e.GetPosition(designCanvas);
+                
+                if (activeControl != null && activeState.ResizeEdge != null)
+                {
+                    // Resize
+                    var deltaX = canvasPos.X - activeState.DragStart.X;
+                    var deltaY = canvasPos.Y - activeState.DragStart.Y;
+                    HandleResize(activeControl, activeState.ResizeEdge, deltaX, deltaY, activeState.StartX, activeState.StartY);
+                    UpdateSelectionBorder();
+                }
+                else if (activeControl != null && activeState.IsDragging)
+                {
+                    // Drag
+                    var deltaX = canvasPos.X - activeState.DragStart.X;
+                    var deltaY = canvasPos.Y - activeState.DragStart.Y;
+                    Canvas.SetLeft(activeControl, activeState.StartX + deltaX);
+                    Canvas.SetTop(activeControl, activeState.StartY + deltaY);
+                    
+                    if (activeControl.Tag is Control real)
+                    {
+                        Canvas.SetLeft(real, activeState.StartX + deltaX);
+                        Canvas.SetTop(real, activeState.StartY + deltaY);
+                    }
+                    UpdateSelectionBorder();
+                }
+                
+                // Update status bar
+                var offsetX = (int)canvasPos.X - 150;
+                var offsetY = (int)canvasPos.Y - 100;
                 if (statusText != null && mainWindow != null)
                 {
                     var controlName = selectedControl?.Name ?? "None";
@@ -195,7 +274,27 @@ public class DesignerWindow
                     statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}";
                 }
             };
-            
+
+            designCanvas.PointerReleased += (s, e) =>
+            {
+                if (activeControl != null)
+                {
+                    Console.WriteLine($"[MOUSE] Released - saving");
+                    
+                    if (activeControl.Tag is Control real)
+                    {
+                        PropertyStore.Set(real.Name!, "X", Canvas.GetLeft(activeControl).ToString());
+                        PropertyStore.Set(real.Name!, "Y", Canvas.GetTop(activeControl).ToString());
+                        PropertyStore.Set(real.Name!, "Width", activeControl.Bounds.Width.ToString());
+                        PropertyStore.Set(real.Name!, "Height", activeControl.Bounds.Height.ToString());
+                    }
+                    
+                    activeControl = null;
+                    activeState.IsDragging = false;
+                    activeState.ResizeEdge = null;
+                }
+            };
+
             // Calculate viewport (window - formbuilder - bars)
             var menuHeight = 30.0;
             var statusHeight = 25.0;
@@ -642,7 +741,6 @@ public class DesignerWindow
                 
                 designCanvas.Children.Add(dummy);
                 designCanvas.Children.Add(real);
-                MakeDraggable(dummy);
             }
         }
     }
