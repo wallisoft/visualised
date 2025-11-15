@@ -88,9 +88,14 @@ public class DesignerWindow
         // ========================================
         if (selectorRow != null)
         {
-            var controlSelector = new TinyCombo
+            var controlSelector = new ComboBox
             {
-                Width = 140  // Remove Height = 24
+                Width = 160,
+                Height = 32,
+                FontSize = 13,
+                Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.Parse("#107C10")),
+                BorderThickness = new Thickness(2)
             };
 
             controlSelector.Items.Add("Button");
@@ -108,22 +113,36 @@ public class DesignerWindow
             controlSelector.Text = "Button";
 
             string selectedControlType = "Button";
-            
+
+            controlSelector.SelectedIndex = 0;
+
+            controlSelector.SelectionChanged += async (s, e) =>
+            {
+                if (controlSelector.SelectedItem?.ToString() == "MainWindow")
+                {
+                    await ShowMainWindowWarning(mainWindow!);
+                    controlSelector.SelectedIndex = 0;
+                    return;
+                }
+                selectedControlType = controlSelector.SelectedItem?.ToString() ?? "Button";
+            };
+
             var addBtn = new Button
             {
-                Content = "Add",
-                Width = 50,
-                Height = 24,
-                FontSize = 11,
+                Content = "➕ Add",
+                Width = 80,
+                Height = 32,
+                FontSize = 13,
                 FontWeight = FontWeight.Bold,
-                Background = Brushes.White,
-                Foreground = new SolidColorBrush(Color.Parse("#2e7d32")),
-                BorderBrush = new SolidColorBrush(Color.Parse("#2e7d32")),
+                Background = new SolidColorBrush(Color.Parse("#107C10")),
+                Foreground = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.Parse("#0d6b0d")),
                 BorderThickness = new Thickness(2),
-                CornerRadius = new CornerRadius(3),
-                Cursor = new Cursor(StandardCursorType.Hand),
-                VerticalAlignment = VerticalAlignment.Top  // Add this
+                CornerRadius = new CornerRadius(4),
+                Cursor = new Cursor(StandardCursorType.Hand)
             };
+
+            addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
 
             controlSelector.SelectionChanged += async (s, selected) =>
             {
@@ -135,8 +154,6 @@ public class DesignerWindow
                 }
                 selectedControlType = selected?.ToString() ?? "Button";
             };
-            
-            addBtn.Click += (s, e) => AddControlToCanvas(selectedControlType);
             
             selectorRow.Children.Add(controlSelector);
             selectorRow.Children.Add(addBtn);
