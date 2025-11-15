@@ -271,16 +271,20 @@ public class DesignerWindow
         {
             designCanvas.PointerMoved += (s, e) =>
             {
-                var mousePos = e.GetPosition(designCanvas);
-                var offsetX = (int)mousePos.X - 150;
-                var offsetY = (int)mousePos.Y - 100;
-
-                if (statusText != null && mainWindow != null)
+                // Only handle if not over a selected control
+                if (selectedControl == null || !isDragging && resizeEdge == null)
                 {
-                    var controlName = selectedControl?.Name ?? "None";
-                    var winW = (int)mainWindow.ClientSize.Width;
-                    var winH = (int)mainWindow.ClientSize.Height;
-                    statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}"; 
+                    var mousePos = e.GetPosition(designCanvas);
+                    var offsetX = (int)mousePos.X - 150;
+                    var offsetY = (int)mousePos.Y - 100;
+
+                    if (statusText != null && mainWindow != null)
+                    {
+                        var controlName = selectedControl?.Name ?? "None";
+                        var winW = (int)mainWindow.ClientSize.Width;
+                        var winH = (int)mainWindow.ClientSize.Height;
+                        statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}";
+                    }
                 }
             };
         }
