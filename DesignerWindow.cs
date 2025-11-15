@@ -785,38 +785,53 @@ public class DesignerWindow
     {
         control.PointerPressed += (s, e) =>
         {
-            if (e.GetCurrentPoint(control).Properties.IsLeftButtonPressed)
+            if (!e.GetCurrentPoint(control).Properties.IsLeftButtonPressed) return;
+                
+            var pos = e.GetPosition(control);
+            var zone = GetResizeZone(control, pos);
+            
+            if (zone != null)
             {
-                var pos = e.GetPosition(control);
-                var zone = GetResizeZone(control, pos);
-                
-                if (zone != null)
-                {
-                    // Start resize
-                    resizeEdge = zone;
-                    dragStartX = Canvas.GetLeft(control);
-                    dragStartY = Canvas.GetTop(control);
-                    dragStart = e.GetPosition(designCanvas);
-                }
-                else
-                {
-                    // Start move
-                    isDragging = true;
-                    dragStart = e.GetPosition(designCanvas);
-                    dragStartX = Canvas.GetLeft(control);
-                    dragStartY = Canvas.GetTop(control);
-                }
-                
-                SelectControl(control);
-                e.Handled = true;
+                // Start resize
+                resizeEdge = zone;
+                isDragging = false;  // Clear drag flag
+                dragStartX = Canvas.GetLeft(control);
+                dragStartY = Canvas.GetTop(control);
+                dragStart = e.GetPosition(designCanvas);
+                control.Cursor = GetCursorForZone(zone);
             }
+            else
+            {
+                // Start move
+                isDragging = true;
+                resizeEdge = null;  // Clear resize flag
+                dragStart = e.GetPosition(designCanvas);
+                dragStartX = Canvas.GetLeft(control);
+                dragStartY = Canvas.GetTop(control);
+                control.Cursor = new Cursor(StandardCursorType.SizeAll);
+            }
+            
+            SelectControl(control);
+            e.Pointer.Capture(control);  // CAPTURE POINTER
+            e.Handled = true;
         };
-        
+
         control.PointerMoved += (s, e) =>
         {
-            if (isDragging)
+            if (resizeEdge != null)
             {
-                // Move
+                // Handle resize
+                var current = e.GetPosition(designCanvas);
+                var deltaX = current.X - dragStart.X;
+                var deltaY = current.Y - dragStart.Y;
+                
+                HandleResize(control, resizeEdge, deltaX, deltaY, dragStartX, dragStartY);
+                UpdateSelectionBorder();
+                e.Handled = true;
+            }
+            else if (isDragging)
+            {
+                // Handle move
                 var current = e.GetPosition(designCanvas);
                 var deltaX = current.X - dragStart.X;
                 var deltaY = current.Y - dragStart.Y;
@@ -831,31 +846,22 @@ public class DesignerWindow
                 }
                 
                 UpdateSelectionBorder();
-            }
-            else if (resizeEdge != null)
-            {
-                // Resize
-                var current = e.GetPosition(designCanvas);
-                var deltaX = current.X - dragStart.X;
-                var deltaY = current.Y - dragStart.Y;
-                
-                HandleResize(control, resizeEdge, deltaX, deltaY);
-                UpdateSelectionBorder();
+                e.Handled = true;
             }
             else
             {
-                // Update cursor
+                // Just hovering - update cursor
                 var pos = e.GetPosition(control);
                 var zone = GetResizeZone(control, pos);
                 control.Cursor = GetCursorForZone(zone);
             }
         };
-        
+
         control.PointerReleased += (s, e) =>
         {
             if (isDragging || resizeEdge != null)
             {
-                // Save position/size to PropertyStore
+                // Save position/size
                 if (control.Tag is Control real)
                 {
                     PropertyStore.Set(real.Name!, "X", Canvas.GetLeft(control).ToString());
@@ -866,30 +872,42 @@ public class DesignerWindow
                 
                 isDragging = false;
                 resizeEdge = null;
+                control.Cursor = new Cursor(StandardCursorType.Arrow);
             }
+            
+            e.Pointer.Capture(null);  // RELEASE CAPTURE
+            e.Handled = true;
         };
-    }
-    
-    private static string? GetResizeZone(Control control, Point pos)
-    {
-        const double edgeSize = 8;
-        var w = control.Bounds.Width;
-        var h = control.Bounds.Height;
-        
-        bool onLeft = pos.X <= edgeSize;
-        bool onRight = pos.X >= w - edgeSize;
-        bool onTop = pos.Y <= edgeSize;
-        bool onBottom = pos.Y >= h - edgeSize;
-        
-        if (onTop && onLeft) return "NW";
-        if (onTop && onRight) return "NE";
-        if (onBottom && onLeft) return "SW";
-        if (onBottom && onRight) return "SE";
-        if (onTop) return "N";
-        if (onBottom) return "S";
-        if (onLeft) return "W";
-        if (onRight) return "E";
-        
+
+        control.PointerCaptureLost += (s, e) =>
+        {
+            // Safety: reset if capture lost
+            isDragging = false;
+            resizeEdge = null;
+            control.Cursor = new Cursor(StandardCursorType.Arrow);
+        };
+        }
+
+        private static string? GetResizeZone(Control control, Point pos)
+        {
+            const double edgeSize = 8;
+            var w = control.Bounds.Width;
+            var h = control.Bounds.Height;
+            
+            bool onLeft = pos.X <= edgeSize;
+            bool onRight = pos.X >= w - edgeSize;
+            bool onTop = pos.Y <= edgeSize;
+            bool onBottom = pos.Y >= h - edgeSize;
+
+            if (onTop && onLeft) return "NW";
+            if (onTop && onRight) return "NE";
+            if (onBottom && onLeft) return "SW";
+            if (onBottom && onRight) return "SE";
+            if (onTop) return "N";
+            if (onBottom) return "S";
+            if (onLeft) return "W";
+            if (onRight) return "E";
+            
         return null;
     }
     
@@ -905,10 +923,8 @@ public class DesignerWindow
         };
     }
     
-    private static void HandleResize(Control control, string edge, double deltaX, double deltaY)
+    private static void HandleResize(Control control, string edge, double deltaX, double deltaY, double startX, double startY)
     {
-        var x = Canvas.GetLeft(control);
-        var y = Canvas.GetTop(control);
         var w = control.Width;
         var h = control.Height;
         
@@ -919,14 +935,14 @@ public class DesignerWindow
                 break;
             case "W":
                 control.Width = Math.Max(20, w - deltaX);
-                Canvas.SetLeft(control, x + deltaX);
+                Canvas.SetLeft(control, startX + deltaX);
                 break;
             case "S":
                 control.Height = Math.Max(20, h + deltaY);
                 break;
             case "N":
                 control.Height = Math.Max(20, h - deltaY);
-                Canvas.SetTop(control, y + deltaY);
+                Canvas.SetTop(control, startY + deltaY);
                 break;
             case "SE":
                 control.Width = Math.Max(20, w + deltaX);
@@ -935,22 +951,22 @@ public class DesignerWindow
             case "SW":
                 control.Width = Math.Max(20, w - deltaX);
                 control.Height = Math.Max(20, h + deltaY);
-                Canvas.SetLeft(control, x + deltaX);
+                Canvas.SetLeft(control, startX + deltaX);
                 break;
             case "NE":
                 control.Width = Math.Max(20, w + deltaX);
                 control.Height = Math.Max(20, h - deltaY);
-                Canvas.SetTop(control, y + deltaY);
+                Canvas.SetTop(control, startY + deltaY);
                 break;
             case "NW":
                 control.Width = Math.Max(20, w - deltaX);
                 control.Height = Math.Max(20, h - deltaY);
-                Canvas.SetLeft(control, x + deltaX);
-                Canvas.SetTop(control, y + deltaY);
+                Canvas.SetLeft(control, startX + deltaX);
+                Canvas.SetTop(control, startY + deltaY);
                 break;
         }
         
-        // Sync to real control
+        // Sync to real
         if (control.Tag is Control real)
         {
             real.Width = control.Width;
