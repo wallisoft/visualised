@@ -34,8 +34,9 @@ public class DesignerWindow
         public Point DragStart { get; set; }
         public double StartX { get; set; }
         public double StartY { get; set; }
-    }
-    
+        public double StartWidth { get; set; }   // ADD THIS
+        public double StartHeight { get; set; }  // ADD THIS
+    } 
     // ========================================
     // ENTRY POINT
     // ========================================
@@ -227,6 +228,8 @@ public class DesignerWindow
                         activeState.DragStart = canvasPos;
                         activeState.StartX = Canvas.GetLeft(child);
                         activeState.StartY = Canvas.GetTop(child);
+                        activeState.StartWidth = child.Width; 
+                        activeState.StartHeight = child.Height;   
                         
                         SelectControl(child);
                         e.Handled = true;
@@ -247,7 +250,8 @@ public class DesignerWindow
 
     Console.WriteLine($"[RESIZE] Mouse moved: {deltaX:F1},{deltaY:F1} - Edge: {activeState.ResizeEdge}");
 
-                    HandleResize(activeControl, activeState.ResizeEdge, deltaX, deltaY, activeState.StartX, activeState.StartY);
+                    HandleResize(activeControl, activeState.ResizeEdge, canvasPos, 
+                        activeState.StartX, activeState.StartY, activeState.StartWidth, activeState.StartHeight);
                     UpdateSelectionBorder();
                 }
                 else if (activeControl != null && activeState.IsDragging)
@@ -948,47 +952,27 @@ public class DesignerWindow
         };
     }
     
-    private static void HandleResize(Control control, string edge, double deltaX, double deltaY, double startX, double startY)
+    private static void HandleResize(Control control, string edge, Point mousePos, double startX, double startY, double startWidth, double startHeight)
     {
-        var w = control.Width;
-        var h = control.Height;
-        
         switch (edge)
         {
             case "E":
-                control.Width = Math.Max(20, w + deltaX);
+                control.Width = Math.Max(20, mousePos.X - startX);
                 break;
             case "W":
-                control.Width = Math.Max(20, w - deltaX);
-                Canvas.SetLeft(control, startX + deltaX);
+                var newWidth = Math.Max(20, (startX + startWidth) - mousePos.X);
+                Canvas.SetLeft(control, mousePos.X);
+                control.Width = newWidth;
                 break;
             case "S":
-                control.Height = Math.Max(20, h + deltaY);
+                control.Height = Math.Max(20, mousePos.Y - startY);
                 break;
             case "N":
-                control.Height = Math.Max(20, h - deltaY);
-                Canvas.SetTop(control, startY + deltaY);
+                var newHeight = Math.Max(20, (startY + startHeight) - mousePos.Y);
+                Canvas.SetTop(control, mousePos.Y);
+                control.Height = newHeight;
                 break;
-            case "SE":
-                control.Width = Math.Max(20, w + deltaX);
-                control.Height = Math.Max(20, h + deltaY);
-                break;
-            case "SW":
-                control.Width = Math.Max(20, w - deltaX);
-                control.Height = Math.Max(20, h + deltaY);
-                Canvas.SetLeft(control, startX + deltaX);
-                break;
-            case "NE":
-                control.Width = Math.Max(20, w + deltaX);
-                control.Height = Math.Max(20, h - deltaY);
-                Canvas.SetTop(control, startY + deltaY);
-                break;
-            case "NW":
-                control.Width = Math.Max(20, w - deltaX);
-                control.Height = Math.Max(20, h - deltaY);
-                Canvas.SetLeft(control, startX + deltaX);
-                Canvas.SetTop(control, startY + deltaY);
-                break;
+            // ... rest
         }
         
         // Sync to real
@@ -1000,4 +984,5 @@ public class DesignerWindow
             Canvas.SetTop(real, Canvas.GetTop(control));
         }
     }
+
 }
