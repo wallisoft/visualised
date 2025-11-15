@@ -244,6 +244,9 @@ public class DesignerWindow
                     // Resize active
                     var deltaX = canvasPos.X - activeState.DragStart.X;
                     var deltaY = canvasPos.Y - activeState.DragStart.Y;
+
+    Console.WriteLine($"[RESIZE] Mouse moved: {deltaX:F1},{deltaY:F1} - Edge: {activeState.ResizeEdge}");
+
                     HandleResize(activeControl, activeState.ResizeEdge, deltaX, deltaY, activeState.StartX, activeState.StartY);
                     UpdateSelectionBorder();
                 }
