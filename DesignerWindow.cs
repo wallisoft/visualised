@@ -59,6 +59,9 @@ public class DesignerWindow
         // Load designer UI from VML
         var dbPath = PropertyStore.GetDbPath();
         var root = LoadControlTreeFromDatabase(dbPath);
+        var overlayWidth = Settings.GetDouble("overlay_width", 800);
+        var overlayHeight = Settings.GetDouble("overlay_height", 600);
+        var formBuilderWidth = Settings.GetDouble("formbuilder_width", 300);
 
         // If root is a Window, apply its properties to our MainWindow
         if (root is Window vmlWindow)
@@ -152,35 +155,45 @@ public class DesignerWindow
                 Background = new SolidColorBrush(Color.Parse("#f5f5f5"))
             };
             
-            // 800x600 overlay centered in viewport
+            // Calculate viewport (window - formbuilder - bars)
+            var menuHeight = 30.0;
+            var statusHeight = 25.0;
+            var viewportWidth = mainWindow!.Width - formBuilderWidth;
+            var viewportHeight = mainWindow.Height - menuHeight - statusHeight;
+            
+            // Center overlay in viewport
+            var overlayX = (viewportWidth - overlayWidth) / 2;
+            var overlayY = (viewportHeight - overlayHeight) / 2;
+            
+            // Create overlay rectangle
             designOverlay = new Rectangle
             {
-                Width = 800,
-                Height = 600,
+                Width = overlayWidth,
+                Height = overlayHeight,
                 Fill = new SolidColorBrush(Color.FromArgb(30, 102, 187, 106)),
                 Stroke = new SolidColorBrush(Color.Parse("#66bb6a")),
                 StrokeThickness = 2,
                 IsHitTestVisible = false
             };
             
-            Canvas.SetLeft(designOverlay, 150);
-            Canvas.SetTop(designOverlay, 100);
+            Canvas.SetLeft(designOverlay, overlayX);
+            Canvas.SetTop(designOverlay, overlayY);
             designCanvas.Children.Add(designOverlay);
             
             // Overlay label
             var overlayLabel = new TextBlock
             {
-                Text = "800x600 Design Area",
+                Text = $"{(int)overlayWidth}x{(int)overlayHeight} Design Area",
                 FontSize = 14,
                 FontWeight = FontWeight.Bold,
                 Foreground = new SolidColorBrush(Color.Parse("#66bb6a")),
-                Background = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
+                Background = Brushes.Transparent,
                 Padding = new Thickness(10, 5),
                 IsHitTestVisible = false
             };
             
-            Canvas.SetLeft(overlayLabel, 160);
-            Canvas.SetTop(overlayLabel, 110);
+            Canvas.SetLeft(overlayLabel, overlayX + 10);
+            Canvas.SetTop(overlayLabel, overlayY + 10);
             designCanvas.Children.Add(overlayLabel);
             
             // Selection border
@@ -244,7 +257,7 @@ public class DesignerWindow
                     var controlName = selectedControl?.Name ?? "None";
                     var winW = (int)mainWindow.ClientSize.Width;
                     var winH = (int)mainWindow.ClientSize.Height;
-                    statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Canvas: 4000x4000 | Mouse: {offsetX},{offsetY}";
+                    statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}"; 
                 }
             };
         }
@@ -736,11 +749,11 @@ public class DesignerWindow
         if (statusText == null || mainWindow == null) return;
         
         var controlName = selectedControl?.Name ?? "None";
-        var winW = (int)mainWindow.ClientSize.Width;  
-        var winH = (int)mainWindow.ClientSize.Height; 
+        var winW = (int)mainWindow.ClientSize.Width;
+        var winH = (int)mainWindow.ClientSize.Height;
         
-        statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: 0,0";
-    } 
+        statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH}";  // Remove mouse - it's updated in PointerMoved
+    }
 
     // ========================================
     // DRAG & RESIZE
