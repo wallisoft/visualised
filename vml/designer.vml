@@ -9,11 +9,9 @@ Height=750
 Parent=Designer
 RowDefinitions=Auto,*,Auto
 
-@Border MenuBar
+@TinyMenu MainMenu
 Parent=MainGrid
 Grid.Row=0
-Background=#107C10
-Height=30
 
 @TextBlock MenuText
 Parent=MenuBar
@@ -109,3 +107,248 @@ VerticalAlignment=Center
 Foreground=White
 Margin=10,0,0,0
 FontSize=11
+
+# ========================================
+# MENU SYSTEM
+# ========================================
+
+# Menu Theme
+@MenuTheme MenuTheme
+Background=#107C10
+Foreground=White
+HoverBackground=White
+HoverForeground=#107C10
+PopupBackground=White
+PopupBorder=#107C10
+Height=30
+
+# Top-level Menu Items
+@MenuItem File
+Parent=MenuBar
+Text=File
+
+@MenuItem Edit
+Parent=MenuBar
+Text=Edit
+
+@MenuItem Tools
+Parent=MenuBar
+Text=Tools
+
+@MenuItem Help
+Parent=MenuBar
+Text=Help
+
+# FILE MENU
+@MenuItem FileNew
+Parent=File
+Text=New Form
+Shortcut=Ctrl+N
+OnClick=FileNewScript
+
+@MenuItem FileOpen
+Parent=File
+Text=Open...
+Shortcut=Ctrl+O
+OnClick=FileOpenScript
+
+@MenuItem FileSave
+Parent=File
+Text=Save
+Shortcut=Ctrl+S
+OnClick=FileSaveScript
+
+@MenuItem FileSaveAs
+Parent=File
+Text=Save As...
+Shortcut=Ctrl+Shift+S
+OnClick=FileSaveAsScript
+
+@MenuItem FileExport
+Parent=File
+Text=Export VML
+OnClick=FileExportScript
+
+@MenuItem FileExit
+Parent=File
+Text=Exit
+OnClick=FileExitScript
+
+# EDIT MENU
+@MenuItem EditUndo
+Parent=Edit
+Text=Undo
+Shortcut=Ctrl+Z
+OnClick=EditUndoScript
+
+@MenuItem EditRedo
+Parent=Edit
+Text=Redo
+Shortcut=Ctrl+Y
+OnClick=EditRedoScript
+
+@MenuItem EditCut
+Parent=Edit
+Text=Cut
+Shortcut=Ctrl+X
+OnClick=EditCutScript
+
+@MenuItem EditCopy
+Parent=Edit
+Text=Copy
+Shortcut=Ctrl+C
+OnClick=EditCopyScript
+
+@MenuItem EditPaste
+Parent=Edit
+Text=Paste
+Shortcut=Ctrl+V
+OnClick=EditPasteScript
+
+@MenuItem EditDelete
+Parent=Edit
+Text=Delete
+Shortcut=Del
+OnClick=EditDeleteScript
+
+# TOOLS MENU
+@MenuItem ToolsSettings
+Parent=Tools
+Text=Settings...
+OnClick=ToolsSettingsScript
+
+@MenuItem ToolsGrid
+Parent=Tools
+Text=Grid Options...
+OnClick=ToolsGridScript
+
+# HELP MENU
+@MenuItem HelpDocs
+Parent=Help
+Text=Documentation
+Shortcut=F1
+OnClick=HelpDocsScript
+
+@MenuItem HelpAbout
+Parent=Help
+Text=About Visualised
+OnClick=HelpAboutScript
+
+# ========================================
+# MENU SCRIPTS (Handlers)
+# ========================================
+
+@Script FileNewScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] File > New Form - Not yet implemented"
+EOF
+
+@Script FileOpenScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] File > Open - Not yet implemented"
+EOF
+
+@Script FileSaveScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] File > Save - Not yet implemented"
+EOF
+
+@Script FileSaveAsScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] File > Save As - Not yet implemented"
+EOF
+
+@Script FileExportScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] File > Export VML - Not yet implemented"
+EOF
+
+@Script FileExitScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Exiting Visualised..."
+pkill -f "VB.dll"
+EOF
+
+@Script EditUndoScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Edit > Undo - Not yet implemented"
+EOF
+
+@Script EditRedoScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Edit > Redo - Not yet implemented"
+EOF
+
+@Script EditCutScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Edit > Cut - Not yet implemented"
+EOF
+
+@Script EditCopyScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Edit > Copy - Not yet implemented"
+EOF
+
+@Script EditPasteScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Edit > Paste - Not yet implemented"
+EOF
+
+@Script EditDeleteScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Edit > Delete - Not yet implemented"
+EOF
+
+@Script ToolsSettingsScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Tools > Settings - Not yet implemented"
+EOF
+
+@Script ToolsGridScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Tools > Grid Options - Not yet implemented"
+EOF
+
+@Script HelpDocsScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[MENU] Opening documentation..."
+xdg-open "https://visualised.dev/docs" 2>/dev/null || echo "Documentation URL: https://visualised.dev/docs"
+EOF
+
+@Script HelpAboutScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "Visualised Form Designer v0.1"
+echo "The VML-driven RAD IDE"
+echo "(c) 2025 Wallisoft"

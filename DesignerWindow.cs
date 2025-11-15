@@ -61,6 +61,9 @@ public class DesignerWindow
 
         // Load designer UI from VML
         var dbPath = PropertyStore.GetDbPath();
+
+        LoadScriptsIntoRegistry(dbPath);
+
         var root = LoadControlTreeFromDatabase(dbPath);
         var overlayWidth = Settings.GetDouble("overlay_width", 800);
         var overlayHeight = Settings.GetDouble("overlay_height", 600);
@@ -983,6 +986,35 @@ public class DesignerWindow
             real.Height = control.Height;
             Canvas.SetLeft(real, Canvas.GetLeft(control));
             Canvas.SetTop(real, Canvas.GetTop(control));
+        }
+    }
+
+    // ========================================
+    // LOAD SCRIPTS INTO REGISTRY
+    // ========================================
+    private static void LoadScriptsIntoRegistry(string dbPath)
+    {
+        using var conn = new SqliteConnection($"Data Source={dbPath}");
+        conn.Open();
+        
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT ut.name, 
+                   MAX(CASE WHEN up.property_name = 'Content' THEN up.property_value END) as content,
+                   MAX(CASE WHEN up.property_name = 'Interpreter' THEN up.property_value END) as interpreter
+            FROM ui_tree ut
+            JOIN ui_properties up ON ut.id = up.ui_tree_id
+            WHERE ut.control_type = 'Script'
+            GROUP BY ut.name";
+        
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var name = reader.GetString(0);
+            var content = reader.IsDBNull(1) ? "" : reader.GetString(1);
+            var interpreter = reader.IsDBNull(2) ? "bash" : reader.GetString(2);
+            
+            ScriptRegistry.Register(name, content, interpreter);
         }
     }
 
