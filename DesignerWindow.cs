@@ -241,7 +241,7 @@ public class DesignerWindow
                 
                 if (activeControl != null && activeState.ResizeEdge != null)
                 {
-                    // Resize
+                    // Resize active
                     var deltaX = canvasPos.X - activeState.DragStart.X;
                     var deltaY = canvasPos.Y - activeState.DragStart.Y;
                     HandleResize(activeControl, activeState.ResizeEdge, deltaX, deltaY, activeState.StartX, activeState.StartY);
@@ -249,7 +249,7 @@ public class DesignerWindow
                 }
                 else if (activeControl != null && activeState.IsDragging)
                 {
-                    // Drag
+                    // Drag active
                     var deltaX = canvasPos.X - activeState.DragStart.X;
                     var deltaY = canvasPos.Y - activeState.DragStart.Y;
                     Canvas.SetLeft(activeControl, activeState.StartX + deltaX);
@@ -261,6 +261,23 @@ public class DesignerWindow
                         Canvas.SetTop(real, activeState.StartY + deltaY);
                     }
                     UpdateSelectionBorder();
+                }
+                else if (selectedControl != null)
+                {
+                    // Hovering over selected control - show resize cursor
+                    var bounds = new Rect(Canvas.GetLeft(selectedControl), Canvas.GetTop(selectedControl),
+                        selectedControl.Bounds.Width, selectedControl.Bounds.Height);
+                    
+                    if (bounds.Contains(canvasPos))
+                    {
+                        var localPos = new Point(canvasPos.X - bounds.X, canvasPos.Y - bounds.Y);
+                        var zone = GetResizeZone(selectedControl, localPos);
+                        designCanvas.Cursor = GetCursorForZone(zone);
+                    }
+                    else
+                    {
+                        designCanvas.Cursor = new Cursor(StandardCursorType.Arrow);
+                    }
                 }
                 
                 // Update status bar
