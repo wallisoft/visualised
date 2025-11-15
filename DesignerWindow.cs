@@ -177,6 +177,22 @@ public class DesignerWindow
                 Height = 4000,
                 Background = new SolidColorBrush(Color.Parse("#e8f5e9")) 
             };
+
+            // Register FIRST, before any controls added
+            designCanvas.PointerMoved += (s, e) =>
+            {
+                var mousePos = e.GetPosition(designCanvas);
+                var offsetX = (int)mousePos.X - 150;
+                var offsetY = (int)mousePos.Y - 100;
+
+                if (statusText != null && mainWindow != null)
+                {
+                    var controlName = selectedControl?.Name ?? "None";
+                    var winW = (int)mainWindow.ClientSize.Width;
+                    var winH = (int)mainWindow.ClientSize.Height;
+                    statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}";
+                }
+            };
             
             // Calculate viewport (window - formbuilder - bars)
             var menuHeight = 30.0;
@@ -271,20 +287,16 @@ public class DesignerWindow
         {
             designCanvas.PointerMoved += (s, e) =>
             {
-                // Only handle if not over a selected control
-                if (selectedControl == null || !isDragging && resizeEdge == null)
-                {
-                    var mousePos = e.GetPosition(designCanvas);
-                    var offsetX = (int)mousePos.X - 150;
-                    var offsetY = (int)mousePos.Y - 100;
+                var mousePos = e.GetPosition(designCanvas);
+                var offsetX = (int)mousePos.X - 150;
+                var offsetY = (int)mousePos.Y - 100;
 
-                    if (statusText != null && mainWindow != null)
-                    {
-                        var controlName = selectedControl?.Name ?? "None";
-                        var winW = (int)mainWindow.ClientSize.Width;
-                        var winH = (int)mainWindow.ClientSize.Height;
-                        statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}";
-                    }
+                if (statusText != null && mainWindow != null)
+                {
+                    var controlName = selectedControl?.Name ?? "None";
+                    var winW = (int)mainWindow.ClientSize.Width;
+                    var winH = (int)mainWindow.ClientSize.Height;
+                    statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: {offsetX},{offsetY}";
                 }
             };
         }
