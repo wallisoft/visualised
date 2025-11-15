@@ -152,7 +152,7 @@ public class DesignerWindow
             {
                 Width = 4000,
                 Height = 4000,
-                Background = new SolidColorBrush(Color.Parse("#f0f7f0")) 
+                Background = new SolidColorBrush(Color.Parse("#e8f5e9")) 
             };
             
             // Calculate viewport (window - formbuilder - bars)
