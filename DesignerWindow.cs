@@ -90,7 +90,7 @@ public class DesignerWindow
         {
             var controlSelector = new ComboBox
             {
-                Width = 160,
+                Width = 130,
                 Height = 32,
                 FontSize = 13,
                 Background = Brushes.White,
@@ -129,8 +129,8 @@ public class DesignerWindow
 
             var addBtn = new Button
             {
-                Content = "➕ Add",
-                Width = 80,
+                Content = " Add ",
+                Width = 70,
                 Height = 32,
                 FontSize = 13,
                 FontWeight = FontWeight.Bold,
