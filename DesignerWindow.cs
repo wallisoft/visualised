@@ -88,7 +88,10 @@ public class DesignerWindow
         // ========================================
         if (selectorRow != null)
         {
-            var controlSelector = new TinyCombo();
+            var controlSelector = new TinyCombo
+            {
+                Width = 140  // Remove Height = 24
+            };
 
             controlSelector.Items.Add("Button");
             controlSelector.Items.Add("TextBox");
