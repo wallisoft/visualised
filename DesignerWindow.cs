@@ -27,13 +27,15 @@ public class DesignerWindow
     private static TextBlock? statusText;
     private static Border? formBuilderBorder;
     private static Dictionary<string, int> controlCounters = new();
+    private class DragState
+    {
+        public bool IsDragging { get; set; }
+        public string? ResizeEdge { get; set; }
+        public Point DragStart { get; set; }
+        public double StartX { get; set; }
+        public double StartY { get; set; }
+    }
     
-    // Drag state
-    private static bool isDragging = false;
-    private static Point dragStart;
-    private static double dragStartX, dragStartY;
-    private static string? resizeEdge = null;
-
     // ========================================
     // ENTRY POINT
     // ========================================
@@ -795,79 +797,76 @@ public class DesignerWindow
     }
 
     // ========================================
-    // DRAG & RESIZE
+    // MAKE CONTROL DRAGGABLE
     // ========================================
     private static void MakeDraggable(Control control)
     {
+        var state = new DragState();
+        
         control.PointerPressed += (s, e) =>
         {
             if (!e.GetCurrentPoint(control).Properties.IsLeftButtonPressed) return;
-                
+            
             var pos = e.GetPosition(control);
             var zone = GetResizeZone(control, pos);
-
-                Console.WriteLine($"[MOUSE] Pressed at {pos.X},{pos.Y} - zone: {zone ?? "null"}");
+            
+            Console.WriteLine($"[MOUSE] Pressed at {pos.X},{pos.Y} - zone: {zone ?? "null"}");
             
             if (zone != null)
             {
                 // Start resize
-                resizeEdge = zone;
-                isDragging = false;  // Clear drag flag
-
-                Console.WriteLine($"[MOUSE] Starting RESIZE mode: {zone}");
-
-                dragStartX = Canvas.GetLeft(control);
-                dragStartY = Canvas.GetTop(control);
-                dragStart = e.GetPosition(designCanvas);
+                state.ResizeEdge = zone;
+                state.IsDragging = false;
                 control.Cursor = GetCursorForZone(zone);
+                Console.WriteLine($"[MOUSE] Starting RESIZE mode: {zone}");
             }
             else
             {
                 // Start move
-                isDragging = true;
-                resizeEdge = null;  // Clear resize flag
-                        Console.WriteLine($"[MOUSE] Starting DRAG mode");
-                dragStart = e.GetPosition(designCanvas);
-                dragStartX = Canvas.GetLeft(control);
-                dragStartY = Canvas.GetTop(control);
+                state.IsDragging = true;
+                state.ResizeEdge = null;
                 control.Cursor = new Cursor(StandardCursorType.SizeAll);
+                Console.WriteLine($"[MOUSE] Starting DRAG mode");
             }
             
+            state.DragStart = e.GetPosition(designCanvas);
+            state.StartX = Canvas.GetLeft(control);
+            state.StartY = Canvas.GetTop(control);
+            
             SelectControl(control);
-            e.Pointer.Capture(control);  // CAPTURE POINTER
+            e.Pointer.Capture(control);
             e.Handled = true;
         };
-
+        
         control.PointerMoved += (s, e) =>
         {
-                    Console.WriteLine($"[MOUSE] Resizing: {resizeEdge}");
-            if (resizeEdge != null)
+            if (state.ResizeEdge != null)
             {
                 // Handle resize
-                        Console.WriteLine($"[MOUSE] Resizing: {resizeEdge}");
+                Console.WriteLine($"[MOUSE] Resizing: {state.ResizeEdge}");
                 var current = e.GetPosition(designCanvas);
-                var deltaX = current.X - dragStart.X;
-                var deltaY = current.Y - dragStart.Y;
+                var deltaX = current.X - state.DragStart.X;
+                var deltaY = current.Y - state.DragStart.Y;
                 
-                HandleResize(control, resizeEdge, deltaX, deltaY, dragStartX, dragStartY);
+                HandleResize(control, state.ResizeEdge, deltaX, deltaY, state.StartX, state.StartY);
                 UpdateSelectionBorder();
                 e.Handled = true;
             }
-            else if (isDragging)
+            else if (state.IsDragging)
             {
                 // Handle move
-                        Console.WriteLine($"[MOUSE] Dragging");
+                Console.WriteLine($"[MOUSE] Dragging");
                 var current = e.GetPosition(designCanvas);
-                var deltaX = current.X - dragStart.X;
-                var deltaY = current.Y - dragStart.Y;
+                var deltaX = current.X - state.DragStart.X;
+                var deltaY = current.Y - state.DragStart.Y;
                 
-                Canvas.SetLeft(control, dragStartX + deltaX);
-                Canvas.SetTop(control, dragStartY + deltaY);
+                Canvas.SetLeft(control, state.StartX + deltaX);
+                Canvas.SetTop(control, state.StartY + deltaY);
                 
                 if (control.Tag is Control real)
                 {
-                    Canvas.SetLeft(real, dragStartX + deltaX);
-                    Canvas.SetTop(real, dragStartY + deltaY);
+                    Canvas.SetLeft(real, state.StartX + deltaX);
+                    Canvas.SetTop(real, state.StartY + deltaY);
                 }
                 
                 UpdateSelectionBorder();
@@ -881,12 +880,14 @@ public class DesignerWindow
                 control.Cursor = GetCursorForZone(zone);
             }
         };
-
+        
         control.PointerReleased += (s, e) =>
         {
-            if (isDragging || resizeEdge != null)
+            if (state.IsDragging || state.ResizeEdge != null)
             {
-                // Save position/size
+                Console.WriteLine($"[MOUSE] Released - saving position");
+                
+                // Save position/size to PropertyStore
                 if (control.Tag is Control real)
                 {
                     PropertyStore.Set(real.Name!, "X", Canvas.GetLeft(control).ToString());
@@ -895,47 +896,48 @@ public class DesignerWindow
                     PropertyStore.Set(real.Name!, "Height", control.Bounds.Height.ToString());
                 }
                 
-                isDragging = false;
-                resizeEdge = null;
+                state.IsDragging = false;
+                state.ResizeEdge = null;
                 control.Cursor = new Cursor(StandardCursorType.Arrow);
             }
             
-            e.Pointer.Capture(null);  // RELEASE CAPTURE
+            e.Pointer.Capture(null);
             e.Handled = true;
         };
-
+        
         control.PointerCaptureLost += (s, e) =>
         {
             // Safety: reset if capture lost
-            isDragging = false;
-            resizeEdge = null;
+            Console.WriteLine($"[MOUSE] Capture lost - resetting");
+            state.IsDragging = false;
+            state.ResizeEdge = null;
             control.Cursor = new Cursor(StandardCursorType.Arrow);
         };
-        }
+    }
 
-        private static string? GetResizeZone(Control control, Point pos)
-        {
-            const double edgeSize = 8;
-            var w = control.Bounds.Width;
-            var h = control.Bounds.Height;
-            
-            bool onLeft = pos.X <= edgeSize;
-            bool onRight = pos.X >= w - edgeSize;
-            bool onTop = pos.Y <= edgeSize;
-            bool onBottom = pos.Y >= h - edgeSize;
+    private static string? GetResizeZone(Control control, Point pos)
+    {
+        const double edgeSize = 8;
+        var w = control.Bounds.Width;
+        var h = control.Bounds.Height;
+        
+        bool onLeft = pos.X <= edgeSize;
+        bool onRight = pos.X >= w - edgeSize;
+        bool onTop = pos.Y <= edgeSize;
+        bool onBottom = pos.Y >= h - edgeSize;
 
-            if (onTop && onLeft) return "NW";
-            if (onTop && onRight) return "NE";
-            if (onBottom && onLeft) return "SW";
-            if (onBottom && onRight) return "SE";
-            if (onTop) return "N";
-            if (onBottom) return "S";
-            if (onLeft) return "W";
-            if (onRight) return "E";
-            
+        if (onTop && onLeft) return "NW";
+        if (onTop && onRight) return "NE";
+        if (onBottom && onLeft) return "SW";
+        if (onBottom && onRight) return "SE";
+        if (onTop) return "N";
+        if (onBottom) return "S";
+        if (onLeft) return "W";
+        if (onRight) return "E";
+        
         return null;
     }
-    
+
     private static Cursor GetCursorForZone(string? zone)
     {
         return zone switch
