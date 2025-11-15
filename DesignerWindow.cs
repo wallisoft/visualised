@@ -37,16 +37,17 @@ public class DesignerWindow
     // ENTRY POINT
     // ========================================
     public static void LoadAndApply(MainWindow window, string vmlPath)
-{
-    PropertyStore.Initialize();
-    
-    // Parse VML into database
-    var parser = new VmlDatabaseParser(PropertyStore.GetDbPath());
-    parser.ImportVml(vmlPath);
-    
-    // Build designer UI from database
-    BuildUI(window, vmlPath);
-}
+    {
+        PropertyStore.Initialize();
+        
+        // Parse VML into database
+        var parser = new VmlDatabaseParser(PropertyStore.GetDbPath());
+        parser.ImportVml(vmlPath);
+        
+        // Build designer UI from database
+        BuildUI(window, vmlPath);
+    }
+
     // ========================================
     // BUILD MAIN UI FROM VML
     // ========================================
@@ -230,17 +231,6 @@ public class DesignerWindow
         
         Console.WriteLine("[UI] Designer ready!");
 
-
-    // ========================================
-    // HELPER: FIND CONTROL BY NAME
-    // ========================================
-    // Set window content
-    window.Content = mainGrid;
-
-    // Load controls from PropertyStore
-    LoadPropertyStoreControls();
-
-    Console.WriteLine("[UI] Designer ready!");
     }
 
     // ========================================
