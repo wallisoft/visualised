@@ -840,6 +840,7 @@ public class DesignerWindow
 
         control.PointerMoved += (s, e) =>
         {
+                    Console.WriteLine($"[MOUSE] Resizing: {resizeEdge}");
             if (resizeEdge != null)
             {
                 // Handle resize
