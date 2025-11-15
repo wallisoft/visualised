@@ -18,6 +18,7 @@ public class DesignerWindow
     // ========================================
     // CORE FIELDS
     // ========================================
+    private static Window? mainWindow;
     private static Canvas? designCanvas;
     private static Control? selectedControl;
     private static Rectangle? selectionBorder;
@@ -53,6 +54,8 @@ public class DesignerWindow
     // ========================================
     private static void BuildUI(MainWindow window, string vmlPath)
     {
+        mainWindow = window;  
+
         // Load designer UI from VML
         var dbPath = PropertyStore.GetDbPath();
         var root = LoadControlTreeFromDatabase(dbPath);
@@ -227,10 +230,34 @@ public class DesignerWindow
         // Load controls from PropertyStore
         LoadPropertyStoreControls();
 
-        // At end of BuildUI, before Console.WriteLine("[UI] Designer ready!")
-        
-        Console.WriteLine("[UI] Designer ready!");
+        // Wire canvas mouse movement to status bar
+        if (designCanvas != null)
+        {
+            designCanvas.PointerMoved += (s, e) =>
+            {
+                var mousePos = e.GetPosition(designCanvas);
+                var offsetX = (int)mousePos.X - 150;
+                var offsetY = (int)mousePos.Y - 100;
 
+                if (statusText != null && mainWindow != null)
+                {
+                    var controlName = selectedControl?.Name ?? "None";
+                    var winW = (int)mainWindow.ClientSize.Width;
+                    var winH = (int)mainWindow.ClientSize.Height;
+                    statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Canvas: 4000x4000 | Mouse: {offsetX},{offsetY}";
+                }
+            };
+        }
+
+        window.PropertyChanged += (s, e) =>
+        {
+            if (e.Property.Name == "ClientSize" || e.Property.Name == "Bounds")
+                UpdateStatusBar();  // No parameter
+        };
+
+        UpdateStatusBar();  // No parameter
+
+        Console.WriteLine("[UI] Designer ready!");
     }
 
     // ========================================
@@ -706,10 +733,14 @@ public class DesignerWindow
     
     private static void UpdateStatusBar()
     {
-        if (statusText == null) return;
+        if (statusText == null || mainWindow == null) return;
+        
         var controlName = selectedControl?.Name ?? "None";
-        statusText.Text = $"Selected: {controlName}";
-    }
+        var winW = (int)mainWindow.ClientSize.Width;  
+        var winH = (int)mainWindow.ClientSize.Height; 
+        
+        statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH} | Mouse: 0,0";
+    } 
 
     // ========================================
     // DRAG & RESIZE
