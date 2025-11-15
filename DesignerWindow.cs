@@ -170,7 +170,7 @@ public class DesignerWindow
             {
                 Width = overlayWidth,
                 Height = overlayHeight,
-                Fill = new SolidColorBrush(Color.FromArgb(30, 102, 187, 106)),
+                Fill = new SolidColorBrush(Color.Parse("#e8f5e9")),  
                 Stroke = new SolidColorBrush(Color.Parse("#66bb6a")),
                 StrokeThickness = 2,
                 IsHitTestVisible = false
