@@ -789,12 +789,17 @@ public class DesignerWindow
                 
             var pos = e.GetPosition(control);
             var zone = GetResizeZone(control, pos);
+
+                Console.WriteLine($"[MOUSE] Pressed at {pos.X},{pos.Y} - zone: {zone ?? "null"}");
             
             if (zone != null)
             {
                 // Start resize
                 resizeEdge = zone;
                 isDragging = false;  // Clear drag flag
+
+                Console.WriteLine($"[MOUSE] Starting RESIZE mode: {zone}");
+
                 dragStartX = Canvas.GetLeft(control);
                 dragStartY = Canvas.GetTop(control);
                 dragStart = e.GetPosition(designCanvas);
@@ -805,6 +810,7 @@ public class DesignerWindow
                 // Start move
                 isDragging = true;
                 resizeEdge = null;  // Clear resize flag
+                        Console.WriteLine($"[MOUSE] Starting DRAG mode");
                 dragStart = e.GetPosition(designCanvas);
                 dragStartX = Canvas.GetLeft(control);
                 dragStartY = Canvas.GetTop(control);
@@ -821,6 +827,7 @@ public class DesignerWindow
             if (resizeEdge != null)
             {
                 // Handle resize
+                        Console.WriteLine($"[MOUSE] Resizing: {resizeEdge}");
                 var current = e.GetPosition(designCanvas);
                 var deltaX = current.X - dragStart.X;
                 var deltaY = current.Y - dragStart.Y;
@@ -832,6 +839,7 @@ public class DesignerWindow
             else if (isDragging)
             {
                 // Handle move
+                        Console.WriteLine($"[MOUSE] Dragging");
                 var current = e.GetPosition(designCanvas);
                 var deltaX = current.X - dragStart.X;
                 var deltaY = current.Y - dragStart.Y;
