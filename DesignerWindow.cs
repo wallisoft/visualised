@@ -88,13 +88,24 @@ public class DesignerWindow
         // ========================================
         if (selectorRow != null)
         {
-            var controlSelector = new TinyCombo
-            {
-                Width = 140,
-                Height = 24,
-            };
-            // ... add items
+            var controlSelector = new TinyCombo();
 
+            controlSelector.Items.Add("Button");
+            controlSelector.Items.Add("TextBox");
+            controlSelector.Items.Add("TextBlock");
+            controlSelector.Items.Add("CheckBox");
+            controlSelector.Items.Add("ComboBox");
+            controlSelector.Items.Add("ListBox");
+            controlSelector.Items.Add("RadioButton");
+            controlSelector.Items.Add("StackPanel");
+            controlSelector.Items.Add("Grid");
+            controlSelector.Items.Add("Border");
+            controlSelector.Items.Add("─────────");
+            controlSelector.Items.Add("MainWindow");
+            controlSelector.Text = "Button";
+
+            string selectedControlType = "Button";
+            
             var addBtn = new Button
             {
                 Content = "Add",
@@ -110,22 +121,6 @@ public class DesignerWindow
                 Cursor = new Cursor(StandardCursorType.Hand),
                 VerticalAlignment = VerticalAlignment.Top  // Add this
             };
-
-            controlSelector.Items.Add("Button");
-            controlSelector.Items.Add("TextBox");
-            controlSelector.Items.Add("TextBlock");
-            controlSelector.Items.Add("CheckBox");
-            controlSelector.Items.Add("ComboBox");
-            controlSelector.Items.Add("ListBox");
-            controlSelector.Items.Add("RadioButton");
-            controlSelector.Items.Add("StackPanel");
-            controlSelector.Items.Add("Grid");
-            controlSelector.Items.Add("Border");
-            controlSelector.Items.Add("─────────");
-            controlSelector.Items.Add("MainWindow");
-            controlSelector.Text = "Button";
-            
-            string selectedControlType = "Button";
 
             controlSelector.SelectionChanged += async (s, selected) =>
             {
