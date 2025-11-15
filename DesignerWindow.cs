@@ -834,7 +834,6 @@ public class DesignerWindow
                 
                 designCanvas.Children.Add(dummy);
                 designCanvas.Children.Add(real);
-                MakeDraggable(dummy);
                 SelectControl(dummy);
                 PropertyStore.SyncControl(real);
                 
@@ -892,125 +891,6 @@ public class DesignerWindow
         var winH = (int)mainWindow.ClientSize.Height;
         
         statusText.Text = $"Selected: {controlName} | Window: {winW}x{winH}";  // Remove mouse - it's updated in PointerMoved
-    }
-
-    // ========================================
-    // MAKE CONTROL DRAGGABLE
-    // ========================================
-    private static void MakeDraggable(Control control)
-    {
-        var state = new DragState();
-        
-        control.PointerPressed += (s, e) =>
-        {
-            if (!e.GetCurrentPoint(control).Properties.IsLeftButtonPressed) return;
-            
-            var pos = e.GetPosition(control);
-            var zone = GetResizeZone(control, pos);
-            
-            Console.WriteLine($"[MOUSE] Pressed at {pos.X},{pos.Y} - zone: {zone ?? "null"}");
-            
-            if (zone != null)
-            {
-                // Start resize
-                state.ResizeEdge = zone;
-                state.IsDragging = false;
-                control.Cursor = GetCursorForZone(zone);
-                Console.WriteLine($"[MOUSE] Starting RESIZE mode: {zone}");
-            }
-            else
-            {
-                // Start move
-                state.IsDragging = true;
-                state.ResizeEdge = null;
-                control.Cursor = new Cursor(StandardCursorType.SizeAll);
-                Console.WriteLine($"[MOUSE] Starting DRAG mode");
-            }
-            
-            state.DragStart = e.GetPosition(designCanvas);
-            state.StartX = Canvas.GetLeft(control);
-            state.StartY = Canvas.GetTop(control);
-            
-            SelectControl(control);
-            e.Pointer.Capture(control);
-            e.Handled = true;
-        };
-        
-        control.PointerMoved += (s, e) =>
-        {
-            if (state.ResizeEdge != null)
-            {
-                // Handle resize
-                Console.WriteLine($"[MOUSE] Resizing: {state.ResizeEdge}");
-                var current = e.GetPosition(designCanvas);
-                var deltaX = current.X - state.DragStart.X;
-                var deltaY = current.Y - state.DragStart.Y;
-                
-                HandleResize(control, state.ResizeEdge, deltaX, deltaY, state.StartX, state.StartY);
-                UpdateSelectionBorder();
-                e.Handled = true;
-            }
-            else if (state.IsDragging)
-            {
-                // Handle move
-                Console.WriteLine($"[MOUSE] Dragging");
-                var current = e.GetPosition(designCanvas);
-                var deltaX = current.X - state.DragStart.X;
-                var deltaY = current.Y - state.DragStart.Y;
-                
-                Canvas.SetLeft(control, state.StartX + deltaX);
-                Canvas.SetTop(control, state.StartY + deltaY);
-                
-                if (control.Tag is Control real)
-                {
-                    Canvas.SetLeft(real, state.StartX + deltaX);
-                    Canvas.SetTop(real, state.StartY + deltaY);
-                }
-                
-                UpdateSelectionBorder();
-                e.Handled = true;
-            }
-            else
-            {
-                // Just hovering - update cursor
-                var pos = e.GetPosition(control);
-                var zone = GetResizeZone(control, pos);
-                control.Cursor = GetCursorForZone(zone);
-            }
-        };
-        
-        control.PointerReleased += (s, e) =>
-        {
-            if (state.IsDragging || state.ResizeEdge != null)
-            {
-                Console.WriteLine($"[MOUSE] Released - saving position");
-                
-                // Save position/size to PropertyStore
-                if (control.Tag is Control real)
-                {
-                    PropertyStore.Set(real.Name!, "X", Canvas.GetLeft(control).ToString());
-                    PropertyStore.Set(real.Name!, "Y", Canvas.GetTop(control).ToString());
-                    PropertyStore.Set(real.Name!, "Width", control.Bounds.Width.ToString());
-                    PropertyStore.Set(real.Name!, "Height", control.Bounds.Height.ToString());
-                }
-                
-                state.IsDragging = false;
-                state.ResizeEdge = null;
-                control.Cursor = new Cursor(StandardCursorType.Arrow);
-            }
-            
-            e.Pointer.Capture(null);
-            e.Handled = true;
-        };
-        
-        control.PointerCaptureLost += (s, e) =>
-        {
-            // Safety: reset if capture lost
-            Console.WriteLine($"[MOUSE] Capture lost - resetting");
-            state.IsDragging = false;
-            state.ResizeEdge = null;
-            control.Cursor = new Cursor(StandardCursorType.Arrow);
-        };
     }
 
     private static string? GetResizeZone(Control control, Point pos)
