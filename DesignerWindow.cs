@@ -106,14 +106,12 @@ public class DesignerWindow
 
             controlSelector.Items.Add("Button");
             controlSelector.Items.Add("TextBox");
-            controlSelector.Items.Add("TextBlock");
             controlSelector.Items.Add("CheckBox");
             controlSelector.Items.Add("ComboBox");
             controlSelector.Items.Add("ListBox");
-            controlSelector.Items.Add("RadioButton");
-            controlSelector.Items.Add("StackPanel");
-            controlSelector.Items.Add("Grid");
+            controlSelector.Items.Add("Label");
             controlSelector.Items.Add("Border");
+            controlSelector.Items.Add("StackPanel");
             controlSelector.Items.Add("─────────");
             controlSelector.Items.Add("MainWindow");
             controlSelector.Text = "Button";
@@ -158,7 +156,6 @@ public class DesignerWindow
                     return;
                 }
                 selectedControlType = controlSelector.SelectedItem?.ToString() ?? "Button";  // Use SelectedItem
-                Console.WriteLine($"[SELECTOR] Changed to: {selectedControlType}");
             };
             selectorRow.Children.Add(controlSelector);
             selectorRow.Children.Add(addBtn);
@@ -219,13 +216,11 @@ public class DesignerWindow
                         {
                             activeState.ResizeEdge = zone;
                             activeState.IsDragging = false;
-                            Console.WriteLine($"[MOUSE] Starting RESIZE: {zone}");
                         }
                         else
                         {
                             activeState.IsDragging = true;
                             activeState.ResizeEdge = null;
-                            Console.WriteLine($"[MOUSE] Starting DRAG");
                         }
                         
                         activeState.DragStart = canvasPos;
@@ -250,8 +245,6 @@ public class DesignerWindow
                     // Resize active
                     var deltaX = canvasPos.X - activeState.DragStart.X;
                     var deltaY = canvasPos.Y - activeState.DragStart.Y;
-
-    Console.WriteLine($"[RESIZE] Mouse moved: {deltaX:F1},{deltaY:F1} - Edge: {activeState.ResizeEdge}");
 
                     HandleResize(activeControl, activeState.ResizeEdge, canvasPos, 
                         activeState.StartX, activeState.StartY, activeState.StartWidth, activeState.StartHeight);
@@ -508,16 +501,23 @@ public class DesignerWindow
         // Create control
         Control control = controlType switch
         {
-            "Window" => new Window(),
+            "Window" => new Window { Width = 1350, Height = 750 },
             "Grid" => new Grid(),
             "Border" => new Border(),
-            "StackPanel" => new StackPanel(),
             "DockPanel" => new DockPanel(),
+            "StackPanel" => new StackPanel(),
             "TextBlock" => new TextBlock(),
             "Button" => new Button(),
             "TextBox" => new TextBox(),
-            "ScrollViewer" => new ScrollViewer(),
-            "Panel" => new Panel(),
+            "CheckBox" => new CheckBox(),
+            "ComboBox" => new ComboBox(),
+            "ListBox" => new ListBox(),
+            //"ScrollViewer" => new ScrollViewer(),
+            //"TinyMenu" => new TinyMenu(PropertyStore.GetDbPath()),
+            //"TinyCombo" => new TinyCombo(),
+            //"TinyButton" => new TinyButton(),
+            //"TinyText" => new TinyText(),
+            //"TinyCheck" => new TinyCheck(),
             _ => throw new Exception($"Unknown control type: {controlType}")
         };
 
@@ -790,6 +790,11 @@ public class DesignerWindow
             "StackPanel" => new DesignPanel("StackPanel"),
             "Grid" => new DesignPanel("Grid"),
             "Border" => new DesignBorder(),
+            //"TinyButton" => new TinyButton { Text = name },
+            //"TinyCombo" => new TinyCombo(),
+            //"TinyText" => new TinyText { Text = "Text" },
+            //"TinyCheck" => new TinyCheck { Text = "Checkbox" },
+            //"TinyMenu" => new TinyMenu(),
             _ => null
         };
         
@@ -805,6 +810,11 @@ public class DesignerWindow
             "StackPanel" => new StackPanel(),
             "Grid" => new Grid(),
             "Border" => new Border(),
+            //"TinyButton" => new TinyButton { Text = name },
+            //"TinyCombo" => new TinyCombo(),
+            //"TinyText" => new TinyText { Text = "Text" },
+            //"TinyCheck" => new TinyCheck { Text = "Checkbox" },
+            //"TinyMenu" => new TinyMenu(),
             _ => null
         };
         
