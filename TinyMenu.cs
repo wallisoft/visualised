@@ -149,6 +149,7 @@ public class TinyMenu : Border
     
     private Button CreateTopLevelButton(MenuItemData menuItem)
     {
+            Console.WriteLine($"[TINYMENU] Creating button for {menuItem.Text}");
         var button = new Button
         {
             Content = menuItem.Text,
@@ -161,10 +162,13 @@ public class TinyMenu : Border
             VerticalAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
         };
+
+            Console.WriteLine($"[TINYMENU] Attaching hover handlers for {menuItem.Text}");
         
         // Hover - show popup
         button.PointerEntered += (s, e) =>
         {
+                    Console.WriteLine($"[TINYMENU] PointerEntered: {menuItem.Text}");
             button.Background = Brush.Parse(_theme.HoverBackground);
             button.Foreground = Brush.Parse(_theme.HoverForeground);
             ShowPopup(menuItem, button);
