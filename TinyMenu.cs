@@ -174,7 +174,7 @@ public class TinyMenu : Border
         // Get child items
         var children = _menuItems.Where(m => m.ParentId == menuItem.Id).ToList();
         if (children.Count == 0) return;
-        
+
         var stack = new StackPanel { Spacing = 0 };
         
         foreach (var child in children)
@@ -196,8 +196,8 @@ public class TinyMenu : Border
             // Hover
             itemButton.PointerEntered += (s, e) =>
             {
-                itemButton.Background = Brush.Parse(_theme.Background);
-                itemButton.Foreground = Brushes.White;
+                itemButton.Background = Brush.Parse(_theme.HoverBackground);  // From VML
+                itemButton.Foreground = Brush.Parse(_theme.HoverForeground);  // From VML
             };
             
             itemButton.PointerExited += (s, e) =>
@@ -263,15 +263,17 @@ public class TinyMenu : Border
     {
         if (_activePopup == null) return;
         
-        var window = this.GetVisualRoot() as Window;
-        if (window?.Content is Panel rootPanel)
+        var rootGrid = FindRootGrid();
+        if (rootGrid != null && rootGrid.Children.Contains(_activePopup))
         {
-            rootPanel.Children.Remove(_activePopup);
+            rootGrid.Children.Remove(_activePopup);
         }
         
+        // Clear the child to release parent relationship
+        _activePopup.Child = null;
         _activePopup = null;
     }
-    
+
     private void ExecuteMenuAction(string scriptName)
     {
         Console.WriteLine($"[TINYMENU] Executing: {scriptName}");
