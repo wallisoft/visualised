@@ -35,7 +35,9 @@ public class TinyMenu : Border
         // Setup overlay canvas when attached to visual tree
         this.AttachedToVisualTree += (s, e) =>
         {
+                Console.WriteLine("[TINYMENU] AttachedToVisualTree");
             var rootGrid = FindRootGrid();
+                Console.WriteLine($"[TINYMENU] RootGrid found: {rootGrid != null}");
             if (rootGrid != null && _overlayCanvas == null)
             {
                 _overlayCanvas = new Canvas 
@@ -45,6 +47,7 @@ public class TinyMenu : Border
                     ZIndex = 999  // Use property instead of Panel.SetZIndex
                 };
                 rootGrid.Children.Add(_overlayCanvas);
+                        Console.WriteLine("[TINYMENU] Overlay canvas created");
 
                 // Close popup when clicking outside
                 _overlayCanvas.PointerPressed += (s2, e2) =>
@@ -188,6 +191,8 @@ public class TinyMenu : Border
         
     private void ShowPopup(MenuItemData menuItem, Button parentButton)
     {
+            Console.WriteLine($"[TINYMENU] ShowPopup called for {menuItem.Text}");
+    Console.WriteLine($"[TINYMENU] Overlay canvas: {_overlayCanvas != null}");
         ClosePopup();
         
         // Get child items
