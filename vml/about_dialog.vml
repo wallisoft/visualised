@@ -1,0 +1,72 @@
+# About Dialog
+Title=About Visualised Markup
+Width=500
+Height=400
+CanResize=false
+
+layout: stackpanel
+padding: 30
+spacing: 20
+background: white
+horizontal_alignment: center
+
+children:
+  - type: textblock
+    text: "🚀"
+    font_size: 48
+    horizontal_alignment: center
+  
+  - type: textblock
+    text: "Visualised Markup"
+    font_size: 24
+    font_weight: bold
+    horizontal_alignment: center
+  
+  - type: textblock
+    text: "Version 1.0.0"
+    font_size: 14
+    foreground: "#666"
+    horizontal_alignment: center
+  
+  - type: textblock
+    text: "Revolutionary YAML-driven RAD IDE"
+    font_size: 12
+    foreground: "#888"
+    horizontal_alignment: center
+    margin: 0,10,0,20
+  
+  - type: textblock
+    text: "The IDE that recursively builds itself"
+    font_style: italic
+    horizontal_alignment: center
+  
+  - type: border
+    height: 1
+    background: "#ddd"
+    margin: 20,0
+  
+  - type: textblock
+    text: "Steve Wallis @ Wallisoft"
+    horizontal_alignment: center
+  
+  - type: textblock
+    text: "register@wallisoft.uk"
+    foreground: "#3498db"
+    horizontal_alignment: center
+  
+  - type: textblock
+    text: "visualised.io"
+    foreground: "#3498db"
+    horizontal_alignment: center
+    margin: 0,0,0,20
+  
+  - type: button
+    content: "OK"
+    width: 100
+    padding: 10,6
+    horizontal_alignment: center
+    onclick: CloseDialog
+
+metadata:
+  description: "About dialog for Visualised Markup"
+
