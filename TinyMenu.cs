@@ -36,16 +36,14 @@ public class TinyMenu : Border
         // In constructor AttachedToVisualTree:
         this.AttachedToVisualTree += (s, e) =>
         {
-            Console.WriteLine("[TINYMENU] AttachedToVisualTree");
             var rootGrid = FindRootGrid();
-            Console.WriteLine($"[TINYMENU] RootGrid found: {rootGrid != null}");
             
             if (rootGrid != null && _overlayCanvas == null)
             {
                 _overlayCanvas = new Canvas 
                 { 
                     Background = Brushes.Transparent,
-                    IsHitTestVisible = false,  // MUST BE FALSE ON STARTUP
+                    IsHitTestVisible = false, 
                     ZIndex = 999
                 };
                 
@@ -53,8 +51,24 @@ public class TinyMenu : Border
                 Grid.SetRowSpan(_overlayCanvas, 2);
                 
                 rootGrid.Children.Add(_overlayCanvas);
-                Console.WriteLine($"[TINYMENU] Overlay created, IsHitTestVisible={_overlayCanvas.IsHitTestVisible}");
                 
+                // Add PointerExited to overlay
+                _overlayCanvas.PointerExited += (s, e) =>
+                {
+                    Console.WriteLine("[OVERLAY] PointerExited");
+                    Task.Delay(150).ContinueWith(_ =>
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            if (_activePopup != null && !_overlayCanvas.IsPointerOver)
+                            {
+                                Console.WriteLine("[OVERLAY] Closing popup");
+                                ClosePopup();
+                            }
+                        });
+                    });
+                };
+
                 _overlayCanvas.PointerPressed += (s2, e2) =>
                 {
                     ClosePopup();
