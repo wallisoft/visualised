@@ -189,10 +189,10 @@ public class TinyMenu : Border
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(15, 8),
                 FontSize = 12,
-                MinWidth = 200,
+                // Remove: MinWidth = 200,
                 Cursor = new Cursor(StandardCursorType.Hand)
-            };
-            
+            }; 
+
             // Hover - use theme colors from VML
             itemButton.PointerEntered += (s, e) =>
             {
@@ -235,29 +235,35 @@ public class TinyMenu : Border
         var rootGrid = FindRootGrid();
         if (rootGrid != null)
         {
-            var buttonPos = parentButton.TranslatePoint(new Point(0, parentButton.Bounds.Height), rootGrid);
+            // Get menu bar height (row 0 of MainGrid)
+            var menuBarHeight = _menuBar.Bounds.Height;
+
+            // Get button's X position relative to MainGrid
+            var buttonPos = parentButton.TranslatePoint(new Point(0, 0), rootGrid);
+
             if (buttonPos.HasValue)
             {
-                _activePopup.Margin = new Thickness(buttonPos.Value.X, buttonPos.Value.Y, 0, 0);
+                // Position: left aligned with button, top at menu bar bottom
+                _activePopup.Margin = new Thickness(buttonPos.Value.X, menuBarHeight, 0, 0);
             }
-            
+
             if (!rootGrid.Children.Contains(_activePopup))
             {
                 rootGrid.Children.Add(_activePopup);
             }
         }
-    }
+    }    
+
+    private void ClosePopup()
+    {
+        if (_activePopup == null) return;
         
-        private void ClosePopup()
+        var rootGrid = FindRootGrid();
+        if (rootGrid != null && rootGrid.Children.Contains(_activePopup))
         {
-            if (_activePopup == null) return;
-            
-            var rootGrid = FindRootGrid();
-            if (rootGrid != null && rootGrid.Children.Contains(_activePopup))
-            {
-                rootGrid.Children.Remove(_activePopup);
-            }
-        
+            rootGrid.Children.Remove(_activePopup);
+        }
+    
         // Fully clear children to release parent relationships
         if (_activePopup.Child is Panel panel)
         {
