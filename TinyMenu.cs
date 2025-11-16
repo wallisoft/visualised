@@ -223,8 +223,6 @@ button.Click += (s, e) =>
         
     private void ShowPopup(MenuItemData menuItem, Button parentButton)
     {
-            Console.WriteLine($"[TINYMENU] ShowPopup called for {menuItem.Text}");
-    Console.WriteLine($"[TINYMENU] Overlay canvas: {_overlayCanvas != null}");
         ClosePopup();
         
         // Get child items
@@ -274,17 +272,6 @@ button.Click += (s, e) =>
             stack.Children.Add(itemButton);
         }
         
-        // Create popup border
-        _activePopup = new Border
-        {
-            Background = Brush.Parse(_theme.PopupBackground),
-            BorderBrush = Brush.Parse(_theme.PopupBorder),
-            BorderThickness = new Thickness(2),
-            BoxShadow = new BoxShadows(new BoxShadow { Blur = 3, Color = Color.Parse("#107C10"), OffsetY = 0 }),
-            Child = stack,
-            Tag = menuItem
-        };
-
         // Create popup border
         _activePopup = new Border
         {
