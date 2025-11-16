@@ -343,7 +343,7 @@ public class TinyMenu : Border
                 {
                     // Nested popup - position to right of parent item
                     Canvas.SetLeft(popup, nestPosition.Value.X);
-                    Canvas.SetTop(popup, nestPosition.Value.Y - 8);
+                    Canvas.SetTop(popup, nestPosition.Value.Y - 20);
                 }
                 else
                 {
