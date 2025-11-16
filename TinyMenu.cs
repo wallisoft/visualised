@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks; 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -22,6 +23,7 @@ public class TinyMenu : Border
     private List<MenuItemData> _menuItems = new();
     private Border? _activePopup;
     private MenuTheme _theme;
+    private Canvas? _overlayCanvas; 
     
     public TinyMenu(string dbPath)
     {
@@ -29,9 +31,31 @@ public class TinyMenu : Border
         LoadTheme();
         LoadMenuStructure();
         BuildUI();
+        
+        // Setup overlay canvas when attached to visual tree
+        this.AttachedToVisualTree += (s, e) =>
+        {
+            var rootGrid = FindRootGrid();
+            if (rootGrid != null && _overlayCanvas == null)
+            {
+                _overlayCanvas = new Canvas 
+                { 
+                    Background = Brushes.Transparent,
+                    IsHitTestVisible = true,
+                    ZIndex = 999  // Use property instead of Panel.SetZIndex
+                };
+                rootGrid.Children.Add(_overlayCanvas);
+
+                // Close popup when clicking outside
+                _overlayCanvas.PointerPressed += (s2, e2) =>
+                {
+                    ClosePopup();
+                };
+            }
+        };
     }
-    
-    private void LoadTheme()
+        
+        private void LoadTheme()
     {
         _theme = new MenuTheme
         {
@@ -135,38 +159,33 @@ public class TinyMenu : Border
             Cursor = new Cursor(StandardCursorType.Hand)
         };
         
-        // Hover effect
+        // Hover - show popup
         button.PointerEntered += (s, e) =>
         {
             button.Background = Brush.Parse(_theme.HoverBackground);
             button.Foreground = Brush.Parse(_theme.HoverForeground);
+            ShowPopup(menuItem, button);
         };
         
         button.PointerExited += (s, e) =>
         {
-            if (_activePopup == null || _activePopup.Tag != menuItem)
+            // Delay closing to allow moving to popup
+            Task.Delay(100).ContinueWith(_ =>
             {
-                button.Background = Brushes.Transparent;
-                button.Foreground = Brush.Parse(_theme.Foreground);
-            }
-        };
-        
-        // Click - show popup
-        button.Click += (s, e) =>
-        {
-            if (_activePopup?.Tag == menuItem)
-            {
-                ClosePopup();
-            }
-            else
-            {
-                ShowPopup(menuItem, button);
-            }
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (_activePopup?.Tag != menuItem || !IsPointerOverPopup())
+                    {
+                        button.Background = Brushes.Transparent;
+                        button.Foreground = Brush.Parse(_theme.Foreground);
+                    }
+                });
+            });
         };
         
         return button;
     }
-    
+        
     private void ShowPopup(MenuItemData menuItem, Button parentButton)
     {
         ClosePopup();
@@ -189,11 +208,10 @@ public class TinyMenu : Border
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(15, 8),
                 FontSize = 12,
-                // Remove: MinWidth = 200,
                 Cursor = new Cursor(StandardCursorType.Hand)
-            }; 
-
-            // Hover - use theme colors from VML
+            };
+            
+            // Hover
             itemButton.PointerEntered += (s, e) =>
             {
                 itemButton.Background = Brush.Parse(_theme.HoverBackground);
@@ -219,56 +237,45 @@ public class TinyMenu : Border
             stack.Children.Add(itemButton);
         }
         
-        // Create popup border (ONLY ONCE)
+        // Create popup border
         _activePopup = new Border
         {
             Background = Brush.Parse(_theme.PopupBackground),
             BorderBrush = Brush.Parse(_theme.PopupBorder),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(2),
             BoxShadow = new BoxShadows(new BoxShadow { Blur = 10, Color = Colors.Black, OffsetY = 2 }),
             Child = stack,
-            Tag = menuItem,
-            ZIndex = 1000
+            Tag = menuItem
         };
         
-        // Position and add to MainGrid
-        var rootGrid = FindRootGrid();
-        if (rootGrid != null)
+        // Position on overlay canvas
+        if (_overlayCanvas != null)
         {
-            // Get menu bar height (row 0 of MainGrid)
-            var menuBarHeight = _menuBar.Bounds.Height;
-
-            // Get button's X position relative to MainGrid
-            var buttonPos = parentButton.TranslatePoint(new Point(0, 0), rootGrid);
-
-            if (buttonPos.HasValue)
+            var rootGrid = FindRootGrid();
+            if (rootGrid != null)
             {
-                // Position: left aligned with button, top at menu bar bottom
-                _activePopup.Margin = new Thickness(buttonPos.Value.X, menuBarHeight, 0, 0);
+                // Position below button, aligned to left edge
+                var buttonPos = parentButton.TranslatePoint(new Point(0, parentButton.Bounds.Height), rootGrid);
+                if (buttonPos.HasValue)
+                {
+                    Canvas.SetLeft(_activePopup, buttonPos.Value.X);
+                    Canvas.SetTop(_activePopup, buttonPos.Value.Y);
+                }
             }
-
-            if (!rootGrid.Children.Contains(_activePopup))
-            {
-                rootGrid.Children.Add(_activePopup);
-            }
+            
+            _overlayCanvas.Children.Add(_activePopup);
         }
-    }    
+    }
 
     private void ClosePopup()
     {
         if (_activePopup == null) return;
         
-        var rootGrid = FindRootGrid();
-        if (rootGrid != null && rootGrid.Children.Contains(_activePopup))
+        if (_overlayCanvas != null && _overlayCanvas.Children.Contains(_activePopup))
         {
-            rootGrid.Children.Remove(_activePopup);
+            _overlayCanvas.Children.Remove(_activePopup);
         }
-    
-        // Fully clear children to release parent relationships
-        if (_activePopup.Child is Panel panel)
-        {
-            panel.Children.Clear();
-        }
+        
         _activePopup.Child = null;
         _activePopup = null;
     }
@@ -346,6 +353,15 @@ public class TinyMenu : Border
         }
         return null;
     }
+
+    private bool IsPointerOverPopup()
+    {
+        if (_activePopup == null) return false;
+
+        // Check if popup is being hovered
+        return _activePopup.IsPointerOver;
+    }
+
 }
 
 public class MenuItemData
