@@ -265,11 +265,27 @@ button.Click += (s, e) =>
             Background = Brush.Parse(_theme.PopupBackground),
             BorderBrush = Brush.Parse(_theme.PopupBorder),
             BorderThickness = new Thickness(2),
-            BoxShadow = new BoxShadows(new BoxShadow { Blur = 10, Color = Colors.Black, OffsetY = 2 }),
+            BoxShadow = new BoxShadows(new BoxShadow { Blur = 3, Color = Color.Parse("#107C10"), OffsetY = 0 }),
             Child = stack,
             Tag = menuItem
         };
-        
+
+        // Close popup when mouse leaves
+        _activePopup.PointerExited += (s, e) =>
+        {
+            // Small delay to allow moving between items
+            Task.Delay(100).ContinueWith(_ =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (!_activePopup.IsPointerOver)
+                    {
+                        ClosePopup();
+                    }
+                });
+            });
+        };
+
         // Position on overlay canvas
         if (_overlayCanvas != null)
         {
