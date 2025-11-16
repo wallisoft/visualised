@@ -181,7 +181,7 @@ public class TinyMenu : Border
         {
             var itemButton = new Button
             {
-                Content = child.Text + (child.Shortcut != null ? $"\t{child.Shortcut}" : ""),
+                Content = child.Text + (child.Shortcut != null ? $"    {child.Shortcut}" : ""),
                 Background = Brushes.Transparent,
                 Foreground = Brushes.Black,
                 BorderThickness = new Thickness(0),
@@ -189,6 +189,7 @@ public class TinyMenu : Border
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(15, 8),
                 FontSize = 12,
+                MinWidth = 200,
                 Cursor = new Cursor(StandardCursorType.Hand)
             };
             
@@ -205,8 +206,8 @@ public class TinyMenu : Border
                 itemButton.Foreground = Brushes.Black;
             };
             
-            // Click - execute script
-            itemButton.Click += async (s, e) =>
+            // Click
+            itemButton.Click += (s, e) =>
             {
                 ClosePopup();
                 if (!string.IsNullOrEmpty(child.OnClick))
@@ -228,24 +229,33 @@ public class TinyMenu : Border
             Tag = menuItem
         };
         
-        // Position below button
-        var overlay = new Panel();
-        overlay.Children.Add(_activePopup);
-        
-        // Add to window
-        var window = this.GetVisualRoot() as Window;
-        if (window?.Content is Panel rootPanel)
+        // Add to MainGrid
+        var rootGrid = FindRootGrid();
+        if (rootGrid != null)
         {
-            var buttonPos = parentButton.TranslatePoint(new Point(0, parentButton.Bounds.Height), rootPanel);
+            var buttonPos = parentButton.TranslatePoint(new Point(0, parentButton.Bounds.Height), rootGrid);
             if (buttonPos.HasValue)
             {
-                Canvas.SetLeft(_activePopup, buttonPos.Value.X);
-                Canvas.SetTop(_activePopup, buttonPos.Value.Y);
+                _activePopup.Margin = new Thickness(buttonPos.Value.X, buttonPos.Value.Y, 0, 0);
             }
             
-            rootPanel.Children.Add(_activePopup);
+            // And set ZIndex directly on the border:
+            _activePopup = new Border
+            {
+                Background = Brush.Parse(_theme.PopupBackground),
+                BorderBrush = Brush.Parse(_theme.PopupBorder),
+                BorderThickness = new Thickness(1),
+                BoxShadow = new BoxShadows(new BoxShadow { Blur = 10, Color = Colors.Black, OffsetY = 2 }),
+                Child = stack,
+                Tag = menuItem,
+                ZIndex = 1000  // ADD THIS
+            };
             
-            Console.WriteLine($"[TINYMENU] Opened popup for {menuItem.Text}");
+            // CHECK if already in children before adding
+            if (!rootGrid.Children.Contains(_activePopup))
+            {
+                rootGrid.Children.Add(_activePopup);
+            }
         }
     }
     
@@ -317,6 +327,23 @@ public class TinyMenu : Border
         cmd.Parameters.AddWithValue("@id", parentId);
         
         return cmd.ExecuteScalar()?.ToString() ?? "";
+    }
+
+    private Grid? FindRootGrid()
+    {
+        // Walk up the visual tree to find MainGrid
+        var current = this.Parent;
+        while (current != null)
+        {
+            if (current is Grid grid && grid.Name == "MainGrid")
+                return grid;
+
+            if (current is Visual visual)
+                current = visual.GetVisualParent();
+            else
+                break;
+        }
+        return null;
     }
 }
 
