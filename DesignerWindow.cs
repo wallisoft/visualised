@@ -398,12 +398,11 @@ public class DesignerWindow
         window.Content = mainGrid;
 
         // Give focus to canvas on load
-        window.Loaded += (s, e) =>
+        window.Loaded += (s, e) => 
         {
             designCanvas?.Focus();
-            Console.WriteLine("[FOCUS] Canvas focused on startup");
+            Console.WriteLine($"[FOCUS] Canvas focused, IsHitTestVisible={designCanvas?.IsHitTestVisible}");
         };
-
         
         // Load controls from PropertyStore
         LoadPropertyStoreControls();

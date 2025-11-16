@@ -54,7 +54,7 @@ public class TinyMenu : Border
                 Grid.SetRowSpan(_overlayCanvas, 2);
                 
                 rootGrid.Children.Add(_overlayCanvas);
-                Console.WriteLine("[TINYMENU] Overlay canvas created in rows 1-2");
+                Console.WriteLine($"[TINYMENU] Overlay created, IsHitTestVisible={_overlayCanvas.IsHitTestVisible}");
                 
                 _overlayCanvas.PointerPressed += (s2, e2) =>
                 {
