@@ -190,7 +190,6 @@ public class TinyMenu : Border
         // Hover - show popup
         button.PointerEntered += (s, e) =>
         {
-            Console.WriteLine($"[TINYMENU] PointerEntered: {menuItem.Text}");
             button.Background = Brush.Parse(_theme.HoverBackground);
             button.Foreground = Brush.Parse(_theme.HoverForeground);
             ShowPopup(menuItem, button);
@@ -237,8 +236,8 @@ public class TinyMenu : Border
             var itemButton = new Button
             {
                 Content = child.Text +
-                          (child.Shortcut != null ? $"    {child.Shortcut}" : "") +
-                          (hasChildren ? "  ▶" : ""),  // Arrow indicator for nested
+                   (child.Shortcut != null ? $"    {child.Shortcut}" : "") +
+                   (hasChildren ? "  ▶" : ""),  // Arrow indicator for nested
                 Background = Brushes.Transparent,
                 Foreground = Brushes.Black,
                 BorderThickness = new Thickness(0),
@@ -344,7 +343,7 @@ public class TinyMenu : Border
                 {
                     // Nested popup - position to right of parent item
                     Canvas.SetLeft(popup, nestPosition.Value.X);
-                    Canvas.SetTop(popup, nestPosition.Value.Y);
+                    Canvas.SetTop(popup, nestPosition.Value.Y - 8);
                 }
                 else
                 {
