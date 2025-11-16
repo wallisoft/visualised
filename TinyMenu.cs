@@ -269,7 +269,11 @@ public class TinyMenu : Border
             rootGrid.Children.Remove(_activePopup);
         }
         
-        // Clear the child to release parent relationship
+        // Fully clear children to release parent relationships
+        if (_activePopup.Child is Panel panel)
+        {
+            panel.Children.Clear();
+        }
         _activePopup.Child = null;
         _activePopup = null;
     }

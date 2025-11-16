@@ -116,8 +116,8 @@ FontSize=11
 @MenuTheme MenuTheme
 Background=#107C10
 Foreground=White
-HoverBackground=White
-HoverForeground=#107C10
+HoverBackground=#107C10
+HoverForeground=White
 PopupBackground=White
 PopupBorder=#107C10
 Height=30
