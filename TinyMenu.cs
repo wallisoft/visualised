@@ -24,6 +24,7 @@ public class TinyMenu : Border
     private Border? _activePopup;
     private MenuTheme _theme;
     private Canvas? _overlayCanvas; 
+    private System.Timers.Timer? _closeTimer;  
     
     public TinyMenu(string dbPath)
     {
@@ -302,26 +303,45 @@ button.Click += (s, e) =>
         };
 
         // Position on overlay canvas
+        // Position on overlay canvas
         if (_overlayCanvas != null)
         {
+            _overlayCanvas.IsHitTestVisible = true;
+            
             var rootGrid = FindRootGrid();
             if (rootGrid != null)
             {
-                // Position at top of overlay (just below menu), aligned with button's left
                 var buttonPos = parentButton.TranslatePoint(new Point(0, 0), rootGrid);
                 if (buttonPos.HasValue)
                 {
                     Canvas.SetLeft(_activePopup, buttonPos.Value.X);
-                    Canvas.SetTop(_activePopup, 0);  // Top of overlay = bottom of menu bar
+                    Canvas.SetTop(_activePopup, 0);
                 }
             }
             
             _overlayCanvas.Children.Add(_activePopup);
+            
+            // Start auto-close timer
+            _closeTimer?.Stop();
+            _closeTimer = new System.Timers.Timer(300);  // Check every 300ms
+            _closeTimer.Elapsed += (s, e) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (_activePopup != null && !_activePopup.IsPointerOver)
+                    {
+                        ClosePopup();
+                    }
+                });
+            };
+            _closeTimer.Start();
         }
     }
 
     private void ClosePopup()
     {
+        _closeTimer?.Stop(); 
+
         if (_activePopup == null) return;
 
         if (_overlayCanvas != null)
