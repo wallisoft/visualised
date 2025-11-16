@@ -285,25 +285,42 @@ button.Click += (s, e) =>
             Tag = menuItem
         };
 
-        // Close popup when mouse leaves
+        // Create popup border
+        _activePopup = new Border
+        {
+            Background = Brush.Parse(_theme.PopupBackground),
+            BorderBrush = Brush.Parse(_theme.PopupBorder),
+            BorderThickness = new Thickness(2),
+            BoxShadow = new BoxShadows(new BoxShadow { Blur = 3, Color = Color.Parse("#107C10"), OffsetY = 0 }),
+            Child = stack,
+            Tag = menuItem
+        };
+
+        // Start close timer when mouse leaves popup
         _activePopup.PointerExited += (s, e) =>
         {
-                Console.WriteLine("[POPUP] PointerExited fired");
-            // Small delay to allow moving between items
-            Task.Delay(100).ContinueWith(_ =>
+            _closeTimer?.Stop();
+            _closeTimer = new System.Timers.Timer(500);  // 500ms grace period
+            _closeTimer.Elapsed += (s2, e2) =>
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    if (!_activePopup.IsPointerOver)
+                    if (_activePopup != null && !_activePopup.IsPointerOver)
                     {
                         ClosePopup();
                     }
                 });
-            });
+            };
+            _closeTimer.Start();
         };
 
-        // Position on overlay canvas
-        // Position on overlay canvas
+        // Cancel timer when mouse returns
+        _activePopup.PointerEntered += (s, e) =>
+        {
+            _closeTimer?.Stop();
+        };
+
+        // Position on overlay canvas 
         if (_overlayCanvas != null)
         {
             _overlayCanvas.IsHitTestVisible = true;
@@ -320,21 +337,6 @@ button.Click += (s, e) =>
             }
             
             _overlayCanvas.Children.Add(_activePopup);
-            
-            // Start auto-close timer
-            _closeTimer?.Stop();
-            _closeTimer = new System.Timers.Timer(300);  // Check every 300ms
-            _closeTimer.Elapsed += (s, e) =>
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    if (_activePopup != null && !_activePopup.IsPointerOver)
-                    {
-                        ClosePopup();
-                    }
-                });
-            };
-            _closeTimer.Start();
         }
     }
 
