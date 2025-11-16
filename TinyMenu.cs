@@ -45,11 +45,10 @@ public class TinyMenu : Border
                 _overlayCanvas = new Canvas 
                 { 
                     Background = Brushes.Transparent,
-                    IsHitTestVisible = true,
+                    IsHitTestVisible = false,  // MUST BE FALSE ON STARTUP
                     ZIndex = 999
                 };
                 
-                // Position overlay to cover only workspace (rows 1-2), not menu (row 0)
                 Grid.SetRow(_overlayCanvas, 1);
                 Grid.SetRowSpan(_overlayCanvas, 2);
                 
@@ -62,6 +61,7 @@ public class TinyMenu : Border
                 };
             }
         };
+
     }
         
     private void LoadTheme()
