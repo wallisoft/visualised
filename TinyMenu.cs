@@ -174,7 +174,7 @@ public class TinyMenu : Border
         // Get child items
         var children = _menuItems.Where(m => m.ParentId == menuItem.Id).ToList();
         if (children.Count == 0) return;
-
+        
         var stack = new StackPanel { Spacing = 0 };
         
         foreach (var child in children)
@@ -193,11 +193,11 @@ public class TinyMenu : Border
                 Cursor = new Cursor(StandardCursorType.Hand)
             };
             
-            // Hover
+            // Hover - use theme colors from VML
             itemButton.PointerEntered += (s, e) =>
             {
-                itemButton.Background = Brush.Parse(_theme.HoverBackground);  // From VML
-                itemButton.Foreground = Brush.Parse(_theme.HoverForeground);  // From VML
+                itemButton.Background = Brush.Parse(_theme.HoverBackground);
+                itemButton.Foreground = Brush.Parse(_theme.HoverForeground);
             };
             
             itemButton.PointerExited += (s, e) =>
@@ -206,7 +206,7 @@ public class TinyMenu : Border
                 itemButton.Foreground = Brushes.Black;
             };
             
-            // Click
+            // Click - execute action
             itemButton.Click += (s, e) =>
             {
                 ClosePopup();
@@ -219,6 +219,7 @@ public class TinyMenu : Border
             stack.Children.Add(itemButton);
         }
         
+        // Create popup border (ONLY ONCE)
         _activePopup = new Border
         {
             Background = Brush.Parse(_theme.PopupBackground),
@@ -226,10 +227,11 @@ public class TinyMenu : Border
             BorderThickness = new Thickness(1),
             BoxShadow = new BoxShadows(new BoxShadow { Blur = 10, Color = Colors.Black, OffsetY = 2 }),
             Child = stack,
-            Tag = menuItem
+            Tag = menuItem,
+            ZIndex = 1000
         };
         
-        // Add to MainGrid
+        // Position and add to MainGrid
         var rootGrid = FindRootGrid();
         if (rootGrid != null)
         {
@@ -239,35 +241,22 @@ public class TinyMenu : Border
                 _activePopup.Margin = new Thickness(buttonPos.Value.X, buttonPos.Value.Y, 0, 0);
             }
             
-            // And set ZIndex directly on the border:
-            _activePopup = new Border
-            {
-                Background = Brush.Parse(_theme.PopupBackground),
-                BorderBrush = Brush.Parse(_theme.PopupBorder),
-                BorderThickness = new Thickness(1),
-                BoxShadow = new BoxShadows(new BoxShadow { Blur = 10, Color = Colors.Black, OffsetY = 2 }),
-                Child = stack,
-                Tag = menuItem,
-                ZIndex = 1000  // ADD THIS
-            };
-            
-            // CHECK if already in children before adding
             if (!rootGrid.Children.Contains(_activePopup))
             {
                 rootGrid.Children.Add(_activePopup);
             }
         }
     }
-    
-    private void ClosePopup()
-    {
-        if (_activePopup == null) return;
         
-        var rootGrid = FindRootGrid();
-        if (rootGrid != null && rootGrid.Children.Contains(_activePopup))
+        private void ClosePopup()
         {
-            rootGrid.Children.Remove(_activePopup);
-        }
+            if (_activePopup == null) return;
+            
+            var rootGrid = FindRootGrid();
+            if (rootGrid != null && rootGrid.Children.Contains(_activePopup))
+            {
+                rootGrid.Children.Remove(_activePopup);
+            }
         
         // Fully clear children to release parent relationships
         if (_activePopup.Child is Panel panel)
