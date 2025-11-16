@@ -276,12 +276,12 @@ button.Click += (s, e) =>
             var rootGrid = FindRootGrid();
             if (rootGrid != null)
             {
-                // Position below button, aligned to left edge
-                var buttonPos = parentButton.TranslatePoint(new Point(0, parentButton.Bounds.Height), rootGrid);
+                // Position at top of overlay (just below menu), aligned with button's left
+                var buttonPos = parentButton.TranslatePoint(new Point(0, 0), rootGrid);
                 if (buttonPos.HasValue)
                 {
                     Canvas.SetLeft(_activePopup, buttonPos.Value.X);
-                    Canvas.SetTop(_activePopup, buttonPos.Value.Y);
+                    Canvas.SetTop(_activePopup, 0);  // Top of overlay = bottom of menu bar
                 }
             }
             
@@ -300,6 +300,11 @@ button.Click += (s, e) =>
         
         _activePopup.Child = null;
         _activePopup = null;
+        
+        // Return focus to canvas
+        var rootGrid = FindRootGrid();
+        var canvas = rootGrid?.Children.OfType<ScrollViewer>().FirstOrDefault()?.Content as Canvas;
+        canvas?.Focus();
     }
 
     private void ExecuteMenuAction(string scriptName)

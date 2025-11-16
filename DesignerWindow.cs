@@ -178,14 +178,8 @@ public class DesignerWindow
             {
                 Width = 4000,
                 Height = 4000,
-                Background = new SolidColorBrush(Color.Parse("#e8f5e9")) 
-            };
-
-            designCanvas = new Canvas
-            {
-                Width = 4000,
-                Height = 4000,
-                Background = new SolidColorBrush(Color.Parse("#e8f5e9"))
+                Background = new SolidColorBrush(Color.Parse("#e8f5e9")), 
+                Focusable = true  
             };
 
             // ADD THESE VARIABLES:
@@ -399,6 +393,17 @@ public class DesignerWindow
         
         // Set window content
         window.Content = mainGrid;
+
+        // Set MainGrid as window content
+        window.Content = mainGrid;
+
+        // Give focus to canvas on load
+        window.Loaded += (s, e) =>
+        {
+            designCanvas?.Focus();
+            Console.WriteLine("[FOCUS] Canvas focused on startup");
+        };
+
         
         // Load controls from PropertyStore
         LoadPropertyStoreControls();
