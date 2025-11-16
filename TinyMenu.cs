@@ -33,23 +33,29 @@ public class TinyMenu : Border
         BuildUI();
         
         // Setup overlay canvas when attached to visual tree
+        // In constructor AttachedToVisualTree:
         this.AttachedToVisualTree += (s, e) =>
         {
-                Console.WriteLine("[TINYMENU] AttachedToVisualTree");
+            Console.WriteLine("[TINYMENU] AttachedToVisualTree");
             var rootGrid = FindRootGrid();
-                Console.WriteLine($"[TINYMENU] RootGrid found: {rootGrid != null}");
+            Console.WriteLine($"[TINYMENU] RootGrid found: {rootGrid != null}");
+            
             if (rootGrid != null && _overlayCanvas == null)
             {
                 _overlayCanvas = new Canvas 
                 { 
                     Background = Brushes.Transparent,
                     IsHitTestVisible = true,
-                    ZIndex = 999  // Use property instead of Panel.SetZIndex
+                    ZIndex = 999
                 };
+                
+                // Position overlay to cover only workspace (rows 1-2), not menu (row 0)
+                Grid.SetRow(_overlayCanvas, 1);
+                Grid.SetRowSpan(_overlayCanvas, 2);
+                
                 rootGrid.Children.Add(_overlayCanvas);
-                        Console.WriteLine("[TINYMENU] Overlay canvas created");
-
-                // Close popup when clicking outside
+                Console.WriteLine("[TINYMENU] Overlay canvas created in rows 1-2");
+                
                 _overlayCanvas.PointerPressed += (s2, e2) =>
                 {
                     ClosePopup();
@@ -58,7 +64,7 @@ public class TinyMenu : Border
         };
     }
         
-        private void LoadTheme()
+    private void LoadTheme()
     {
         _theme = new MenuTheme
         {
