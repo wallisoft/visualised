@@ -273,6 +273,7 @@ button.Click += (s, e) =>
         // Close popup when mouse leaves
         _activePopup.PointerExited += (s, e) =>
         {
+                Console.WriteLine("[POPUP] PointerExited fired");
             // Small delay to allow moving between items
             Task.Delay(100).ContinueWith(_ =>
             {
