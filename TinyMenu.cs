@@ -292,15 +292,20 @@ button.Click += (s, e) =>
     private void ClosePopup()
     {
         if (_activePopup == null) return;
-        
-        if (_overlayCanvas != null && _overlayCanvas.Children.Contains(_activePopup))
+
+        if (_overlayCanvas != null)
         {
-            _overlayCanvas.Children.Remove(_activePopup);
+            if (_overlayCanvas.Children.Contains(_activePopup))
+            {
+                // Remove this line: _overlayCanvas.IsHitTestVisible = true;
+                _overlayCanvas.Children.Remove(_activePopup);
+            }
+            _overlayCanvas.IsHitTestVisible = false;  // Keep this - disable overlay when closed
         }
-        
+
         _activePopup.Child = null;
         _activePopup = null;
-        
+
         // Return focus to canvas
         var rootGrid = FindRootGrid();
         var canvas = rootGrid?.Children.OfType<ScrollViewer>().FirstOrDefault()?.Content as Canvas;
