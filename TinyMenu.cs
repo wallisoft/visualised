@@ -35,7 +35,6 @@ public class TinyMenu : Border
         BuildUI();
         
         // Setup overlay canvas when attached to visual tree
-        // In constructor AttachedToVisualTree:
         this.AttachedToVisualTree += (s, e) =>
         {
             var rootGrid = FindRootGrid();
@@ -57,14 +56,12 @@ public class TinyMenu : Border
                 // Add PointerExited to overlay
                 _overlayCanvas.PointerExited += (s, e) =>
                 {
-                    Console.WriteLine("[OVERLAY] PointerExited");
                     Task.Delay(150).ContinueWith(_ =>
                     {
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             if (_activePopup != null && !_overlayCanvas.IsPointerOver)
                             {
-                                Console.WriteLine("[OVERLAY] Closing popup");
                                 ClosePopup();
                             }
                         });
@@ -135,8 +132,6 @@ public class TinyMenu : Border
             
             _menuItems.Add(menuItem);
         }
-        
-        Console.WriteLine($"[TINYMENU] Loaded {_menuItems.Count} menu items");
     }
     
     private void BuildUI()
@@ -271,96 +266,95 @@ public class TinyMenu : Border
             };
 
             itemButton.PointerExited += (s, e) =>
-        {
+            {
+                if (!hasChildren)
+                {
+                    itemButton.Background = Brushes.Transparent;
+                    itemButton.Foreground = Brushes.Black;
+                }
+            };
+
+            // Click - execute action (only if no children)
             if (!hasChildren)
             {
-                itemButton.Background = Brushes.Transparent;
-                itemButton.Foreground = Brushes.Black;
-            }
-        };
-
-        // Click - execute action (only if no children)
-        if (!hasChildren)
-        {
-            itemButton.Click += (s, e) =>
-            {
-                CloseAllPopups();
-                if (!string.IsNullOrEmpty(child.OnClick))
+                itemButton.Click += (s, e) =>
                 {
-                    ExecuteMenuAction(child.OnClick);
-                }
-            };
-        }
-
-        stack.Children.Add(itemButton);
-        }
-
-        // Create popup border
-        var popup = new Border
-        {
-            Background = Brush.Parse(_theme.PopupBackground),
-            BorderBrush = Brush.Parse(_theme.PopupBorder),
-            BorderThickness = new Thickness(2),
-            BoxShadow = new BoxShadows(new BoxShadow { Blur = 3, Color = Color.Parse("#107C10"), OffsetY = 0 }),
-            Child = stack,
-            Tag = menuItem
-        };
-
-        // Start close timer when mouse leaves popup
-        popup.PointerExited += (s, e) =>
-        {
-            _closeTimer?.Stop();
-            _closeTimer = new System.Timers.Timer(500);
-            _closeTimer.Elapsed += (s2, e2) =>
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    // Check if mouse is over any popup
-                    if (!_activePopups.Any(p => p.IsPointerOver))
+                    CloseAllPopups();
+                    if (!string.IsNullOrEmpty(child.OnClick))
                     {
-                        CloseAllPopups();
+                        ExecuteMenuAction(child.OnClick);
                     }
-                });
-            };
-            _closeTimer.Start();
-        };
+                };
+            }
 
-        // Cancel timer when mouse returns
-        popup.PointerEntered += (s, e) =>
-        {
-            _closeTimer?.Stop();
-        };
+            stack.Children.Add(itemButton);
+            }
 
-        // Position popup
-        if (_overlayCanvas != null)
-        {
-            _overlayCanvas.IsHitTestVisible = true;
-
-            var rootGrid = FindRootGrid();
-            if (rootGrid != null)
+            // Create popup border
+            var popup = new Border
             {
-                if (isNested && nestPosition.HasValue)
+                Background = Brush.Parse(_theme.PopupBackground),
+                BorderBrush = Brush.Parse(_theme.PopupBorder),
+                BorderThickness = new Thickness(2),
+                BoxShadow = new BoxShadows(new BoxShadow { Blur = 3, Color = Color.Parse("#107C10"), OffsetY = 0 }),
+                Child = stack,
+                Tag = menuItem
+            };
+
+            // Start close timer when mouse leaves popup
+            popup.PointerExited += (s, e) =>
+            {
+                _closeTimer?.Stop();
+                _closeTimer = new System.Timers.Timer(500);
+                _closeTimer.Elapsed += (s2, e2) =>
                 {
-                    // Nested popup - position to right of parent item
-                    Canvas.SetLeft(popup, nestPosition.Value.X);
-                    Canvas.SetTop(popup, nestPosition.Value.Y - 30);
-                }
-                else
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        // Check if mouse is over any popup
+                        if (!_activePopups.Any(p => p.IsPointerOver))
+                        {
+                            CloseAllPopups();
+                        }
+                    });
+                };
+                _closeTimer.Start();
+            };
+
+            // Cancel timer when mouse returns
+            popup.PointerEntered += (s, e) =>
+            {
+                _closeTimer?.Stop();
+            };
+
+            // Position popup
+            if (_overlayCanvas != null)
+            {
+                _overlayCanvas.IsHitTestVisible = true;
+
+                var rootGrid = FindRootGrid();
+                if (rootGrid != null)
                 {
-                    // Top-level popup - position below menu button
+                    if (isNested && nestPosition.HasValue)
+                    {
+                        // Nested popup - position to right of parent item
+                        Canvas.SetLeft(popup, nestPosition.Value.X);
+                        Canvas.SetTop(popup, nestPosition.Value.Y - 30);
+                    }
+                    else
+                    {
+                        // Top-level popup - position below menu button
                     var buttonPos = parentControl.TranslatePoint(new Point(0, 0), rootGrid);
                     if (buttonPos.HasValue)
                     {
                         Canvas.SetLeft(popup, buttonPos.Value.X);
-                    Canvas.SetTop(popup, 0);
+                        Canvas.SetTop(popup, 0);
+                    }
                 }
             }
+            _overlayCanvas.Children.Add(popup);
+            _activePopups.Add(popup);
         }
-
-        _overlayCanvas.Children.Add(popup);
-        _activePopups.Add(popup);
     }
-}
         
     private void CloseNestedPopups(Control fromItem)
     {
@@ -400,8 +394,6 @@ public class TinyMenu : Border
 
     private void ExecuteMenuAction(string scriptName)
     {
-        Console.WriteLine($"[TINYMENU] Executing: {scriptName}");
-
         var script = ScriptRegistry.Get(scriptName);
         if (script != null)
         {
