@@ -222,6 +222,40 @@ Parent=Tools
 Text=Grid Options...
 OnClick=ToolsGridScript
 
+@MenuItem ToolsImport
+Parent=Tools
+Text=Import...
+
+@MenuItem ImportVB5
+Parent=ToolsImport
+Text=VB5/6 Project
+OnClick=ImportVB5Script
+
+@MenuItem ImportHTML
+Parent=ToolsImport
+Text=HTML/CSS Project
+OnClick=ImportHTMLScript
+
+@MenuItem ImportXAML
+Parent=ToolsImport
+Text=XAML Project
+OnClick=ImportXAMLScript
+
+@MenuItem ImportJSON
+Parent=ToolsImport
+Text=JSON Schema
+OnClick=ImportJSONScript
+
+@MenuItem ImportSQL
+Parent=ToolsImport
+Text=SQL Database
+OnClick=ImportSQLScript
+
+@MenuItem ImportGlade
+Parent=ToolsImport
+Text=Glade UI
+OnClick=ImportGladeScript
+
 # HELP MENU
 @MenuItem HelpDocs
 Parent=Help
@@ -352,3 +386,17 @@ Content=<<EOF
 echo "Visualised Form Designer v0.1"
 echo "The VML-driven RAD IDE"
 echo "(c) 2025 Wallisoft"
+
+@Script ImportVB5Script
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[IMPORT] VB5/6 Project - Not yet implemented"
+EOF
+
+@Script ImportHTMLScript
+Interpreter=bash
+Content=<<EOF
+#!/bin/bash
+echo "[IMPORT] HTML/CSS - Not yet implemented"
+EOF

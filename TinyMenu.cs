@@ -161,8 +161,6 @@ public class TinyMenu : Border
             var button = CreateTopLevelButton(menuItem);
             Grid.SetColumn(button, i);
             _menuBar.Children.Add(button);
-            
-            Console.WriteLine($"[TINYMENU] Created top-level: {menuItem.Text}");
         }
         
         Child = _menuBar;
@@ -170,15 +168,12 @@ public class TinyMenu : Border
     
     private Button CreateTopLevelButton(MenuItemData menuItem)
     {
-            Console.WriteLine($"[TINYMENU] Creating button for {menuItem.Text}");
         var button = new Button
         {
             Content = menuItem.Text,
             Background = Brushes.Transparent,
             Foreground = Brush.Parse(_theme.Foreground),
             BorderThickness = new Thickness(0),
-            FontWeight = FontWeight.Bold,
-            FontSize = 13,
             Padding = new Thickness(15, 0),
             VerticalAlignment = VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
@@ -242,7 +237,6 @@ button.Click += (s, e) =>
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(15, 8),
-                FontSize = 12,
                 Cursor = new Cursor(StandardCursorType.Hand)
             };
             
