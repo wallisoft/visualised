@@ -165,10 +165,17 @@ public class TinyMenu : Border
 
             Console.WriteLine($"[TINYMENU] Attaching hover handlers for {menuItem.Text}");
         
+button.Click += (s, e) =>
+{
+    Console.WriteLine($"[TINYMENU] CLICKED: {menuItem.Text}");
+    ShowPopup(menuItem, button);
+};
+
+
         // Hover - show popup
         button.PointerEntered += (s, e) =>
         {
-                    Console.WriteLine($"[TINYMENU] PointerEntered: {menuItem.Text}");
+            Console.WriteLine($"[TINYMENU] PointerEntered: {menuItem.Text}");
             button.Background = Brush.Parse(_theme.HoverBackground);
             button.Foreground = Brush.Parse(_theme.HoverForeground);
             ShowPopup(menuItem, button);
