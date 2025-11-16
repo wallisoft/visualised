@@ -25,6 +25,7 @@ public class TinyMenu : Border
     private MenuTheme _theme;
     private Canvas? _overlayCanvas; 
     private System.Timers.Timer? _closeTimer;  
+    private List<Border> _activePopups = new(); 
     
     public TinyMenu(string dbPath)
     {
@@ -179,13 +180,11 @@ public class TinyMenu : Border
             Cursor = new Cursor(StandardCursorType.Hand)
         };
 
-            Console.WriteLine($"[TINYMENU] Attaching hover handlers for {menuItem.Text}");
         
-button.Click += (s, e) =>
-{
-    Console.WriteLine($"[TINYMENU] CLICKED: {menuItem.Text}");
-    ShowPopup(menuItem, button);
-};
+        button.Click += (s, e) =>
+        {
+            ShowPopup(menuItem, button);
+        };
 
 
         // Hover - show popup
@@ -215,59 +214,90 @@ button.Click += (s, e) =>
         
         return button;
     }
-        
-    private void ShowPopup(MenuItemData menuItem, Button parentButton)
+
+    private void ShowPopup(MenuItemData menuItem, Control parentControl, bool isNested = false, Point? nestPosition = null)
     {
-        ClosePopup();
-        
+        // Close all popups if this is a top-level menu item
+        if (!isNested)
+        {
+            CloseAllPopups();
+        }
+
         // Get child items
         var children = _menuItems.Where(m => m.ParentId == menuItem.Id).ToList();
         if (children.Count == 0) return;
-        
+
         var stack = new StackPanel { Spacing = 0 };
-        
+
         foreach (var child in children)
         {
+            // Check if this item has children (for nested menus)
+            var hasChildren = _menuItems.Any(m => m.ParentId == child.Id);
+
             var itemButton = new Button
             {
-                Content = child.Text + (child.Shortcut != null ? $"    {child.Shortcut}" : ""),
+                Content = child.Text +
+                          (child.Shortcut != null ? $"    {child.Shortcut}" : "") +
+                          (hasChildren ? "  ▶" : ""),  // Arrow indicator for nested
                 Background = Brushes.Transparent,
                 Foreground = Brushes.Black,
                 BorderThickness = new Thickness(0),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(15, 8),
-                Cursor = new Cursor(StandardCursorType.Hand)
+                Cursor = new Cursor(StandardCursorType.Hand),
+                Tag = child  // Store menu item for nested lookup
             };
-            
+
             // Hover
             itemButton.PointerEntered += (s, e) =>
             {
                 itemButton.Background = Brush.Parse(_theme.HoverBackground);
                 itemButton.Foreground = Brush.Parse(_theme.HoverForeground);
+
+                // Show nested popup if has children
+                if (hasChildren)
+                {
+                    // Close any previously open nested popups at this level or deeper
+                    CloseNestedPopups(itemButton);
+
+                    // Get button position for nested popup
+                    var rootGrid = FindRootGrid();
+                    if (rootGrid != null && _overlayCanvas != null)
+                    {
+                        var buttonPos = itemButton.TranslatePoint(new Point(itemButton.Bounds.Width, 0), rootGrid);
+                        ShowPopup(child, itemButton, true, buttonPos);
+                    }
+                }
             };
-            
+
             itemButton.PointerExited += (s, e) =>
+        {
+            if (!hasChildren)
             {
                 itemButton.Background = Brushes.Transparent;
                 itemButton.Foreground = Brushes.Black;
-            };
-            
-            // Click - execute action
+            }
+        };
+
+        // Click - execute action (only if no children)
+        if (!hasChildren)
+        {
             itemButton.Click += (s, e) =>
             {
-                ClosePopup();
+                CloseAllPopups();
                 if (!string.IsNullOrEmpty(child.OnClick))
                 {
                     ExecuteMenuAction(child.OnClick);
                 }
             };
-            
-            stack.Children.Add(itemButton);
         }
-        
+
+        stack.Children.Add(itemButton);
+        }
+
         // Create popup border
-        _activePopup = new Border
+        var popup = new Border
         {
             Background = Brush.Parse(_theme.PopupBackground),
             BorderBrush = Brush.Parse(_theme.PopupBorder),
@@ -278,17 +308,18 @@ button.Click += (s, e) =>
         };
 
         // Start close timer when mouse leaves popup
-        _activePopup.PointerExited += (s, e) =>
+        popup.PointerExited += (s, e) =>
         {
             _closeTimer?.Stop();
-            _closeTimer = new System.Timers.Timer(500);  // 500ms grace period
+            _closeTimer = new System.Timers.Timer(500);
             _closeTimer.Elapsed += (s2, e2) =>
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    if (_activePopup != null && !_activePopup.IsPointerOver)
+                    // Check if mouse is over any popup
+                    if (!_activePopups.Any(p => p.IsPointerOver))
                     {
-                        ClosePopup();
+                        CloseAllPopups();
                     }
                 });
             };
@@ -296,55 +327,77 @@ button.Click += (s, e) =>
         };
 
         // Cancel timer when mouse returns
-        _activePopup.PointerEntered += (s, e) =>
+        popup.PointerEntered += (s, e) =>
         {
             _closeTimer?.Stop();
         };
 
-        // Position on overlay canvas 
+        // Position popup
         if (_overlayCanvas != null)
         {
             _overlayCanvas.IsHitTestVisible = true;
-            
+
             var rootGrid = FindRootGrid();
             if (rootGrid != null)
             {
-                var buttonPos = parentButton.TranslatePoint(new Point(0, 0), rootGrid);
-                if (buttonPos.HasValue)
+                if (isNested && nestPosition.HasValue)
                 {
-                    Canvas.SetLeft(_activePopup, buttonPos.Value.X);
-                    Canvas.SetTop(_activePopup, 0);
+                    // Nested popup - position to right of parent item
+                    Canvas.SetLeft(popup, nestPosition.Value.X);
+                    Canvas.SetTop(popup, nestPosition.Value.Y);
+                }
+                else
+                {
+                    // Top-level popup - position below menu button
+                    var buttonPos = parentControl.TranslatePoint(new Point(0, 0), rootGrid);
+                    if (buttonPos.HasValue)
+                    {
+                        Canvas.SetLeft(popup, buttonPos.Value.X);
+                    Canvas.SetTop(popup, 0);
                 }
             }
-            
-            _overlayCanvas.Children.Add(_activePopup);
+        }
+
+        _overlayCanvas.Children.Add(popup);
+        _activePopups.Add(popup);
+    }
+}
+        
+    private void CloseNestedPopups(Control fromItem)
+    {
+        // Close all popups that are children of this item's popup
+        // (simplified - just close all except first one for now)
+        while (_activePopups.Count > 1)
+        {
+            var popup = _activePopups[_activePopups.Count - 1];
+            _overlayCanvas?.Children.Remove(popup);
+            _activePopups.RemoveAt(_activePopups.Count - 1);
         }
     }
 
-    private void ClosePopup()
+    public void CloseAllPopups()
     {
-        _closeTimer?.Stop(); 
-
-        if (_activePopup == null) return;
-
+        _closeTimer?.Stop();
+        
+        foreach (var popup in _activePopups)
+        {
+            if (_overlayCanvas != null && _overlayCanvas.Children.Contains(popup))
+            {
+                _overlayCanvas.Children.Remove(popup);
+            }
+            popup.Child = null;
+        }
+        
+        _activePopups.Clear();
+        
         if (_overlayCanvas != null)
         {
-            if (_overlayCanvas.Children.Contains(_activePopup))
-            {
-                // Remove this line: _overlayCanvas.IsHitTestVisible = true;
-                _overlayCanvas.Children.Remove(_activePopup);
-            }
-            _overlayCanvas.IsHitTestVisible = false;  // Keep this - disable overlay when closed
+            _overlayCanvas.IsHitTestVisible = false;
         }
-
-        _activePopup.Child = null;
-        _activePopup = null;
-
-        // Return focus to canvas
-        var rootGrid = FindRootGrid();
-        var canvas = rootGrid?.Children.OfType<ScrollViewer>().FirstOrDefault()?.Content as Canvas;
-        canvas?.Focus();
     }
+
+    // Keep old ClosePopup for compatibility
+    private void ClosePopup() => CloseAllPopups();
 
     private void ExecuteMenuAction(string scriptName)
     {
